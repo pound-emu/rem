@@ -97,8 +97,6 @@ void test_all(abi abi_information, int iteration)
         for (int ins = ir_ternary_begin + 1; ins < ir_ternary_end; ++ins)
         {
             emit_operation(&enviroment,abi_information, (ir_instructions)ins,count, 1, 3, register_max);
-
-            break;
         }
 
         ir_operation_block::jump_if(enviroment.ir, small_label, small_iterator);
