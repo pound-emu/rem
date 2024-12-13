@@ -290,7 +290,7 @@ bool ir_operation_block::is_label(ir_operation* operation)
 
 ir_operand ir_operation_block::create_label(ir_operation_block* block)
 {
-	int label_location = block->label_index;
+	uint64_t label_location = block->label_index;
 	block->label_index++;
 
 	ir_operand result_label = ir_operand::create_con(label_location, int64);

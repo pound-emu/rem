@@ -1,6 +1,12 @@
 #include "x86_pre_allocator.h"
 #include "ir/bit_register_allocations.h"
 #include "ir/checks.h"
+#include "tools/bit_tools.h"
+
+static bool undefined_behavior_disallowed(x86_pre_allocator_context* context)
+{
+	return context->rules & x86_pre_allocator_context_rules::disallow_undefined_behavior;
+}
 
 //I'm pretty sure std::initializer_list does not allocate memory.
 static void assert_same_size(std::initializer_list<ir_operand> operands)
@@ -70,6 +76,39 @@ static ir_operand register_or_constant(x86_pre_allocator_context* context, ir_op
 	emit_move(context, copy, *source);
 
 	return copy;
+}
+
+static ir_operand register_or_constant(x86_pre_allocator_context* context, ir_operand source, bool force_copy = false)
+{
+	return register_or_constant(context, &source, force_copy);
+}
+
+static void emit_throw_exception(x86_pre_allocator_context* context)
+{
+	ir_operand zero = register_or_constant(context, ir_operand::create_con(0));
+
+	//TODO in the future, i want this to call an actual exception
+	ir_operation_block::emitds(context->ir, ir_load, zero, zero);
+}
+
+static void assert_binary_condition(x86_pre_allocator_context* context, ir_instructions condition, ir_operand x, ir_operand y)
+{
+	assert_same_size({x, y});
+
+	ir_operand condition_result = create_scrap_operand(context, x.meta_data);
+	
+	x = register_or_constant(context, &x);	
+	y = register_or_constant(context, &y);
+
+	ir_operation_block::emitds(context->ir, condition, condition_result, x, y);
+
+	ir_operand end = ir_operation_block::create_label(context->ir);
+
+	ir_operation_block::jump_if(context->ir, end, condition_result);
+
+	emit_throw_exception(context);
+
+	ir_operation_block::mark_label(context->ir, end);
 }
 
 static void extend_source(x86_pre_allocator_context* context,ir_operand* source, uint64_t new_size, bool is_signed)
@@ -162,10 +201,19 @@ static void emit_compare(x86_pre_allocator_context* result, uint64_t instruction
 static void emit_shift(x86_pre_allocator_context* result, uint64_t instruction, ir_operand destination, ir_operand source_0, ir_operand source_1)
 {
 	assert_same_size({ destination, source_0, source_1 });
-	
+
 	ir_operand working_destination = destination;
 	ir_operand working_source_0 = register_or_constant(result, &source_0);
 	ir_operand working_source_1 = register_or_constant(result, &source_1);
+
+	if (undefined_behavior_disallowed(result))
+	{
+		uint64_t working_size = destination.meta_data & UINT32_MAX;
+
+		uint64_t max_shift = (8 << working_size) -1;
+
+		assert_binary_condition(result, ir_compare_less_equal_unsigned, working_source_1, ir_operand::create_con(max_shift, working_size));
+	}
 
 	ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_lock, RCX(ir_operand_meta::int64));
 
@@ -212,6 +260,7 @@ static void emit_d_f_d_n(x86_pre_allocator_context* result, uint64_t instruction
 	ir_operation_block::emitds(result->ir, instruction, working_destination, working_destination);
 }
 
+//TODO: This code is nasty, needs to be refactored.
 static void emit_big_multiply_divide(x86_pre_allocator_context* result, uint64_t instruction, ir_operand destination, ir_operand source_0, ir_operand source_1)
 {
 	assert_same_size({ destination, source_0, source_1 });
@@ -467,6 +516,12 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		}; break;
 
 		case ir_mark_label:
+		{
+			emit_as_is(pre_allocator_context, operation);
+			
+			assert(operation->sources[0].value < UINT32_MAX);
+		}; break;
+
 		case ir_load:
 		case ir_store:
 		case ir_jump_if:
@@ -512,11 +567,13 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 	}
 }
 
-void x86_pre_allocator_context::run_pass(x86_pre_allocator_context* pre_allocator_context, ir_operation_block* result_ir, ir_operation_block* source, cpu_information cpu_data, os_information os)
+void x86_pre_allocator_context::run_pass(x86_pre_allocator_context* pre_allocator_context, ir_operation_block* result_ir, ir_operation_block* source, cpu_information cpu_data, os_information os, x86_pre_allocator_context_rules rules)
 {
 	assert(cpu_data == x86_64);
 
 	ir_operation_block::clamp_operands(source, false);
+
+	pre_allocator_context->rules = rules;
 
 	pre_allocator_context->allocator = result_ir->allocator;
 	pre_allocator_context->scrap_index = 0;
@@ -524,6 +581,8 @@ void x86_pre_allocator_context::run_pass(x86_pre_allocator_context* pre_allocato
 	pre_allocator_context->source_ir = source;
 
 	pre_allocator_context->revisit_instructions = intrusive_linked_list<intrusive_linked_list_element<ir_operation>*>::create(pre_allocator_context->allocator, nullptr, nullptr);
+
+	pre_allocator_context->ir->label_index = UINT32_MAX;
 
 	for (auto i = source->operations->first; i != source->operations->last; i = i->next)
 	{

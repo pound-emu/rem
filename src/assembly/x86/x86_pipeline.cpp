@@ -17,7 +17,7 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 	x86_pre_allocator_context pre_allocation_data;
 	basic_register_allocator_context register_allocation_data;
 
-	x86_pre_allocator_context::run_pass(&pre_allocation_data, pre_allocated_code, source_ir, working_abi.cpu,working_abi.os);
+	x86_pre_allocator_context::run_pass(&pre_allocation_data, pre_allocated_code, source_ir, working_abi.cpu,working_abi.os, x86_pre_allocator_context_rules::disallow_undefined_behavior);
 	
 	basic_register_allocator_context::run_pass(
 		&register_allocation_data,

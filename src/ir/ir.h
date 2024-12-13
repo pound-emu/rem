@@ -30,9 +30,12 @@ enum ir_instructions : uint64_t
 	ir_divide_signed,
 	ir_divide_unsigned,
 	ir_multiply,
-	ir_multiply_hi_signed,
+	ir_multiply_hi_signed,			//ir_divide_signed INT_MAX, -1 is considered undefined behavior. 
 	ir_multiply_hi_unsigned,
 	ir_rotate_right,
+
+									//ir_shift a, b where b is greater than the bit length is considered
+									//undefined behavior.
 	ir_shift_left,
 	ir_shift_right_signed,
 	ir_shift_right_unsigned,
@@ -46,7 +49,7 @@ enum ir_instructions : uint64_t
 	ir_incrament,
 	ir_move,
 	ir_negate,
-	ir_sign_extend,
+	ir_sign_extend,					//ir_sign_extend a, b where a has less bits than b will just be a zero extend.
 	ir_bitwise_not,
 
 	ir_unary_end,
@@ -192,7 +195,7 @@ struct ir_operation_block
 {
 	arena_allocator*									allocator;
 	intrusive_linked_list<ir_operation>*				operations;
-	int													label_index;
+	uint64_t											label_index;
 
 	static void											create(ir_operation_block** result,arena_allocator* allocator);
 	static void											create_raw_operation(arena_allocator* allocator, ir_operation* result, uint64_t instruction, int destination_count, int source_count);

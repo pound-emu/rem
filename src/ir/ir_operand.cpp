@@ -1,5 +1,7 @@
 #include "ir.h"
 
+#include "tools/bit_tools.h"
+
 bool ir_operand::is_register(ir_operand* test)
 {
 	return !is_constant(test);
@@ -31,12 +33,7 @@ uint64_t ir_operand::get_masked_constant(ir_operand* test)
 {
 	assert(is_constant(test));
 
-	uint64_t bit_count = 8 << get_raw_size(test);
-
-	if (bit_count == 64)
-		return test->value;
-
-	return test->value & ((1ULL << bit_count) - 1);
+	return test->value & get_mask_from_size(test->meta_data & UINT32_MAX);
 }
 
 uint64_t ir_operand::get_raw_size(ir_operand* test)
@@ -58,8 +55,10 @@ ir_operand ir_operand::create_con(uint64_t value, uint64_t size)
 {
 	ir_operand result;
 
-	result.value = value;
-	result.meta_data = (size & UINT32_MAX) | ir_operand_meta::is_constant;
+	size = (size & UINT32_MAX);
+
+	result.value = value & get_mask_from_size(size);
+	result.meta_data = size | ir_operand_meta::is_constant;
 
 	return result;
 }

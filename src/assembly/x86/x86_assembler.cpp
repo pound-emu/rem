@@ -3,6 +3,7 @@
 #include "x86_assembler.h"
 #include "ir/checks.h"
 #include "xbyak/xbyak.h"
+#include "tools/bit_tools.h"
 
 #define ONE_MB 1ULL * 1024 * 1024
 
@@ -268,12 +269,34 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			ir_operand* sources = working_operation.sources.data;
 
 			assert_is_register(destinations[0]);
-			assert_all_registers(&working_operation);
+			assert_is_register(sources[0]);
+
+			//assert_all_registers(&working_operation);
 
 			assert(destinations[0].meta_data == sources[0].meta_data);
 			assert(destinations[0].meta_data == sources[1].meta_data);
 
-			c.cmp(create_operand(sources[0]), create_operand(sources[1]));
+			if (ir_operand::is_constant(&sources[1]))
+			{
+				uint64_t constant = ir_operand::get_masked_constant(&sources[1]);
+
+				uint64_t working_size = ir_operand::get_raw_size(&working_operation.sources[1]);
+
+				if (working_size <= int32)
+				{
+					assert(constant <= create_int_max(working_size));	
+				}
+				else
+				{
+					assert(constant <= create_int_max(int32));	
+				}
+
+				c.cmp(create_operand(sources[0]), constant);
+			}
+			else
+			{
+				c.cmp(create_operand(sources[0]), create_operand(sources[1]));
+			}
 
 			switch (instruction)
 			{

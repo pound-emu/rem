@@ -2,6 +2,7 @@
 #include "ir/ir.h"
 #include "test_enviroment.h"
 #include "tools/numbers.h"
+#include "tools/bit_tools.h"
 #include <vector>
 
 ir_operand random_constant(uint64_t size)
@@ -20,12 +21,12 @@ ir_operand random_reg(uint64_t size, int max_registers)
 
 static void emit_operation(test_enviroment* test,abi abi_information, ir_instructions instruction, int iterations, int destination_count, int source_count,int reg_max)
 {
-    std::vector<ir_operand> sources;
-    std::vector<ir_operand> destinations;
-
     for (int size = 0; size < iterations; ++size)
     {
-        uint64_t working_size = int16;
+        std::vector<ir_operand> sources;
+        std::vector<ir_operand> destinations;
+
+        uint64_t working_size = size % 4;
 
         for (int i = 0; i < destination_count; ++i)
         {
@@ -52,7 +53,25 @@ static void emit_operation(test_enviroment* test,abi abi_information, ir_instruc
                 {
                     ir_operation_block::emitds(test->ir, ir_bitwise_or, sources[1], sources[1], ir_operand::create_con(1, sources[1].meta_data));
                 }
-            }; break;;
+            }; break;
+
+            case ir_shift_left:
+            case ir_shift_right_signed:
+            case ir_shift_right_unsigned:
+            case ir_rotate_right:
+            {
+                int bit_count = 8 << sources[1].meta_data;
+                uint64_t mask = bit_count - 1;
+
+                if (ir_operand::is_constant(&sources[1]))
+                {
+                    sources[1].value &= mask;
+                }
+                else
+                {
+                    ir_operation_block::emitds(test->ir, ir_bitwise_and, sources[1], sources[1], ir_operand::create_con(mask, sources[1].meta_data));
+                }
+            }; break;
         }
 
         ir_operation_block::emit_with(test->ir, instruction, destinations.data(), destination_count, sources.data(), source_count);
@@ -109,8 +128,8 @@ void test_all(abi abi_information, int iteration)
 
     ir_operation_block::emits(enviroment.ir, ir_close_and_return, ir_operand::create_reg(0, int64));
 
-    uint64_t emulator_result = test_enviroment::execute_emulator(&enviroment, nullptr);
     uint64_t jit_result = test_enviroment::execute_jit(&enviroment, nullptr);
+    uint64_t emulator_result = test_enviroment::execute_emulator(&enviroment, nullptr);
 
     std::cout << jit_result << " " << emulator_result << std::endl;
 

@@ -2,6 +2,7 @@
 #include "ir/checks.h"
 #include "tools/numbers.h"
 #include "tools/big_number.h"
+#include "tools/bit_tools.h"
 
 #define GENERIC_TEMPLATE tenplate<typename T>
 
@@ -45,35 +46,6 @@ static void init_ir_emulator_context(ir_emulator* ir_emulator_context, ir_operat
 static void advance(ir_emulator* ir_emulator_context)
 {
     ir_emulator_context->working_instruction_element = ir_emulator_context->working_instruction_element->next;
-}
-
-static uint64_t get_mask_from_size(uint64_t size)
-{
-    if (size == int64)
-        return -1;
-
-    assert(size != int128);
-
-    uint64_t mask = (1ULL << (8 << size)) - 1;
-
-    return mask;
-}
-
-static int64_t sign_extend_from_size(uint64_t source, uint64_t size)
-{
-    if (size == int64)
-        return source;
-
-    assert(size != int128);
-
-    int bit = 63 - ((8 << size) - 1);
-
-    return ((int64_t)source << bit) >> bit;
-}
-
-static uint64_t zero_extend_from_size(uint64_t source, uint64_t size)
-{
-    return source & get_mask_from_size(size);
 }
 
 static uint64_t* get_destination(ir_emulator* ir_emulator_context, ir_operand working_operand)
@@ -168,8 +140,6 @@ static void execute_operation_binary(ir_emulator* ir_emulator_context)
 
     ir_operand s1 = sources[1];
 
-    uint64_t shift_mask = working_size <= int32 ? 31 : 63;
-
     uint64_t result;
 
     switch (working_instruction.instruction)
@@ -188,18 +158,56 @@ static void execute_operation_binary(ir_emulator* ir_emulator_context)
         case ir_compare_less_signed:            result = sign_extend_from_size(x, working_size) < sign_extend_from_size(y, working_size); break;
         case ir_compare_less_unsigned:          result = x < y; break;
         case ir_compare_not_equal:              result = x != y; break;
-        case ir_divide_unsigned:                result = x / y; break;
         case ir_multiply:                       result = x * y; break;
         case ir_subtract:                       result = x - y; break;
-        case ir_shift_left:                     result = x << (y & shift_mask); break;
-        case ir_shift_right_unsigned:           result = x >> (y & shift_mask); break;
-        case ir_shift_right_signed:             result = sign_extend_from_size(x, working_size) >> (y & shift_mask); break;
 
+        case ir_divide_unsigned:
+        case ir_divide_signed:
+        {
+            if (y == 0)
+            {
+                throw 0;
+            }
+
+            switch (working_instruction.instruction)
+            {
+                case ir_divide_unsigned: result = x / y; break;;
+                case ir_divide_signed: 
+                {
+                    int64_t sx = sign_extend_from_size(x, working_size);
+                    int64_t sy = sign_extend_from_size(y, working_size);
+
+                    //On x86, this is undefined behavior LOL
+                    if (sx == create_int_min(working_size) && sy == -1)
+                    {
+                        throw 0;
+                    }
+
+                    result = sx / sy;
+                }; break;                
+            }
+        }; break;
+
+        case ir_shift_left:  
+        case ir_shift_right_signed:
+        case ir_shift_right_unsigned:
         case ir_rotate_right:
         {
-            y = (y & (bit_count - 1));
-            result = (x >> y) | (x << (bit_count - y));
-            
+            uint64_t shift_mask = (8ULL << working_size) - 1;
+
+            if (y > shift_mask)
+            {
+                throw 0;
+            }
+
+            switch (working_instruction.instruction)
+            {
+                case ir_shift_left:             result = x << y; break;
+                case ir_shift_right_signed:     result = sign_extend_from_size(x, working_size) >> y; break;
+                case ir_shift_right_unsigned:   result = x >> y; break;
+                case ir_rotate_right:           result = (x >> y) | (x << (bit_count - y)); break;
+                default: throw 0;
+            }
         }; break;
 
 
@@ -223,14 +231,6 @@ static void execute_operation_binary(ir_emulator* ir_emulator_context)
             }
 
             result = top;
-        }; break;
-        
-        case ir_divide_signed:
-        {
-            int64_t sx = sign_extend_from_size(x, working_size);
-            int64_t sy = sign_extend_from_size(y, working_size);
-
-            result = sx / sy;
         }; break;
 
     default:
