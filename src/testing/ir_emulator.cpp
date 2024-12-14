@@ -171,13 +171,12 @@ static void execute_operation_binary(ir_emulator* ir_emulator_context)
 
             switch (working_instruction.instruction)
             {
-                case ir_divide_unsigned: result = x / y; break;;
+                case ir_divide_unsigned: result = x / y; break;
                 case ir_divide_signed: 
                 {
                     int64_t sx = sign_extend_from_size(x, working_size);
                     int64_t sy = sign_extend_from_size(y, working_size);
 
-                    //On x86, this is undefined behavior LOL
                     if (sx == create_int_min(working_size) && sy == -1)
                     {
                         throw 0;
@@ -272,6 +271,19 @@ static void execute_operation_ternary(ir_emulator* ir_emulator_context)
         case ir_conditional_select:
         {
             result = x ? y : z;
+        }; break;
+
+        case ir_double_shift_right:
+        {   
+            int bit_count = (8 << working_size);
+
+            if (z >= bit_count || z == 0)
+            {
+                throw 0;
+            }
+            
+            result = (x >> z) | (y << (bit_count - z));
+
         }; break;
 
         default: throw 0;
@@ -400,10 +412,10 @@ uint64_t ir_emulator::execute(ir_emulator* ir_emulator_context, ir_operation_blo
             }; break;
 
             case ir_conditional_select:
+            case ir_double_shift_right:
             {
                 execute_operation_ternary(ir_emulator_context);
             } break;
-
 
             default:
             {

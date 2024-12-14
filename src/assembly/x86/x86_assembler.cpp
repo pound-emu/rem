@@ -210,7 +210,6 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			}
 		}; break;
 
-		/*
 		case ir_double_shift_right:
 		{
 			ir_operand* destinations = working_operation.destinations.data;
@@ -231,7 +230,35 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 
 			c.shrd(dn, m.getReg(), cl);
 		}; break;
-		*/
+
+		case ir_assert_true:
+		case ir_assert_false:
+		{
+			ir_operand* destinations = working_operation.destinations.data;
+			ir_operand* sources = working_operation.sources.data;
+
+			assert_operand_count(&working_operation, 0, 1);
+
+			Xbyak::Operand check = create_operand(sources[0]);
+
+			c.cmp(check, 0);
+
+			Xbyak::Label end;
+
+			if (instruction == ir_assert_true)
+			{
+				c.jne(end);
+			}
+			else
+			{
+				c.je(end);
+			}
+
+			c.mov(c.rax,0);
+			c.mov(c.rax,c.ptr[c.rax]);
+
+			c.L(end);
+		}; break;
 
 		case ir_conditional_select:
 		{
@@ -341,7 +368,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			{
 				uint64_t imm = sources[1].value;
 
-				assert(imm <= UINT32_MAX);
+				assert(imm <= INT32_MAX);
 
 				switch (instruction)
 				{

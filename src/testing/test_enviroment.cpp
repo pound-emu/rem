@@ -30,7 +30,7 @@ uint64_t test_enviroment::execute_emulator(test_enviroment* test_enviroment_cont
 
 uint64_t test_enviroment::execute_jit(test_enviroment* test_enviroment_context, void* arguments)
 {
-    void* code = jit_context::compile_code(&test_enviroment_context->jit, test_enviroment_context->ir);
+    void* code = jit_context::compile_code(&test_enviroment_context->jit, test_enviroment_context->ir, check_undefined_behavior);
 
     return jit_context::call_jitted_function(&test_enviroment_context->jit, code, (uint64_t*)arguments);
 }

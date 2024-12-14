@@ -68,7 +68,7 @@ void* jit_context::append_to_jit_cache(jit_context* context, void* source_functi
     return growing_jit_cache::append_code(&context->jit_cache, source_function, function_size);
 }
 
-void* jit_context::compile_code(jit_context* context, ir_operation_block* ir_operation_block_context)
+void* jit_context::compile_code(jit_context* context, ir_operation_block* ir_operation_block_context, compiler_flags flags)
 {
     void* code_buffer;
     uint64_t code_size;
@@ -79,7 +79,7 @@ void* jit_context::compile_code(jit_context* context, ir_operation_block* ir_ope
     {
         case x86_64:
         {
-            assemble_x86_64_pipeline(&code_buffer, &code_size, ir_operation_block_context, false, working_abi);
+            assemble_x86_64_pipeline(&code_buffer, &code_size, ir_operation_block_context, false, working_abi, flags);
         }; break;
 
         default: throw 0;

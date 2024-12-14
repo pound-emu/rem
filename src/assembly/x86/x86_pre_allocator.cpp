@@ -3,11 +3,6 @@
 #include "ir/checks.h"
 #include "tools/bit_tools.h"
 
-static bool undefined_behavior_disallowed(x86_pre_allocator_context* context)
-{
-	return context->rules & x86_pre_allocator_context_rules::disallow_undefined_behavior;
-}
-
 //I'm pretty sure std::initializer_list does not allocate memory.
 static void assert_same_size(std::initializer_list<ir_operand> operands)
 {
@@ -87,11 +82,12 @@ static void emit_throw_exception(x86_pre_allocator_context* context)
 {
 	ir_operand zero = register_or_constant(context, ir_operand::create_con(0));
 
-	//TODO in the future, i want this to call an actual exception
+	//TODO in the future, i want this to throw an actual exception
+	//instead of reading a null pointer LOL
 	ir_operation_block::emitds(context->ir, ir_load, zero, zero);
 }
 
-static void assert_binary_condition(x86_pre_allocator_context* context, ir_instructions condition, ir_operand x, ir_operand y)
+static void assert_binary_condition_true(x86_pre_allocator_context* context, ir_instructions condition, ir_operand x, ir_operand y)
 {
 	assert_same_size({x, y});
 
@@ -206,15 +202,6 @@ static void emit_shift(x86_pre_allocator_context* result, uint64_t instruction, 
 	ir_operand working_source_0 = register_or_constant(result, &source_0);
 	ir_operand working_source_1 = register_or_constant(result, &source_1);
 
-	if (undefined_behavior_disallowed(result))
-	{
-		uint64_t working_size = destination.meta_data & UINT32_MAX;
-
-		uint64_t max_shift = (8 << working_size) -1;
-
-		assert_binary_condition(result, ir_compare_less_equal_unsigned, working_source_1, ir_operand::create_con(max_shift, working_size));
-	}
-
 	ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_lock, RCX(ir_operand_meta::int64));
 
 	emit_move(result, RCX(destination.meta_data), working_source_1);
@@ -224,7 +211,6 @@ static void emit_shift(x86_pre_allocator_context* result, uint64_t instruction, 
 	ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_unlock, RCX(ir_operand_meta::int64));
 }
 
-/*
 static void emit_double_shift_right(x86_pre_allocator_context* result, ir_operand destination, ir_operand source_0, ir_operand source_1, ir_operand shift)
 {
 	assert_same_size({ destination, source_0, source_1, shift });
@@ -240,13 +226,32 @@ static void emit_double_shift_right(x86_pre_allocator_context* result, ir_operan
 	emit_move(result, working_scrap, working_source_0);
 
 	emit_move(result, RCX(working_scrap.meta_data), working_shift);
-	ir_operation_block::emitds(result->ir, ir_instructions::ir_double_shift_right, working_scrap, working_scrap, working_source_1, RCX(working_scrap.meta_data));
+
+	if (ir_operand::get_raw_size(&destination) == int8)
+	{
+		working_destination.meta_data = int16;
+		working_source_0.meta_data = int16;
+		working_source_1.meta_data = int16;
+		working_shift.meta_data = int16;
+		working_scrap.meta_data = int16;
+
+		extend_source(result, &working_source_0, int16, false);
+
+		emit_move(result, working_scrap, working_source_1);
+
+		ir_operation_block::emitds(result->ir, ir_shift_left, working_scrap, working_scrap, ir_operand::create_con(8, int16));
+		ir_operation_block::emitds(result->ir, ir_bitwise_or, working_scrap, working_scrap, working_source_0);
+		ir_operation_block::emitds(result->ir, ir_shift_right_unsigned, working_scrap, working_scrap, RCX(working_scrap.meta_data));
+	}
+	else
+	{
+		ir_operation_block::emitds(result->ir, ir_instructions::ir_double_shift_right, working_scrap, working_scrap, working_source_1, RCX(working_scrap.meta_data));
+	}
 
 	emit_move(result, working_destination, working_scrap);
 
 	ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_unlock, RCX(ir_operand_meta::int64));
 }
-*/
 
 static void emit_d_f_d_n(x86_pre_allocator_context* result, uint64_t instruction, ir_operand destination, ir_operand source)
 {
@@ -378,6 +383,29 @@ static void emit_argument_load(x86_pre_allocator_context* result, ir_operation* 
 	intrusive_linked_list< intrusive_linked_list_element<ir_operation>*>::insert_element(result->revisit_instructions, result->ir->operations->last->prev);
 
 	ir_operation_block::emitds(result->ir, ir_instructions::ir_load, instruction->destinations[0], instruction->destinations[0], ir_operand::create_con(instruction->sources[0].value * 8));
+}
+
+static void emit_with_possible_remaps(x86_pre_allocator_context* result, ir_operation* operation)
+{
+	ir_operand new_destinations[10];
+	ir_operand new_sources[10];
+
+	for (int i = 0; i < operation->destinations.count; ++i)
+	{
+		new_destinations[i] =  register_or_constant(result, operation->destinations[i]);
+	}
+
+	for (int i = 0; i < operation->sources.count; ++i)
+	{
+		new_sources[i] =  register_or_constant(result, operation->sources[i]);
+	}
+
+	ir_operation_block::emit_with(
+		result->ir, 
+		operation->instruction,
+		new_destinations,		operation->destinations.count,
+		new_sources,			operation->sources.count
+	);
 }
 
 static void emit_as_is(x86_pre_allocator_context* result, ir_operation* operation)
@@ -529,6 +557,12 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 			emit_as_is(pre_allocator_context, operation);
 		}; break;
 
+		case ir_assert_false:
+		case ir_assert_true:
+		{
+			emit_with_possible_remaps(pre_allocator_context, operation);
+		}; break;
+
 		case ir_conditional_select:
 		{
 			assert_operand_count(operation, 1, 3);
@@ -537,7 +571,6 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 			emit_conditional_select(pre_allocator_context, operation->destinations[0], operation->sources[0], operation->sources[1], operation->sources[2]);
 		}; break;
 
-		/*
 		case ir_double_shift_right:
 		{
 			assert_operand_count(operation, 1, 3);
@@ -545,7 +578,6 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 
 			emit_double_shift_right(pre_allocator_context, operation->destinations[0], operation->sources[0], operation->sources[1], operation->sources[2]);
 		}; break;
-		*/
 
 		default: assert(false); throw 0;
 	}
@@ -567,13 +599,11 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 	}
 }
 
-void x86_pre_allocator_context::run_pass(x86_pre_allocator_context* pre_allocator_context, ir_operation_block* result_ir, ir_operation_block* source, cpu_information cpu_data, os_information os, x86_pre_allocator_context_rules rules)
+void x86_pre_allocator_context::run_pass(x86_pre_allocator_context* pre_allocator_context, ir_operation_block* result_ir, ir_operation_block* source, cpu_information cpu_data, os_information os)
 {
 	assert(cpu_data == x86_64);
 
 	ir_operation_block::clamp_operands(source, false);
-
-	pre_allocator_context->rules = rules;
 
 	pre_allocator_context->allocator = result_ir->allocator;
 	pre_allocator_context->scrap_index = 0;

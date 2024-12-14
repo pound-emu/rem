@@ -313,6 +313,28 @@ void ir_operation_block::jump_if_not(ir_operation_block* block, ir_operand label
 	//TODO
 }
 
+static void get_used_operands(std::unordered_set<uint64_t>* result,ir_operand* operands, int operand_count)
+{
+	for (int i = 0; i < operand_count; ++i)
+	{
+		ir_operand working = operands[i];
+
+		if (ir_operand::is_constant(&working))
+			continue;
+
+		result->insert(working.value);
+	}
+}
+
+void ir_operation_block::get_used_registers(std::unordered_set<uint64_t>* result, ir_operation_block* block)
+{
+	for (auto i = block->operations->first; i != nullptr; i = i->next)
+	{
+		get_used_operands(result, i->data.destinations.data, i->data.destinations.count);
+		get_used_operands(result, i->data.sources.data, i->data.sources.count);
+	}
+}
+
 void ir_operation_block::jump(ir_operation_block* block, ir_operand label)
 {
 	jump_if(block, label, ir_operand::create_con(1));

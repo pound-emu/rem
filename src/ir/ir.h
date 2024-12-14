@@ -4,6 +4,7 @@
 #define IR_H
 
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 #include "memory_tools.h"
@@ -30,12 +31,9 @@ enum ir_instructions : uint64_t
 	ir_divide_signed,
 	ir_divide_unsigned,
 	ir_multiply,
-	ir_multiply_hi_signed,			//ir_divide_signed INT_MAX, -1 is considered undefined behavior. 
+	ir_multiply_hi_signed,
 	ir_multiply_hi_unsigned,
 	ir_rotate_right,
-
-									//ir_shift a, b where b is greater than the bit length is considered
-									//undefined behavior.
 	ir_shift_left,
 	ir_shift_right_signed,
 	ir_shift_right_unsigned,
@@ -46,21 +44,19 @@ enum ir_instructions : uint64_t
 	//Unary Operations
 	ir_unary_start,
 
+	ir_bitwise_not,
 	ir_incrament,
 	ir_move,
 	ir_negate,
-	ir_sign_extend,					//ir_sign_extend a, b where a has less bits than b will just be a zero extend.
-	ir_bitwise_not,
+	ir_sign_extend, 
 
 	ir_unary_end,
 
-	//Ternary
+	//Ternary Operations
 	ir_ternary_begin,
 
 	ir_conditional_select,
-
-	//This instruction needs testing. Until then, it is canned.
-	//ir_double_shift_right,
+	ir_double_shift_right,
 
 	ir_ternary_end,
 
@@ -82,6 +78,10 @@ enum ir_instructions : uint64_t
 	ir_open_context,
 	ir_register_allocator_p_lock,
 	ir_register_allocator_p_unlock,
+
+	//Asserts
+	ir_assert_false,
+	ir_assert_true,
 
 	//X86
 	x86_cqo,
@@ -209,6 +209,7 @@ struct ir_operation_block
 	static void 										jump(ir_operation_block* block, ir_operand label);
 	static void 										jump_if(ir_operation_block* block, ir_operand label, ir_operand condition);
 	static void 										jump_if_not(ir_operation_block* block, ir_operand label, ir_operand condition);
+	static void 										get_used_registers(std::unordered_set<uint64_t>* result, ir_operation_block* block);
 
 	static std::string 									get_block_log(ir_operation_block* ir);
 	static void 										log(ir_operation_block* ctx);

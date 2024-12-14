@@ -27,7 +27,7 @@ static void emit_operation(test_enviroment* test,abi abi_information, ir_instruc
         std::vector<ir_operand> destinations;
 
         uint64_t working_size = size % 4;
-
+        
         for (int i = 0; i < destination_count; ++i)
         {
             destinations.push_back(random_reg(working_size, reg_max));
@@ -47,10 +47,12 @@ static void emit_operation(test_enviroment* test,abi abi_information, ir_instruc
             {
                 if (ir_operand::is_constant(&sources[1]))
                 {
+                    sources[1].value &= 0b11ULL;
                     sources[1].value |= 1;
                 }
                 else
                 {
+                    ir_operation_block::emitds(test->ir, ir_bitwise_and, sources[1], sources[1], ir_operand::create_con(~0b11ULL, sources[1].meta_data));
                     ir_operation_block::emitds(test->ir, ir_bitwise_or, sources[1], sources[1], ir_operand::create_con(1, sources[1].meta_data));
                 }
             }; break;
@@ -72,6 +74,23 @@ static void emit_operation(test_enviroment* test,abi abi_information, ir_instruc
                     ir_operation_block::emitds(test->ir, ir_bitwise_and, sources[1], sources[1], ir_operand::create_con(mask, sources[1].meta_data));
                 }
             }; break;
+
+            case ir_double_shift_right:
+            {
+                int bit_count = 8 << ir_operand::get_raw_size(&sources[2]);
+                uint64_t mask = bit_count - 1;
+
+                if (ir_operand::is_constant(&sources[2]))
+                {
+                    sources[2].value &= mask;
+                    sources[2].value |= 1;
+                }
+                else
+                {
+                    ir_operation_block::emitds(test->ir, ir_bitwise_and, sources[2], sources[2], ir_operand::create_con(mask, sources[2].meta_data));
+                    ir_operation_block::emitds(test->ir, ir_bitwise_or, sources[2], sources[2], ir_operand::create_con(1, sources[2].meta_data));
+                }
+            }; break;
         }
 
         ir_operation_block::emit_with(test->ir, instruction, destinations.data(), destination_count, sources.data(), source_count);
@@ -85,7 +104,7 @@ void test_all(abi abi_information, int iteration)
     test_enviroment enviroment;
     test_enviroment::create(&enviroment, abi_information);
 
-    int register_max = 100;
+    int register_max = 6;
 
     for (int i = 0; i < register_max; ++i)
     {
@@ -93,12 +112,13 @@ void test_all(abi abi_information, int iteration)
     }
 
     int count = 100;
+    int iterations = 100;
 
     {
         ir_operand small_label = ir_operation_block::create_label(enviroment.ir);
 
         ir_operand small_iterator = ir_operand::create_reg(register_max);
-        ir_operation_block::emitds(enviroment.ir, ir_move, small_iterator,ir_operand::create_con(100));
+        ir_operation_block::emitds(enviroment.ir, ir_move, small_iterator,ir_operand::create_con(iterations));
 
         ir_operation_block::mark_label(enviroment.ir,small_label);
         ir_operation_block::emitds(enviroment.ir, ir_subtract, small_iterator,small_iterator,ir_operand::create_con(1));
@@ -121,12 +141,7 @@ void test_all(abi abi_information, int iteration)
         ir_operation_block::jump_if(enviroment.ir, small_label, small_iterator);
     }
 
-    for (int i = 0; i < register_max; ++i)
-    {
-        ir_operation_block::emitds(enviroment.ir, ir_bitwise_exclusive_or, ir_operand::create_reg(0, int64), ir_operand::create_reg(0, int64), ir_operand::create_reg(i, int64));
-    }
-
-    ir_operation_block::emits(enviroment.ir, ir_close_and_return, ir_operand::create_reg(0, int64));
+    ir_operation_block::emits(enviroment.ir, ir_close_and_return, random_reg(int64, register_max));
 
     uint64_t jit_result = test_enviroment::execute_jit(&enviroment, nullptr);
     uint64_t emulator_result = test_enviroment::execute_emulator(&enviroment, nullptr);
