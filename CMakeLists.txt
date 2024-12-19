@@ -19,4 +19,6 @@ include_directories(${PROJECT} ${SOURCE_DIRECTORY})
 
 add_executable(${PROJECT} ${SOURCES} ${HEADERS})
 
+target_link_libraries(rem PUBLIC ${LIBRARY_DIRECTORY}unicorn/libunicorn.a)
+
 set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)

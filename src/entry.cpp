@@ -3,15 +3,23 @@
 
 #include "thread"
 
+#include "testing/arm_unicorn_fuzzer.h"
+
 bool tests_running = true;
 
 void run_test_forever(int i)
 {
     while (tests_running)
     {
+        arm_unicorn_fuzzer fuzzer;
+
+        arm_unicorn_fuzzer::create(&fuzzer);
+
         test_all(get_abi(), i);
 
         ++i;
+
+        arm_unicorn_fuzzer::destroy(&fuzzer);
     }
 }
 
