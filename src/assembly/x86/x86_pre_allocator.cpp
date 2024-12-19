@@ -639,11 +639,15 @@ void x86_pre_allocator_context::run_pass(x86_pre_allocator_context* pre_allocato
 		switch (working_element->data.instruction)
 		{
 		case ir_get_argument:
+		{
 			working_element->data.instruction = ir_load; 
 			working_element->data.sources[1].value = context_size + 8;
-			; break;
-		case ir_close_and_return: 
-			working_element->data.sources[1].value = context_size; break;
+		} break;
+		
+		case ir_close_and_return:
+		{
+			working_element->data.sources[1].value = context_size; 
+		} break;
 		default: throw 0;
 		}
 	}

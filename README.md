@@ -6,7 +6,7 @@ Libraries Used:
 Road Plan:
 
     X86 Backend                         - [in progress]
-    Complete arm64 frontend             - [not started] 
+    Complete arm64 frontend             - [in progress] 
     arm64 backend                       - [some header files layed out]
     Complete riscv frontend             - [not started]
     Power PC 32                         - [not started]

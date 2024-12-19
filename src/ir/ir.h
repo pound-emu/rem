@@ -196,6 +196,7 @@ struct ir_operation_block
 	arena_allocator*									allocator;
 	intrusive_linked_list<ir_operation>*				operations;
 	uint64_t											label_index;
+	uint64_t											local_index;
 
 	static void											create(ir_operation_block** result,arena_allocator* allocator);
 	static void											create_raw_operation(arena_allocator* allocator, ir_operation* result, uint64_t instruction, int destination_count, int source_count);

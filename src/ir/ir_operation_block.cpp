@@ -17,6 +17,7 @@ void ir_operation_block::create(ir_operation_block** result,arena_allocator* all
 	create_raw_operation(allocator, &last_nop, ir_no_operation, 0, 0);
 
 	working_result->label_index = 0;
+	working_result->local_index = 0;
 
 	working_result->operations = intrusive_linked_list<ir_operation>::create(allocator, first_nop, last_nop);
 	

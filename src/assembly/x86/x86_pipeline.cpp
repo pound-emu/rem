@@ -46,6 +46,7 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 			ir_operand_meta::int128, 
 			(uint32_t)pre_allocation_data.opernad_counts[0] 
 		},
+		
 		RSP(ir_operand_meta::int64)
 	);
 
