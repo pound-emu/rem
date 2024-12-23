@@ -88,6 +88,10 @@ enum ir_instructions : uint64_t
 	x86_cdq,
 	x86_cwd,
 	x86_lea,
+
+	//Emulator Helpers
+	ir_guest_store_context,
+	ir_guest_load_context,
 };
 
 static std::string instruction_names[] = {

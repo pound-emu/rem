@@ -2,13 +2,46 @@
 #define ARM_UNICORN_FUZZER_H
 
 #include "unicorn/headers/unicorn.h"
+#include "emulator/arm64/arm64_process.h"
+
+
+struct vec128
+{
+    uint64_t d0;
+    uint64_t d1;
+
+    bool operator == (vec128 other)
+    {
+        return (d0 == other.d0) && (d1 == other.d1);
+    }
+};
+
+struct arm64_context
+{
+    uint64_t    x[32];
+    vec128      q[32];
+
+    uint64_t    memory;
+
+    uint64_t    n, z, c, v;
+};
 
 struct arm_unicorn_fuzzer
 {
-    uc_engine* uc;
+    uc_engine*              uc;
+    std::vector<uint8_t>    test_memory;
+    
+    jit_context             my_jit_context;
 
-    static void create(arm_unicorn_fuzzer* result);
-    static void destroy(arm_unicorn_fuzzer* to_destroy);
+    arm64_context           debug_arm_context;
+
+    static void             create(arm_unicorn_fuzzer* result);
+    static void             destroy(arm_unicorn_fuzzer* to_destroy);
+
+    static void             emit_guest_instruction(arm_unicorn_fuzzer* context,  uint32_t instruction);  
+    static void             validate_context(arm_unicorn_fuzzer* context);
+
+    static void             execute_code(arm_unicorn_fuzzer* context, uint64_t instruction_count);
 };
 
 #endif

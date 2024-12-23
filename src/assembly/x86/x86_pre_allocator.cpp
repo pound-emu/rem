@@ -3,24 +3,6 @@
 #include "ir/checks.h"
 #include "tools/bit_tools.h"
 
-//I'm pretty sure std::initializer_list does not allocate memory.
-static void assert_same_size(std::initializer_list<ir_operand> operands)
-{
-	int count = operands.size();
-
-	if (count == 0)
-		return;
-
-	uint64_t first_size = operands.begin()[0].meta_data & UINT32_MAX;
-
-	for (int i = 1; i < count; ++i)
-	{
-		uint64_t working_size = operands.begin()[i].meta_data & UINT32_MAX;
-
-		assert(working_size == first_size);
-	}
-}
-
 static uint64_t get_context_size(uint64_t value)
 {
 	return (value + 32) & ~0b1111ULL;

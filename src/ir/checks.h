@@ -69,4 +69,24 @@ static void assert_registers_same_type(ir_operation* operation)
 	}
 }
 
+//I'm pretty sure std::initializer_list does not allocate memory.
+static void assert_same_size(std::initializer_list<ir_operand> operands)
+{
+	//TODO in relase, this should not execute
+
+	int count = operands.size();
+
+	if (count == 0)
+		return;
+
+	uint64_t first_size = operands.begin()[0].meta_data & UINT32_MAX;
+
+	for (int i = 1; i < count; ++i)
+	{
+		uint64_t working_size = operands.begin()[i].meta_data & UINT32_MAX;
+
+		assert(working_size == first_size);
+	}
+}
+
 #endif
