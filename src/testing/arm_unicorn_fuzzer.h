@@ -2,7 +2,7 @@
 #define ARM_UNICORN_FUZZER_H
 
 #include "unicorn/headers/unicorn.h"
-#include "emulator/arm64/arm64_process.h"
+#include "emulator/aarch64/aarch64_process.h"
 
 
 struct vec128
@@ -33,13 +33,14 @@ struct arm_unicorn_fuzzer
     
     jit_context             my_jit_context;
 
-    arm64_context           debug_arm_context;
+    arm64_context           debug_arm_interpreted_function;
+    arm64_context           debug_arm_jited_function;
 
     static void             create(arm_unicorn_fuzzer* result);
     static void             destroy(arm_unicorn_fuzzer* to_destroy);
 
     static void             emit_guest_instruction(arm_unicorn_fuzzer* context,  uint32_t instruction);  
-    static void             validate_context(arm_unicorn_fuzzer* context);
+    static void             validate_context(arm_unicorn_fuzzer* context, arm64_context test);
 
     static void             execute_code(arm_unicorn_fuzzer* context, uint64_t instruction_count);
 };

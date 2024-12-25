@@ -1,4 +1,5 @@
 #include "guest_function_store.h"
+#include "ir/ir.h"
 
 guest_function guest_function_store::get_or_translate_function(guest_function_store* context, uint64_t address)
 {
@@ -30,5 +31,12 @@ guest_function guest_function_store::get_or_translate_function(guest_function_st
 
 guest_function guest_function_store::translate_function(guest_function_store* context, uint64_t address)
 {
+    arena_allocator function_allocator = arena_allocator::create(1024 * 1024 * 1024);
+    ir_operation_block* function_block;
     
+    ir_operation_block::create(&function_block, &function_allocator);
+
+    throw 0;
+
+    arena_allocator::destroy(&function_allocator);
 }
