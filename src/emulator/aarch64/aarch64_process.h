@@ -20,6 +20,8 @@ struct aarch64_process
     static void                     create(aarch64_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, aarch64_context_offsets arm_guest_data);
     static uint64_t                 jit_function(aarch64_process* process, uint64_t guest_function, void* arm_context);
     static uint64_t                 interperate_function(aarch64_process* process, uint64_t guest_function, void* arm_context);
+
+    static guest_function           translate_function(translate_request_data* data);
 };
 
 #endif

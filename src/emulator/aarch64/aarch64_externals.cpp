@@ -1,4 +1,5 @@
 #include "aarch64_impl.h"
+#include "aarch64_emit_context.h"
 
 uint64_t _x_interpreter(interpreter_data* ctx, uint64_t reg_id)
 {
@@ -46,9 +47,36 @@ void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 }
 
 
-ir_operand _x_jit(ssa_emit_context* ctx, uint64_t reg_id){ throw 0; }
-void _x_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value){ throw 0; }
+ir_operand _x_jit(ssa_emit_context* ctx, uint64_t reg_id)
+{
+    return aarch64_emit_context::get_x_raw((aarch64_emit_context*)ctx->context_data, reg_id);
+}
+
+void _x_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
+{
+    aarch64_emit_context::set_x_raw((aarch64_emit_context*)ctx->context_data, reg_id, value);
+}
+
 ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id){ throw 0; }
-void _sys_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value){ throw 0; }
-void _branch_long_jit(ssa_emit_context* ctx, ir_operand location){ throw 0; }
+
+void _sys_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    aarch64_context_offsets offsets = actx->process->guest_context_offset_data;
+    
+    switch (reg_id)
+    {
+        case 0: aarch64_emit_context::set_context_reg_raw(actx,offsets.n_offset, value); break;
+        case 1: aarch64_emit_context::set_context_reg_raw(actx,offsets.z_offset, value); break;
+        case 2: aarch64_emit_context::set_context_reg_raw(actx,offsets.c_offset, value); break;
+        case 3: aarch64_emit_context::set_context_reg_raw(actx,offsets.v_offset, value); break;
+        default: throw 0;
+    }
+}
+
+void _branch_long_jit(ssa_emit_context* ctx, ir_operand location)
+{
+    aarch64_emit_context::branch_long((aarch64_emit_context*)ctx->context_data, location);
+}
+
 uint64_t _get_pc_jit(ssa_emit_context* ctx){ throw 0; }

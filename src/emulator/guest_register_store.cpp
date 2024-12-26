@@ -7,11 +7,11 @@ void guest_register_store::create(guest_register_store* result, ssa_emit_context
     result->ssa_emit_context_context = ir;
     result->guest_context_size = guest_context_size;
 
-    result->guest_registers = (guest_register*)arena_allocator::allocate_recursive(ir->ir->allocator, guest_context_size);
+    result->guest_registers = (guest_register*)arena_allocator::allocate_recursive(ir->ir->allocator, guest_context_size * sizeof(guest_register));
 
     for (int i = 0; i < guest_context_size; ++i)
     {
-        result->guest_registers[i].is_open_guest = true;
+        result->guest_registers[i].free_guest = true;
         result->guest_registers[i].mode = none;
     }
 }
@@ -27,10 +27,10 @@ void guest_register_store::create_register(guest_register_store* guest_register_
 
     for (int i = 0; i < size; ++i)
     {
-        assert(result[i].is_open_guest);
+        assert(result[i].free_guest);
     }
 
-    result->is_open_guest = false;
+    result->free_guest = false;
     result->raw_register = ssa_emit_context::create_global(guest_register_store_context->ssa_emit_context_context, type);
 }
 
@@ -40,7 +40,7 @@ ir_operand guest_register_store::request_guest_register(guest_register_store* gu
     
     guest_register* guest_register = &guest_register_store_context->guest_registers[index];
 
-    if (!guest_register->is_open_guest)
+    if (guest_register->free_guest)
     {
         assert(false);
 
@@ -58,6 +58,13 @@ void guest_register_store::write_to_guest_register(guest_register_store* guest_r
     
     guest_register* guest_register = &guest_register_store_context->guest_registers[index];
     ir_operation_block* ir = guest_register_store_context->ssa_emit_context_context->ir;
+
+    if (guest_register->free_guest)
+    {
+        assert(false);
+
+        throw 0;
+    }
 
     ir_operand raw_register = guest_register->raw_register;
 

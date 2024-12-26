@@ -26,6 +26,19 @@ static void append_table(aarch64_process* process, std::string encoding, void* e
 	fixed_length_decoder<uint32_t>::insert_entry(&process->decoder, instruction, mask, emit, interperate);
 }
 
+template <typename T>
+int64_t sign_extend(T src) 
+{
+    switch (sizeof(T))
+    {
+        case 1: return (int8_t)src;
+        case 2: return (int16_t)src;
+        case 4: return (int32_t)src;
+    }
+
+    return src;
+}
+
 static void call_add_subtract_imm12_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int sf = (instruction >> 31) & 1;
@@ -108,17 +121,17 @@ O add_subtract_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_fl
 	}
 	if ((set_flags))
 	{
-		_sys_interpreter(ctx,0ULL,(int64_t)d < (int64_t)0ULL);
+		_sys_interpreter(ctx,0ULL,sign_extend(d) < sign_extend(0ULL));
 		_sys_interpreter(ctx,1ULL,d == 0ULL);
 		if ((is_add))
 		{
 			_sys_interpreter(ctx,2ULL,d < n);
-			_sys_interpreter(ctx,3ULL,(int64_t)((d ^ n) & ~ (n ^ m)) < (int64_t)0ULL);
+			_sys_interpreter(ctx,3ULL,sign_extend(((d ^ n) & ~ (n ^ m))) < sign_extend(0ULL));
 		}
 		else
 		{
-			_sys_interpreter(ctx,2ULL,d >= n);
-			_sys_interpreter(ctx,3ULL,(int64_t)((d ^ n) & (n ^ m)) < (int64_t)0ULL);
+			_sys_interpreter(ctx,2ULL,n >= m);
+			_sys_interpreter(ctx,3ULL,sign_extend(((d ^ n) & (n ^ m))) < sign_extend(0ULL));
 		}
 	}
 	return d;
@@ -260,7 +273,7 @@ ir_operand add_subtract_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n,
 		}
 		else
 		{
-			_sys_jit(ctx,2ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_unsigned, d, n));
+			_sys_jit(ctx,2ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_unsigned, n, m));
 			_sys_jit(ctx,3ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m)), ir_operand::create_con(0ULL, O)));
 		}
 	}
@@ -271,9 +284,9 @@ void add_subtract_imm12_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 {
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = XSP_jit(ctx,Rn);
+		ir_operand operand1 = ir_operand::copy_new_raw_size(XSP_jit(ctx,Rn), O);
 		ir_operand operand2 = ir_operand::create_con(decode_add_subtract_imm_12_jit(ctx,imm12,sh), O);
-		ir_operand d = add_subtract_impl_jit(ctx,O,operand1,operand2,S,op == 0ULL);
+		ir_operand d = ir_operand::copy_new_raw_size(add_subtract_impl_jit(ctx,O,operand1,operand2,S,op == 0ULL), O);
 		if ((S))
 		{
 			X_jit(ctx,Rd,d);
@@ -306,7 +319,7 @@ void move_wide_immediate_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, u
 	}
 	if ((sf == 0ULL))
 	{
-		result = ir_operand::copy_new_raw_size(result, int32);
+		result = ir_operand::copy_new_raw_size(ir_operand::copy_new_raw_size(result, int32), int64);
 	}
 	X_jit(ctx,Rd,result);
 }

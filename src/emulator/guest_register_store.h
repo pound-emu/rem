@@ -16,7 +16,7 @@ enum guest_usage
 
 struct guest_register
 {
-    bool        is_open_guest;
+    bool        free_guest;
     int         guest_register_offset;
     ir_operand  raw_register;
     int         mode;

@@ -9,6 +9,8 @@ struct ssa_emit_context
     uint64_t                local_top;
     uint64_t                global_bottom;
 
+    void*                   context_data;
+
     static void             create(ssa_emit_context* ctx, ir_operation_block* ir);
     static void             reset_local(ssa_emit_context* ctx);
 

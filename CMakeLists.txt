@@ -20,5 +20,7 @@ include_directories(${PROJECT} ${SOURCE_DIRECTORY})
 add_executable(${PROJECT} ${SOURCES} ${HEADERS})
 
 target_link_libraries(rem PUBLIC ${LIBRARY_DIRECTORY}unicorn/libunicorn.a)
+target_link_libraries(rem PUBLIC ${LIBRARY_DIRECTORY}capstone/libcapstone.a)
+target_link_libraries(rem PUBLIC ${LIBRARY_DIRECTORY}keystone/libkeystone.a)
 
 set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)

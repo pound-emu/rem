@@ -13,6 +13,8 @@ struct aarch64_context_offsets
     
     int exclusive_address_offset;
     int exclusive_value_offset;
+
+    int context_size;
 };
 
 #endif
