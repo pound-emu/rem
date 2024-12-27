@@ -22,9 +22,14 @@ ir_operand ssa_emit_context::create_local(ssa_emit_context* ctx, uint64_t new_si
     return ir_operand::create_reg(local_index, new_size);
 }
 
-ir_operand ssa_emit_context::emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x)
+ir_operand ssa_emit_context::emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x, uint64_t new_type)
 {
-    ir_operand result = create_local(ctx, x.meta_data);
+    if (new_type == UINT64_MAX)
+    {
+        new_type = x.meta_data;
+    }
+
+    ir_operand result = create_local(ctx, new_type);
 
     ir_operation_block::emitds(ctx->ir, instruction, result, x);
 

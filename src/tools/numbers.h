@@ -6,7 +6,7 @@
 
 static uint64_t create_random_number()
 {
-    uint64_t result ;
+    uint64_t result = 0;
 
     for (int i = 0; i < 8; ++i)
     {

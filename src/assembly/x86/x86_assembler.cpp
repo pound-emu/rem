@@ -98,6 +98,8 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 	*result_code = arena_allocator::allocate_recursive(allocator, ONE_MB);
 	Xbyak::CodeGenerator c(ONE_MB, *result_code);
 
+	c.setDefaultJmpNEAR(true);
+
 	for (auto i = source_ir->operations->first; i != source_ir->operations->last; i = i->next)
 	{
 		ir_operation	working_operation = i->data;

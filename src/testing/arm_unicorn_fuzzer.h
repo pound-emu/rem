@@ -15,6 +15,11 @@ struct vec128
     {
         return (d0 == other.d0) && (d1 == other.d1);
     }
+
+    bool operator != (vec128 other)
+    {
+        return !(*this == other);
+    }
 };
 
 struct arm64_context

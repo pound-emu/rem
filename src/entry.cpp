@@ -1,4 +1,5 @@
 #include "testing/arm_unicorn_fuzzer.h"
+#include "tools/numbers.h"
 
 #include "keystone/headers/keystone/arm64.h"
 #include "capstone/headers/capstone/capstone.h"
@@ -80,7 +81,7 @@ static void test_single_instruction(uint32_t instruction)
     if (ins == "undefined")
         return;
 
-    std::cout << "Test Passed " << ins << std::endl;
+    std::cout << "Testing " << ins << std::endl;
 
     arm_unicorn_fuzzer tester;
     arm_unicorn_fuzzer::create(&tester);
@@ -100,8 +101,10 @@ static void test_add_subtract_imm12(int seed)
 
     srand(seed);
 
-    uint32_t ins = 285212672;
-    ins |= (rand() & ~528482304);
+    uint32_t ins = 448792576;
+    ins |= (create_random_number() & ~2145449984);
+
+    bool valid;
 
     test_single_instruction(ins);
 }
@@ -110,7 +113,7 @@ int main()
 {
     int i = 0;
 
-    for (int i = 0; i < 10000; ++i)
+    for (int i = 0; i < 100000; ++i)
     {
         test_add_subtract_imm12(i++);
     }

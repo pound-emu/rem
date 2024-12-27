@@ -79,4 +79,9 @@ void _branch_long_jit(ssa_emit_context* ctx, ir_operand location)
     aarch64_emit_context::branch_long((aarch64_emit_context*)ctx->context_data, location);
 }
 
-uint64_t _get_pc_jit(ssa_emit_context* ctx){ throw 0; }
+uint64_t _get_pc_jit(ssa_emit_context* ctx)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+
+    return actx->current_instruction_address;
+}

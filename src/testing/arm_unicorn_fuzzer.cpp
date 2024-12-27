@@ -16,7 +16,7 @@ static void memrand(void* result, uint64_t size)
 
     for (int i = 0; i < size; ++i)
     {
-        ((char*)result)[i] = 0;// rand() | (rand() >> 1);
+        ((char*)result)[i] = 0;//rand() | (rand() >> 1);
     }
 }
 
@@ -35,6 +35,18 @@ static int transalte_uc_reg(int reg)
 static void reset_registers(arm_unicorn_fuzzer* ctx)
 {
     memrand(&ctx->debug_arm_interpreted_function, sizeof(arm64_context));
+
+    for (int i = 0; i < 32; ++i)
+    {
+        if (i & 1)
+        {
+            ctx->debug_arm_interpreted_function.x[i] = INT64_MIN;
+        }
+        else
+        {
+            ctx->debug_arm_interpreted_function.x[i] = 0;
+        }
+    }
 
     for (int i = 0; i < 32; ++i)
     {
@@ -90,18 +102,23 @@ void arm_unicorn_fuzzer::validate_context(arm_unicorn_fuzzer* context, arm64_con
         assert(uc_reg_read(context->uc, transalte_uc_reg(UC_ARM64_REG_X0 + i), &test_x) == UC_ERR_OK);
         assert(uc_reg_read(context->uc, UC_ARM64_REG_Q0 + i, &test_q) == UC_ERR_OK);
 
-        assert(test_x == test.x[i]);
-        assert(test_q == test.q[i]);
+        if (test_x != test.x[i])
+        {
+            std::cout << "Register " << i << " Expected " << test_x << " but got " << test.x[i] << std::endl;
+
+            throw 0;
+        }
+        if (test_q != test.q[i]) throw 0;
     }
 
     uint64_t nzcv;
 
     assert(uc_reg_read(context->uc, UC_ARM64_REG_NZCV, &nzcv) == UC_ERR_OK);
 
-    assert(((nzcv >> 31) & 1) == test.n);
-    assert(((nzcv >> 30) & 1) == test.z);
-    assert(((nzcv >> 29) & 1) == test.c);
-    assert(((nzcv >> 28) & 1) == test.v);
+    if(((nzcv >> 31) & 1) != test.n) throw 0;
+    if(((nzcv >> 30) & 1) != test.z) throw 0;
+    if(((nzcv >> 29) & 1) != test.c) throw 0;
+    if(((nzcv >> 28) & 1) != test.v) throw 0;
 }
 
 void arm_unicorn_fuzzer::execute_code(arm_unicorn_fuzzer* context, uint64_t instruction_count)

@@ -20,6 +20,8 @@ struct aarch64_emit_context
     std::unordered_map<uint64_t, ir_operand>                    basic_block_labels;
     std::unordered_set<uint64_t>                                basic_block_translate_que;
     branch_type                                                 branch_state;
+    uint64_t                                                    current_instruction_address;
+    uint32_t                                                    current_raw_instruction;
 
     guest_register_store                                        registers;
     std::vector<intrusive_linked_list_element<ir_operation>*>   context_movement;    

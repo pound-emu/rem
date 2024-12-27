@@ -16,7 +16,7 @@ struct ssa_emit_context
 
     static ir_operand       create_local(ssa_emit_context* ctx, uint64_t new_size);
     static ir_operand       create_global(ssa_emit_context* ctx, uint64_t new_size);
-    static ir_operand       emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x);
+    static ir_operand       emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x, uint64_t new_type = UINT64_MAX);
     static ir_operand       emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x, ir_operand y);
     static ir_operand       emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x, ir_operand y, ir_operand z);
     static ir_operand       to_con(ssa_emit_context* ctx, uint64_t source);

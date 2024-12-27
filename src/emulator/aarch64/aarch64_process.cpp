@@ -94,6 +94,9 @@ guest_function aarch64_process::translate_function(translate_request_data* data)
 
                 ssa_emit_context::reset_local(&ssa_emit);
 
+                aarch64_emit.current_instruction_address = working_address;
+                aarch64_emit.current_raw_instruction = raw_instruction;
+
                 ((void(*)(ssa_emit_context*, uint32_t))instruction_table->emit)(&ssa_emit, raw_instruction);
 
                 if (aarch64_emit.branch_state == no_branch)

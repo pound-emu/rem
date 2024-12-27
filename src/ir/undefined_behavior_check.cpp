@@ -7,10 +7,12 @@ static ir_operand create_register(std::unordered_set<uint64_t>* used_operands, u
     {
         if (used_operands->find(*top) != used_operands->end())
         {
-            --*top;   
+            *top = *top - 1;
 
             continue;
         }
+
+        used_operands->insert(*top);
 
         return ir_operand::create_reg(*top, new_size);
     }
@@ -20,13 +22,15 @@ void run_undefined_behavior_check_pass(ir_operation_block* ir, ir_operation_bloc
 {
     std::unordered_set<uint64_t> used_operands;
 
+    ir_operation_block::clamp_operands(ir, false);
+
     ir_operation_block::get_used_registers(&used_operands, source);
+
+    uint64_t top = UINT64_MAX;
 
     for (auto i = source->operations->first->next; i != nullptr; i = i->next)
     {
         ir_operation working_operation = i->data;
-
-        uint64_t top = UINT64_MAX;
 
         ir_operand* destinations = working_operation.destinations.data;
         ir_operand* sources = working_operation.sources.data;
