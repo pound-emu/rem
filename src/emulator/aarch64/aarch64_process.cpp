@@ -117,6 +117,8 @@ guest_function aarch64_process::translate_function(translate_request_data* data)
 
     aarch64_emit_context::emit_context_movement(&aarch64_emit);
 
+    //ir_operation_block::log(raw_ir);
+
     void* code = jit_context::compile_code(process->host_jit_context, raw_ir, compiler_flags::check_undefined_behavior);
 
     guest_function result;

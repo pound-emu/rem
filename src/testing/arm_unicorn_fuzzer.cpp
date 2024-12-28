@@ -16,7 +16,7 @@ static void memrand(void* result, uint64_t size)
 
     for (int i = 0; i < size; ++i)
     {
-        ((char*)result)[i] = 0;//rand() | (rand() >> 1);
+        ((char*)result)[i] = rand() | (rand() >> 1);
     }
 }
 
@@ -38,14 +38,7 @@ static void reset_registers(arm_unicorn_fuzzer* ctx)
 
     for (int i = 0; i < 32; ++i)
     {
-        if (i & 1)
-        {
-            ctx->debug_arm_interpreted_function.x[i] = INT64_MIN;
-        }
-        else
-        {
-            ctx->debug_arm_interpreted_function.x[i] = 0;
-        }
+        ctx->debug_arm_interpreted_function.x[i] = i;
     }
 
     for (int i = 0; i < 32; ++i)

@@ -493,6 +493,7 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case ir_bitwise_not:
 		case ir_incrament: 
 		case ir_negate:
+		case ir_logical_not:
 		{
 			assert_operand_count(operation, 1, 1);
 			assert_is_register(operation->destinations[0]);

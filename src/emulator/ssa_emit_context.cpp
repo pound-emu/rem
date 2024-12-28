@@ -62,3 +62,15 @@ void ssa_emit_context::reset_local(ssa_emit_context* ctx)
 {
     ctx->local_top = 0;
 }
+
+void ssa_emit_context::move(ssa_emit_context* ctx, ir_operand result, ir_operand source)
+{
+    assert_same_size({result, source});
+
+    if (ir_operand::is_constant(&result))
+    {
+        throw 0;
+    }
+
+    ir_operation_block::emitds(ctx->ir, ir_move, result, source);
+}

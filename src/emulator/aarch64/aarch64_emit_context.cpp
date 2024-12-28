@@ -121,3 +121,8 @@ void aarch64_emit_context::set_context_reg_raw(aarch64_emit_context* ctx, int in
 {
     guest_register_store::write_to_guest_register(&ctx->registers, index, value);
 }
+
+ir_operand aarch64_emit_context::get_context_reg_raw(aarch64_emit_context* ctx, int index)
+{
+    return guest_register_store::request_guest_register(&ctx->registers, index);
+}

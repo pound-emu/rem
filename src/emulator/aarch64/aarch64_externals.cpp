@@ -30,7 +30,21 @@ uint64_t _get_pc_interpreter(interpreter_data* ctx)
     return ctx->current_pc;
 }
 
-uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id){ throw 0; }
+void undefined_interpreter(interpreter_data* ctx){throw 0;};
+
+uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id)
+{
+    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+
+    switch (reg_id)
+    {
+        case 0: return *(uint64_t*)((char*)ctx->register_data + offsets->n_offset) & 1;break;
+        case 1: return *(uint64_t*)((char*)ctx->register_data + offsets->z_offset) & 1;break;
+        case 2: return *(uint64_t*)((char*)ctx->register_data + offsets->c_offset) & 1;break;
+        case 3: return *(uint64_t*)((char*)ctx->register_data + offsets->v_offset) & 1;break;
+        default: throw 0;
+    }
+}
 
 void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 {
@@ -57,7 +71,20 @@ void _x_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
     aarch64_emit_context::set_x_raw((aarch64_emit_context*)ctx->context_data, reg_id, value);
 }
 
-ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id){ throw 0; }
+ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    aarch64_context_offsets offsets = actx->process->guest_context_offset_data;
+
+    switch (reg_id)
+    {
+        case 0: return aarch64_emit_context::get_context_reg_raw(actx,offsets.n_offset); break;
+        case 1: return aarch64_emit_context::get_context_reg_raw(actx,offsets.z_offset); break;
+        case 2: return aarch64_emit_context::get_context_reg_raw(actx,offsets.c_offset); break;
+        case 3: return aarch64_emit_context::get_context_reg_raw(actx,offsets.v_offset); break;
+        default: throw 0;
+    }
+}
 
 void _sys_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
 {
@@ -85,3 +112,5 @@ uint64_t _get_pc_jit(ssa_emit_context* ctx)
 
     return actx->current_instruction_address;
 }
+
+void undefined_jit(ssa_emit_context* ctx){throw 0;};

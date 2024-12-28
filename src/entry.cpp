@@ -94,15 +94,15 @@ static void test_single_instruction(uint32_t instruction)
     arm_unicorn_fuzzer::destroy(&tester);
 }
 
-static void test_add_subtract_imm12(int seed)
+static void test_random_instruction(int seed, int instruction, int mask)
 {
     //ins 285212672
 	//mask 528482304
 
     srand(seed);
 
-    uint32_t ins = 448792576;
-    ins |= (create_random_number() & ~2145449984);
+    uint32_t ins = instruction;
+    ins |= (create_random_number() & ~mask);
 
     bool valid;
 
@@ -112,11 +112,38 @@ static void test_add_subtract_imm12(int seed)
 int main()
 {
     int i = 0;
+    
+    aarch64_process p;
+    aarch64_process::create(&p, {}, nullptr, {});
 
-    for (int i = 0; i < 100000; ++i)
+    auto table = fixed_length_decoder<uint32_t>::get_table_by_name(&p.decoder, "add_subtract_carry");
+
+    //bool valid;
+    //test_single_instruction(assemble_instruction("and x19, x16, #0xaaaaaaaaaaaaaaaa", &valid));
+
+    if (true)
     {
-        test_add_subtract_imm12(i++);
+        for (int i = 0; i < 100000; ++i)
+        {
+            for (int i = 0; i < p.decoder.entries.size(); ++i)
+            {
+                auto entry = p.decoder.entries[i];
+
+                test_random_instruction(i++, entry.instruction, entry.mask);
+            }
+        }
     }
+    else
+    {
+        auto entry = table;
+
+        for (int i = 0; i < 100000; ++i)
+        {
+            test_random_instruction(i++, entry.instruction, entry.mask);
+        }
+    }
+
+    std::cout << "Every instruction tested is valid " << std::endl;
 
     ks_close(ks);
     cs_close(&cs);

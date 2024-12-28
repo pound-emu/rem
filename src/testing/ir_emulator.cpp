@@ -6,37 +6,6 @@
 
 #define GENERIC_TEMPLATE tenplate<typename T>
 
-template <typename T>
-static void sign_extend_bottom(big_number<T, 2>* working)
-{
-    int top_bit = (sizeof(T) * 8) - 1;
-
-    bool bit = working->buffer[0] >> top_bit;
-
-    if (bit)
-    {
-        working->buffer[1] = -1;
-    }
-}
-
-template <typename T>
-static void multiply_hi(T* top, T* bottom, T x, T y, bool is_signed)
-{
-    big_number<T, 2> wx = x;
-    big_number<T, 2> wy = y;
-
-    if (is_signed)
-    {
-        sign_extend_bottom(&wx);
-        sign_extend_bottom(&wy);
-    }
-
-    big_number<T, 2> r = wx * wy;
-
-    *top = r.buffer[1];
-    *bottom = r.buffer[0];
-}
-
 static void init_ir_emulator_context(ir_emulator* ir_emulator_context, ir_operation_block* to_execute, uint64_t* arguments)
 {
     ir_emulator_context->working_registers = std::unordered_map<uint64_t, uint64_t>();

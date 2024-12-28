@@ -39,6 +39,7 @@ struct aarch64_emit_context
     static ir_operand                                           get_x_raw(aarch64_emit_context* ctx, int index);
     static void                                                 set_x_raw(aarch64_emit_context* ctx, int index, ir_operand value);
     static void                                                 set_context_reg_raw(aarch64_emit_context* ctx, int index, ir_operand value);
+    static ir_operand                                           get_context_reg_raw(aarch64_emit_context* ctx, int index);
 };
 
 #endif

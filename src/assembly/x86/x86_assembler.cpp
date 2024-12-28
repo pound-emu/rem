@@ -120,6 +120,13 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		case ir_multiply_hi_signed:			c.imul(create_operand(working_operation.sources[1])); 		assert_valid_mul_div_operation(&working_operation);	break;
 		case ir_multiply_hi_unsigned:		c.mul(create_operand(working_operation.sources[1])); 		assert_valid_mul_div_operation(&working_operation);	break;
 
+		case ir_logical_not:
+			c.not_(create_operand(working_operation.destinations[0])); 	
+			c.and_(create_operand(working_operation.destinations[0]), 1); 	
+			
+			assert_valid_unary_operation(&working_operation); 	
+		break;
+
 		case ir_mark_label:
 		{
 			if (working_operation.sources.count == 0)

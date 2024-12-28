@@ -49,6 +49,7 @@ enum ir_instructions : uint64_t
 	ir_move,
 	ir_negate,
 	ir_sign_extend, 
+	ir_logical_not,
 
 	ir_unary_end,
 
