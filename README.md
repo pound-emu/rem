@@ -40,8 +40,6 @@ Road Plan:
                                                 - Not started
                                             - Data Processing -- Scalar Floating-Point and Advanced SIMD
                                                 - Not Started
-                                            
-
     arm64 backend                       - [not started]
     Complete riscv frontend             - [not started]
     Power PC 32                         - [not started]
