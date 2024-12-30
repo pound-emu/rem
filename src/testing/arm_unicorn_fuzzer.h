@@ -51,4 +51,42 @@ struct arm_unicorn_fuzzer
     static void             execute_code(arm_unicorn_fuzzer* context, uint64_t instruction_count);
 };
 
+static bool skip_uneeded;
+
+static bool skip_instruction(uint32_t instruction, bool check_uniqe = false)
+{
+    if (!skip_uneeded && !check_uniqe)
+        return false;
+
+    if (((instruction >> 25) & 0b101) == 0b100)
+        return true;
+
+    if (((instruction >> 26) & 0b111) == 0b101)
+        return true;
+
+    return false;
+}
+
+static bool is_valid_instruction(uint32_t instruction)
+{
+    //ldp stp undefined behavior
+    if (((instruction >> 22) & 0b11111001) == 0b10100001)
+    {
+        int t2 = (instruction >> 10) & 31;
+        int n = (instruction >> 5) & 31;
+        int t = (instruction & 31);
+
+        if ((instruction >> 26) & 1)
+            return true;
+
+        if (n == 31)
+            return true;
+
+        if (n == t2 || n == t || t2 == t)
+            return false;
+    }
+
+    return true;
+}
+
 #endif

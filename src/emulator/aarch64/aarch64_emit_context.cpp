@@ -77,7 +77,7 @@ void aarch64_emit_context::emit_context_movement(aarch64_emit_context* ctx)
             if (working_register->free_guest)
                 continue;
 
-            if (working_register->mode == guest_usage::none)
+            if (working_register->mode == guest_usage::guest_usage_none)
                 continue;
 
             if (i->data.instruction == ir_guest_load_context)
@@ -101,6 +101,13 @@ static int get_x_location(aarch64_emit_context* ctx, int index)
     return x_location;
 }
 
+static int get_v_location(aarch64_emit_context* ctx, int index)
+{
+    int v_location = ctx->process->guest_context_offset_data.q_offset + (index * 16);
+
+    return v_location;
+}
+
 ir_operand aarch64_emit_context::get_x_raw(aarch64_emit_context* ctx, int index)
 {
     assert(index >= 0 && index <= 31);
@@ -115,6 +122,22 @@ void aarch64_emit_context::set_x_raw(aarch64_emit_context* ctx, int index, ir_op
     assert(index >= 0 && index <= 31);
 
     guest_register_store::write_to_guest_register(&ctx->registers, get_x_location(ctx, index), value);
+}
+
+ir_operand aarch64_emit_context::get_v_raw(aarch64_emit_context* ctx, int index)
+{
+    assert(index >= 0 && index <= 31);
+
+    ir_operand result = guest_register_store::request_guest_register(&ctx->registers,get_v_location(ctx, index));
+
+    return result;
+}
+
+void aarch64_emit_context::set_v_raw(aarch64_emit_context* ctx, int index, ir_operand value)
+{
+    assert(index >= 0 && index <= 31);
+
+    guest_register_store::write_to_guest_register(&ctx->registers, get_v_location(ctx, index), value);
 }
 
 void aarch64_emit_context::set_context_reg_raw(aarch64_emit_context* ctx, int index, ir_operand value)

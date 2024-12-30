@@ -22,6 +22,15 @@ ir_operand ssa_emit_context::create_local(ssa_emit_context* ctx, uint64_t new_si
     return ir_operand::create_reg(local_index, new_size);
 }
 
+ir_operand ssa_emit_context::emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, uint64_t new_type)
+{
+    ir_operand result = create_local(ctx, new_type);
+
+    ir_operation_block::emitds(ctx->ir, instruction, result);
+
+    return result;
+}
+
 ir_operand ssa_emit_context::emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x, uint64_t new_type)
 {
     if (new_type == UINT64_MAX)
@@ -73,4 +82,9 @@ void ssa_emit_context::move(ssa_emit_context* ctx, ir_operand result, ir_operand
     }
 
     ir_operation_block::emitds(ctx->ir, ir_move, result, source);
+}
+
+void ssa_emit_context::store(ssa_emit_context* ctx, ir_operand physical_address, ir_operand value)
+{
+    ir_operation_block::emits(ctx->ir, ir_store, physical_address, value);
 }

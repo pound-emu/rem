@@ -60,6 +60,8 @@ ir_operand ir_operand::create_con(uint64_t value, uint64_t size)
 	result.value = value & get_mask_from_size(size);
 	result.meta_data = size | ir_operand_meta::is_constant;
 
+	assert(!ir_operand::is_vector(&result));
+
 	return result;
 }
 
@@ -87,6 +89,12 @@ ir_operand ir_operand::copy_new_raw_size(ir_operand source, uint64_t new_size)
 {
 	if (new_size & UINT32_MAX == source.meta_data & UINT32_MAX)
 		return source;
+
+	if (ir_operand::is_vector(&source) != ((new_size & UINT32_MAX) >= int128))
+	{
+		assert(false);
+		throw 0;
+	}
 
 	source.meta_data = (new_size & UINT32_MAX) | (source.meta_data & ~(uint64_t)UINT32_MAX);
 

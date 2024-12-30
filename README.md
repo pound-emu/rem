@@ -10,34 +10,42 @@ Road Plan:
 
     X86 Backend                         - [in progress]
     Complete arm64 frontend             - [in progress] 
+                                            [X] - Complete implementation
+                                            [ ] - Incomplete implementation
                                             - Data Processing immediate
-                                                - PC-rel. addressing                    [X]
-                                                - Add/subtract (immediate)              [X]
-                                                - Add/subtract (immediate, with tags)   [ ]
-                                                - Min/max (immediate)                   [X]
-                                                - Logical (immediate)                   [X]
-                                                - Move wide (immediate)                 [X]
-                                                - Bitfield                              [X]
-                                                - Extract                               [X]
+                                                - PC-rel. addressing                            [X]
+                                                - Add/subtract (immediate)                      [X]
+                                                - Add/subtract (immediate, with tags)           [ ]
+                                                - Min/max (immediate)                           [X]
+                                                - Logical (immediate)                           [X]
+                                                - Move wide (immediate)                         [X]
+                                                - Bitfield                                      [X]
+                                                - Extract                                       [X]
                                             - Data Processing -- Register
-                                                - Data-processing (2 source)            [ ]
-                                                - Data-processing (1 source)            [ ]
-                                                - Logical (shifted register)            [X]
-                                                - Add/subtract (shifted register)       [X]
-                                                - Add/subtract (extended register)      [X]
-                                                - Add/subtract (with carry)             [X]
-                                                - Add/subtract (checked pointer)        [ ]
-                                                - Rotate right into flags               [ ]
-                                                - Evaluate into flags                   [ ]
-                                                - Conditional compare (register)        [X]
-                                                - Conditional compare (immediate)       [X]
-                                                - Conditional select                    [X]
-                                                - Data-processing (3 source)            [ ]
+                                                - Data-processing (2 source)                    [ ]
+                                                - Data-processing (1 source)                    [ ]
+                                                - Logical (shifted register)                    [X]
+                                                - Add/subtract (shifted register)               [X]
+                                                - Add/subtract (extended register)              [X]
+                                                - Add/subtract (with carry)                     [X]
+                                                - Add/subtract (checked pointer)                [ ]
+                                                - Rotate right into flags                       [ ]
+                                                - Evaluate into flags                           [ ]
+                                                - Conditional compare (register)                [X]
+                                                - Conditional compare (immediate)               [X]
+                                                - Conditional select                            [X]
+                                                - Data-processing (3 source)                    [ ]
                                                 All the base instructions have been implamented. Limited support for extensions.
                                             - Branches, Exception Generating and System instructions
                                                 - Only implamented instruction is BR
                                             - Loads and Stores
-                                                - Not started
+                                                - Load/store register pair (post-indexed)       [X]
+                                                - Load/store register pair (pre-indexed)        [X]
+                                                - Load/store register pair (offset)             [X]
+                                                - Load/store register (unscaled immediate)      [X]
+                                                - Load/store register (immediate post-indexed)  [X]
+                                                - Load/store register (immediate pre-indexed)   [X]
+                                                - Load/store register (unsigned immediate)      [X]
                                             - Data Processing -- Scalar Floating-Point and Advanced SIMD
                                                 - Not Started
     arm64 backend                       - [not started]

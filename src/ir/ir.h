@@ -80,6 +80,11 @@ enum ir_instructions : uint64_t
 	ir_register_allocator_p_lock,
 	ir_register_allocator_p_unlock,
 
+	//Vectors
+	ir_vector_extract,
+	ir_vector_insert,
+	ir_vector_zero,
+
 	//Asserts
 	ir_assert_false,
 	ir_assert_true,
@@ -97,6 +102,7 @@ enum ir_instructions : uint64_t
 
 static std::string instruction_names[] = {
 	"ir_binary_start",
+
 	"ir_add",
 	"ir_bitwise_and",
 	"ir_bitwise_exclusive_or",
@@ -121,35 +127,54 @@ static std::string instruction_names[] = {
 	"ir_shift_right_signed",
 	"ir_shift_right_unsigned",
 	"ir_subtract",
+
 	"ir_binary_end",
+
 	"ir_unary_start",
+
 	"ir_bitwise_not",
 	"ir_incrament",
 	"ir_move",
 	"ir_negate",
 	"ir_sign_extend", 
+	"ir_logical_not",
+
 	"ir_unary_end",
+
 	"ir_ternary_begin",
+
 	"ir_conditional_select",
 	"ir_double_shift_right",
+
 	"ir_ternary_end",
+
 	"ir_jump_if",
 	"ir_mark_label",
+
 	"ir_close_and_return",
 	"ir_compare_and_swap",
 	"ir_get_argument",
+
 	"ir_load",
 	"ir_store",
+
 	"ir_no_operation",
 	"ir_open_context",
 	"ir_register_allocator_p_lock",
 	"ir_register_allocator_p_unlock",
+
+	"ir_vector_extract",
+	"ir_vector_insert",
+	"ir_vector_zero",
+
 	"ir_assert_false",
 	"ir_assert_true",
+
 	"x86_cqo",
 	"x86_cdq",
 	"x86_cwd",
 	"x86_lea",
+
 	"ir_guest_store_context",
 	"ir_guest_load_context",
 };

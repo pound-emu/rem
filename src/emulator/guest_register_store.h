@@ -8,10 +8,10 @@ struct ssa_emit_context;
 
 enum guest_usage
 {
-    none        = 0,
-    read        = 1 << 0,
-    write       = 1 << 1,
-    read_write  = read | write
+    guest_usage_none    = 0,
+    guest_usage_read    = 1 << 0,
+    guest_usage_write   = 1 << 1,
+    //read_write          = guest_usage_read | guest_usage_write
 };
 
 struct guest_register

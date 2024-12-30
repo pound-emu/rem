@@ -1,4 +1,6 @@
 #include "arm_unicorn_fuzzer.h"
+#include "emulator/ssa_emit_context.h"
+#include "tools/numbers.h"
 
 static void* base_plus_va(void* context, uint64_t virtual_address)
 {
@@ -7,12 +9,14 @@ static void* base_plus_va(void* context, uint64_t virtual_address)
 
 static void base_plus_va_jit(void* memory, ssa_emit_context* ir, ir_operand destination, ir_operand source)
 {
-    throw 0;
+    ir_operation_block* ctx = ir->ir;
+
+    ir_operation_block::emitds(ctx, ir_add, destination, ir_operand::create_con((uint64_t)memory), source);
 }
 
 static void memrand(void* result, uint64_t size)
 {
-    srand(size);
+    //srand(size);
 
     for (int i = 0; i < size; ++i)
     {
@@ -32,13 +36,16 @@ static int transalte_uc_reg(int reg)
     return reg;
 }
 
-static void reset_registers(arm_unicorn_fuzzer* ctx)
+static void reset_registers(arm_unicorn_fuzzer* ctx, bool random)
 {
     memrand(&ctx->debug_arm_interpreted_function, sizeof(arm64_context));
 
-    for (int i = 0; i < 32; ++i)
+    if (!random)
     {
-        ctx->debug_arm_interpreted_function.x[i] = i;
+        for (int i = 0; i < 32; ++i)
+        {
+            ctx->debug_arm_interpreted_function.x[i] = (1 << 16) + i;
+        } 
     }
 
     for (int i = 0; i < 32; ++i)
@@ -116,20 +123,21 @@ void arm_unicorn_fuzzer::validate_context(arm_unicorn_fuzzer* context, arm64_con
 
 void arm_unicorn_fuzzer::execute_code(arm_unicorn_fuzzer* context, uint64_t instruction_count)
 {
-    srand(0);
-
-    reset_registers(context);
-
-    while (context->test_memory.size() & 4095)
+    while (context->test_memory.size() & (1 << 17) - 1)
     {
-        context->test_memory.push_back(rand());
+        context->test_memory.push_back(create_random_number());
     }
 
     std::vector<uint8_t> unicorn_memory = context->test_memory;
-    std::vector<uint8_t> my_memory = context->test_memory;
+    std::vector<uint8_t> interpreter_memory = context->test_memory;
+    std::vector<uint8_t> jit_memory = context->test_memory;
+
+    int ins = *(int*)unicorn_memory.data();
+
+    reset_registers(context, !skip_instruction(ins, true));
 
     aarch64_process my_process;
-    aarch64_process::create(&my_process, {my_memory.data(), base_plus_va, base_plus_va_jit},&context->my_jit_context,
+    aarch64_process::create(&my_process, {interpreter_memory.data(), base_plus_va, base_plus_va_jit},&context->my_jit_context,
         {
             offsetof(arm64_context, arm64_context::x),
             offsetof(arm64_context, arm64_context::q),
@@ -146,13 +154,24 @@ void arm_unicorn_fuzzer::execute_code(arm_unicorn_fuzzer* context, uint64_t inst
         }
     );
 
-    assert(uc_mem_map_ptr(context->uc, 0, unicorn_memory.size(), UC_PROT_ALL, my_memory.data()) == UC_ERR_OK);
+    assert(uc_mem_map_ptr(context->uc, 0, unicorn_memory.size(), UC_PROT_ALL, unicorn_memory.data()) == UC_ERR_OK);
 
     if (uc_emu_start(context->uc,0, -1, -1, instruction_count) != UC_ERR_OK) {throw 0;}
 
     aarch64_process::interperate_function(&my_process, 0, &context->debug_arm_interpreted_function);
     validate_context(context, context->debug_arm_interpreted_function);
 
+    my_process.guest_memory_context.base = jit_memory.data();
+
     aarch64_process::jit_function(&my_process, 0, &context->debug_arm_jited_function);
     validate_context(context, context->debug_arm_jited_function);
+
+    if (((ins >> 25) & 0b101) == 0b100)
+    {
+        for (int i = 0; i < unicorn_memory.size(); ++i)
+        {
+            assert(unicorn_memory[i] == interpreter_memory[i]);
+            assert(unicorn_memory[i] == jit_memory[i]);
+        }
+    }
 }

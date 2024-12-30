@@ -28,6 +28,11 @@ static void assert_all_registers(ir_operand* operands, int count)
 	}
 }
 
+static void assert_is_size(ir_operand operand, int size)
+{
+	assert(ir_operand::get_raw_size(&operand) == size);
+}
+
 static void assert_all_registers(ir_operation* operation)
 {
 	assert_all_registers(operation->destinations.data, operation->destinations.count);

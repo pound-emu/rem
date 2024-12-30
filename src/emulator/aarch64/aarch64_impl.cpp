@@ -48,6 +48,42 @@ T rotate_right(T src, int ammount)
 	return (src >> ammount)|(src << (INT_BITS - ammount));
 }
 
+static ir_operand copy_new_raw_size(ssa_emit_context* ctx, ir_operand source, uint64_t new_size)
+{
+	bool div = new_size >= int128;
+	bool siv = ir_operand::is_vector(&source);
+
+	if (div == siv)
+	{
+		if (new_size >= ir_operand::get_raw_size(&source))
+		{
+			return source;
+		} 
+		else
+		{
+			source = ir_operand::copy_new_raw_size(source, new_size);
+
+			return ssa_emit_context::emit_ssa(ctx, ir_move, source);
+		}
+	}
+	else if (div && !siv)
+	{	
+		ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_vector_zero, int128);
+
+		ir_operation_block::emitds(ctx->ir, ir_vector_insert, result, result, source, ir_operand::create_con(0), ir_operand::create_con(64));
+
+		return result;
+	}
+	else
+	{
+		ir_operand result = ssa_emit_context::create_local(ctx, new_size);
+		
+		ir_operation_block::emitds(ctx->ir, ir_vector_extract, result, source, ir_operand::create_con(0), ir_operand::create_con(64));
+
+		return result;
+	}
+}
+
 static void call_add_subtract_imm12_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int sf = (instruction >> 31) & 1;
@@ -502,6 +538,166 @@ static void emit_pc_rel_addressing_jit(ssa_emit_context* ctx, uint32_t instructi
 	pc_rel_addressing_jit(ctx, op, immlo, immhi, Rd);
 }
 
+static void call_load_store_register_post_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int imm9 = (instruction >> 12) & 511;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_post_interpreter(ctx, size, VR, opc, imm9, Rn, Rt);
+}
+
+static void emit_load_store_register_post_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int imm9 = (instruction >> 12) & 511;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_post_jit(ctx, size, VR, opc, imm9, Rn, Rt);
+}
+
+static void call_load_store_register_pre_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int imm9 = (instruction >> 12) & 511;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_pre_interpreter(ctx, size, VR, opc, imm9, Rn, Rt);
+}
+
+static void emit_load_store_register_pre_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int imm9 = (instruction >> 12) & 511;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_pre_jit(ctx, size, VR, opc, imm9, Rn, Rt);
+}
+
+static void call_load_store_register_unscaled_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int imm9 = (instruction >> 12) & 511;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_unscaled_interpreter(ctx, size, VR, opc, imm9, Rn, Rt);
+}
+
+static void emit_load_store_register_unscaled_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int imm9 = (instruction >> 12) & 511;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_unscaled_jit(ctx, size, VR, opc, imm9, Rn, Rt);
+}
+
+static void call_load_store_register_pair_imm_offset_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int opc = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int L = (instruction >> 22) & 1;
+	int imm7 = (instruction >> 15) & 127;
+	int Rt2 = (instruction >> 10) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_pair_imm_offset_interpreter(ctx, opc, VR, L, imm7, Rt2, Rn, Rt);
+}
+
+static void emit_load_store_register_pair_imm_offset_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int opc = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int L = (instruction >> 22) & 1;
+	int imm7 = (instruction >> 15) & 127;
+	int Rt2 = (instruction >> 10) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_pair_imm_offset_jit(ctx, opc, VR, L, imm7, Rt2, Rn, Rt);
+}
+
+static void call_load_store_register_pair_imm_post_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int opc = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int L = (instruction >> 22) & 1;
+	int imm7 = (instruction >> 15) & 127;
+	int Rt2 = (instruction >> 10) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_pair_imm_post_interpreter(ctx, opc, VR, L, imm7, Rt2, Rn, Rt);
+}
+
+static void emit_load_store_register_pair_imm_post_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int opc = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int L = (instruction >> 22) & 1;
+	int imm7 = (instruction >> 15) & 127;
+	int Rt2 = (instruction >> 10) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_pair_imm_post_jit(ctx, opc, VR, L, imm7, Rt2, Rn, Rt);
+}
+
+static void call_load_store_register_pair_imm_pre_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int opc = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int L = (instruction >> 22) & 1;
+	int imm7 = (instruction >> 15) & 127;
+	int Rt2 = (instruction >> 10) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_pair_imm_pre_interpreter(ctx, opc, VR, L, imm7, Rt2, Rn, Rt);
+}
+
+static void emit_load_store_register_pair_imm_pre_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int opc = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int L = (instruction >> 22) & 1;
+	int imm7 = (instruction >> 15) & 127;
+	int Rt2 = (instruction >> 10) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_pair_imm_pre_jit(ctx, opc, VR, L, imm7, Rt2, Rn, Rt);
+}
+
+static void call_load_store_register_imm_unsigned_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int imm12 = (instruction >> 10) & 4095;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_imm_unsigned_interpreter(ctx, size, VR, opc, imm12, Rn, Rt);
+}
+
+static void emit_load_store_register_imm_unsigned_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int imm12 = (instruction >> 10) & 4095;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_imm_unsigned_jit(ctx, size, VR, opc, imm12, Rn, Rt);
+}
+
 static void call_br_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int Rn = (instruction >> 5) & 31;
@@ -537,6 +733,13 @@ void init_aarch64_decoder(aarch64_process* process)
 	append_table(process, "--111010010----------0-----0----", (void*)emit_conditional_compare_jit, (void*)call_conditional_compare_interpreter, "conditional_compare");
 	append_table(process, "---100101-----------------------", (void*)emit_move_wide_immediate_jit, (void*)call_move_wide_immediate_interpreter, "move_wide_immediate");
 	append_table(process, "---10000------------------------", (void*)emit_pc_rel_addressing_jit, (void*)call_pc_rel_addressing_interpreter, "pc_rel_addressing");
+	append_table(process, "--111-00--0---------01----------", (void*)emit_load_store_register_post_jit, (void*)call_load_store_register_post_interpreter, "load_store_register_post");
+	append_table(process, "--111-00--0---------11----------", (void*)emit_load_store_register_pre_jit, (void*)call_load_store_register_pre_interpreter, "load_store_register_pre");
+	append_table(process, "--111-00--0---------00----------", (void*)emit_load_store_register_unscaled_jit, (void*)call_load_store_register_unscaled_interpreter, "load_store_register_unscaled");
+	append_table(process, "--101-010-----------------------", (void*)emit_load_store_register_pair_imm_offset_jit, (void*)call_load_store_register_pair_imm_offset_interpreter, "load_store_register_pair_imm_offset");
+	append_table(process, "--101-001-----------------------", (void*)emit_load_store_register_pair_imm_post_jit, (void*)call_load_store_register_pair_imm_post_interpreter, "load_store_register_pair_imm_post");
+	append_table(process, "--101-011-----------------------", (void*)emit_load_store_register_pair_imm_pre_jit, (void*)call_load_store_register_pair_imm_pre_interpreter, "load_store_register_pair_imm_pre");
+	append_table(process, "--111-01------------------------", (void*)emit_load_store_register_imm_unsigned_jit, (void*)call_load_store_register_imm_unsigned_interpreter, "load_store_register_imm_unsigned");
 	append_table(process, "1101011000011111000000-----00000", (void*)emit_br_jit, (void*)call_br_interpreter, "br");
 }
 
@@ -549,11 +752,11 @@ void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 		uint32_t d = add_subtract_impl_interpreter<uint32_t>(ctx,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL));
 		if ((S))
 		{
-			X_interpreter(ctx,Rd,d);
+			X_interpreter(ctx,Rd,(uint64_t)d);
 		}
 		else
 		{
-			XSP_interpreter(ctx,Rd,d);
+			XSP_interpreter(ctx,Rd,(uint64_t)d);
 		}
 	}
 	if (sf == 1ULL)
@@ -563,11 +766,11 @@ void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 		uint64_t d = add_subtract_impl_interpreter<uint64_t>(ctx,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL));
 		if ((S))
 		{
-			X_interpreter(ctx,Rd,d);
+			X_interpreter(ctx,Rd,(uint64_t)d);
 		}
 		else
 		{
-			XSP_interpreter(ctx,Rd,d);
+			XSP_interpreter(ctx,Rd,(uint64_t)d);
 		}
 	}
 	
@@ -581,14 +784,14 @@ void add_subtract_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64
 		uint32_t operand1 = X_interpreter(ctx,Rn);
 		uint32_t operand2 = a_shift_reg_interpreter<uint32_t>(ctx,Rm,shift,shift_ammount);
 		uint32_t result = add_subtract_impl_interpreter<uint32_t>(ctx,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL));
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
 		uint64_t operand1 = X_interpreter(ctx,Rn);
 		uint64_t operand2 = a_shift_reg_interpreter<uint64_t>(ctx,Rm,shift,shift_ammount);
 		uint64_t result = add_subtract_impl_interpreter<uint64_t>(ctx,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL));
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -604,11 +807,11 @@ void add_subtract_extended_interpreter(interpreter_data* ctx, uint64_t sf, uint6
 		uint32_t result = add_subtract_impl_interpreter<uint32_t>(ctx,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL));
 		if ((S))
 		{
-			X_interpreter(ctx,Rd,result);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		else
 		{
-			XSP_interpreter(ctx,Rd,result);
+			XSP_interpreter(ctx,Rd,(uint64_t)result);
 		}
 	}
 	if (sf == 1ULL)
@@ -620,11 +823,11 @@ void add_subtract_extended_interpreter(interpreter_data* ctx, uint64_t sf, uint6
 		uint64_t result = add_subtract_impl_interpreter<uint64_t>(ctx,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL));
 		if ((S))
 		{
-			X_interpreter(ctx,Rd,result);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		else
 		{
-			XSP_interpreter(ctx,Rd,result);
+			XSP_interpreter(ctx,Rd,(uint64_t)result);
 		}
 	}
 	
@@ -637,14 +840,14 @@ void add_subtract_carry_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 		uint32_t operand1 = X_interpreter(ctx,Rn);
 		uint32_t operand2 = X_interpreter(ctx,Rm);
 		uint32_t result = add_subtract_carry_impl_interpreter<uint32_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint32_t)_sys_interpreter(ctx,2ULL));
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
 		uint64_t operand1 = X_interpreter(ctx,Rn);
 		uint64_t operand2 = X_interpreter(ctx,Rm);
 		uint64_t result = add_subtract_carry_impl_interpreter<uint64_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint64_t)_sys_interpreter(ctx,2ULL));
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -674,7 +877,7 @@ void shift_variable_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rm,
 		{
 			result = (rotate_right((uint32_t)operand1,(uint32_t)operand2));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -699,7 +902,7 @@ void shift_variable_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rm,
 		{
 			result = (rotate_right((uint64_t)operand1,(uint64_t)operand2));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -767,7 +970,7 @@ void multiply_additive_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t 
 		{
 			result = ((uint32_t)operand3 - (uint32_t)(((uint32_t)operand1 * (uint32_t)operand2)));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -784,7 +987,7 @@ void multiply_additive_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t 
 		{
 			result = ((uint64_t)operand3 - (uint64_t)(((uint64_t)operand1 * (uint64_t)operand2)));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -799,7 +1002,7 @@ void divide_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rm, uint64_
 		uint32_t result;
 		if ((((uint32_t)operand2 == (uint32_t)0ULL)))
 		{
-			X_interpreter(ctx,Rd,0ULL);
+			X_interpreter(ctx,Rd,(uint64_t)0ULL);
 		}
 		else
 		{
@@ -812,16 +1015,16 @@ void divide_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rm, uint64_
 				}
 				if ((((uint32_t)((uint32_t)operand1 == (uint32_t)min) && (uint32_t)((uint32_t)operand2 == (uint32_t)-1ULL))))
 				{
-					X_interpreter(ctx,Rd,min);
+					X_interpreter(ctx,Rd,(uint64_t)min);
 				}
 				else
 				{
-					X_interpreter(ctx,Rd,((uint32_t)(sign_extend((uint32_t)operand1) / sign_extend((uint32_t)operand2))));
+					X_interpreter(ctx,Rd,(uint64_t)((uint32_t)(sign_extend((uint32_t)operand1) / sign_extend((uint32_t)operand2))));
 				}
 			}
 			else
 			{
-				X_interpreter(ctx,Rd,((uint32_t)operand1 / (uint32_t)operand2));
+				X_interpreter(ctx,Rd,(uint64_t)((uint32_t)operand1 / (uint32_t)operand2));
 			}
 		}
 	}
@@ -832,7 +1035,7 @@ void divide_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rm, uint64_
 		uint64_t result;
 		if ((((uint64_t)operand2 == (uint64_t)0ULL)))
 		{
-			X_interpreter(ctx,Rd,0ULL);
+			X_interpreter(ctx,Rd,(uint64_t)0ULL);
 		}
 		else
 		{
@@ -845,16 +1048,16 @@ void divide_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rm, uint64_
 				}
 				if ((((uint64_t)((uint64_t)operand1 == (uint64_t)min) && (uint64_t)((uint64_t)operand2 == (uint64_t)-1ULL))))
 				{
-					X_interpreter(ctx,Rd,min);
+					X_interpreter(ctx,Rd,(uint64_t)min);
 				}
 				else
 				{
-					X_interpreter(ctx,Rd,((uint64_t)(sign_extend((uint64_t)operand1) / sign_extend((uint64_t)operand2))));
+					X_interpreter(ctx,Rd,(uint64_t)((uint64_t)(sign_extend((uint64_t)operand1) / sign_extend((uint64_t)operand2))));
 				}
 			}
 			else
 			{
-				X_interpreter(ctx,Rd,((uint64_t)operand1 / (uint64_t)operand2));
+				X_interpreter(ctx,Rd,(uint64_t)((uint64_t)operand1 / (uint64_t)operand2));
 			}
 		}
 	}
@@ -873,7 +1076,7 @@ void rbit_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rn, uint64_t 
 			uint32_t working = ((uint32_t)(((uint32_t)operand >> (uint32_t)i)) & (uint32_t)1ULL);
 			result = ((uint32_t)result | (uint32_t)(((uint32_t)working << (uint32_t)(((uint64_t)((uint64_t)datasize - (uint64_t)i) - (uint64_t)1ULL)))));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -884,7 +1087,7 @@ void rbit_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rn, uint64_t 
 			uint64_t working = ((uint64_t)(((uint64_t)operand >> (uint64_t)i)) & (uint64_t)1ULL);
 			result = ((uint64_t)result | (uint64_t)(((uint64_t)working << (uint64_t)(((uint64_t)((uint64_t)datasize - (uint64_t)i) - (uint64_t)1ULL)))));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -902,7 +1105,7 @@ void rev16_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rn, uint64_t
 			part = reverse_bytes_interpreter<uint32_t>(ctx,part,2ULL);
 			result = ((uint32_t)result | (uint32_t)(((uint32_t)part << (uint32_t)(((uint64_t)i * (uint64_t)16ULL)))));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -915,7 +1118,7 @@ void rev16_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rn, uint64_t
 			part = reverse_bytes_interpreter<uint64_t>(ctx,part,2ULL);
 			result = ((uint64_t)result | (uint64_t)(((uint64_t)part << (uint64_t)(((uint64_t)i * (uint64_t)16ULL)))));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -935,7 +1138,7 @@ void reverse_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t opc, uint6
 		{
 			result = ((uint32_t)reverse_bytes_interpreter<uint32_t>(ctx,working,4ULL) | (uint32_t)(((uint32_t)reverse_bytes_interpreter<uint32_t>(ctx,((uint32_t)working >> (uint32_t)32ULL),4ULL) << (uint32_t)32ULL)));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -949,7 +1152,7 @@ void reverse_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t opc, uint6
 		{
 			result = ((uint64_t)reverse_bytes_interpreter<uint64_t>(ctx,working,4ULL) | (uint64_t)(((uint64_t)reverse_bytes_interpreter<uint64_t>(ctx,((uint64_t)working >> (uint64_t)32ULL),4ULL) << (uint64_t)32ULL)));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -987,7 +1190,7 @@ void count_leading_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t s, u
 				result = ((uint32_t)result + (uint32_t)1ULL);
 			}
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -1019,7 +1222,7 @@ void count_leading_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t s, u
 				result = ((uint64_t)result + (uint64_t)1ULL);
 			}
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -1045,7 +1248,7 @@ void extr_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t N, uint64_t R
 		{
 			result = ((uint32_t)(((uint32_t)operand2 >> (uint32_t)lsb)) | (uint32_t)(((uint32_t)operand1 << (uint32_t)(((uint64_t)datasize - (uint64_t)lsb)))));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -1065,7 +1268,7 @@ void extr_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t N, uint64_t R
 		{
 			result = ((uint64_t)(((uint64_t)operand2 >> (uint64_t)lsb)) | (uint64_t)(((uint64_t)operand1 << (uint64_t)(((uint64_t)datasize - (uint64_t)lsb)))));
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -1118,7 +1321,7 @@ void bitfield_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t opc, uint
 		{
 			top = dst;
 		}
-		X_interpreter(ctx,Rd,((uint32_t)(((uint32_t)top & (uint32_t)~tmask)) | (uint32_t)(((uint32_t)bot & (uint32_t)tmask))));
+		X_interpreter(ctx,Rd,(uint64_t)((uint32_t)(((uint32_t)top & (uint32_t)~tmask)) | (uint32_t)(((uint32_t)bot & (uint32_t)tmask))));
 	}
 	if (sf == 1ULL)
 	{
@@ -1142,7 +1345,7 @@ void bitfield_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t opc, uint
 		{
 			top = dst;
 		}
-		X_interpreter(ctx,Rd,((uint64_t)(((uint64_t)top & (uint64_t)~tmask)) | (uint64_t)(((uint64_t)bot & (uint64_t)tmask))));
+		X_interpreter(ctx,Rd,(uint64_t)((uint64_t)(((uint64_t)top & (uint64_t)~tmask)) | (uint64_t)(((uint64_t)bot & (uint64_t)tmask))));
 	}
 	
 }
@@ -1170,14 +1373,14 @@ void logical_immediate_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t 
 		else if ((((uint64_t)opc == (uint64_t)3ULL)))
 		{
 			result = ((uint32_t)operand1 & (uint32_t)operand2);
-			X_interpreter(ctx,Rd,result);
-			_sys_interpreter(ctx,0ULL,((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
-			_sys_interpreter(ctx,1ULL,((uint32_t)result == (uint32_t)0ULL));
-			_sys_interpreter(ctx,2ULL,0ULL);
-			_sys_interpreter(ctx,3ULL,0ULL);
+			X_interpreter(ctx,Rd,(uint64_t)result);
+			_sys_interpreter(ctx,0ULL,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
+			_sys_interpreter(ctx,1ULL,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
+			_sys_interpreter(ctx,2ULL,(uint64_t)0ULL);
+			_sys_interpreter(ctx,3ULL,(uint64_t)0ULL);
 			return;
 		}
-		XSP_interpreter(ctx,Rd,result);
+		XSP_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -1199,14 +1402,14 @@ void logical_immediate_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t 
 		else if ((((uint64_t)opc == (uint64_t)3ULL)))
 		{
 			result = ((uint64_t)operand1 & (uint64_t)operand2);
-			X_interpreter(ctx,Rd,result);
-			_sys_interpreter(ctx,0ULL,((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
-			_sys_interpreter(ctx,1ULL,((uint64_t)result == (uint64_t)0ULL));
-			_sys_interpreter(ctx,2ULL,0ULL);
-			_sys_interpreter(ctx,3ULL,0ULL);
+			X_interpreter(ctx,Rd,(uint64_t)result);
+			_sys_interpreter(ctx,0ULL,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
+			_sys_interpreter(ctx,1ULL,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
+			_sys_interpreter(ctx,2ULL,(uint64_t)0ULL);
+			_sys_interpreter(ctx,3ULL,(uint64_t)0ULL);
 			return;
 		}
-		XSP_interpreter(ctx,Rd,result);
+		XSP_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -1229,10 +1432,10 @@ void logical_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op
 			result = ((uint32_t)operand1 & (uint32_t)operand2);
 			if ((((uint64_t)opc == (uint64_t)3ULL)))
 			{
-				_sys_interpreter(ctx,0ULL,((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
-				_sys_interpreter(ctx,1ULL,((uint32_t)result == (uint32_t)0ULL));
-				_sys_interpreter(ctx,2ULL,0ULL);
-				_sys_interpreter(ctx,3ULL,0ULL);
+				_sys_interpreter(ctx,0ULL,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
+				_sys_interpreter(ctx,1ULL,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
+				_sys_interpreter(ctx,2ULL,(uint64_t)0ULL);
+				_sys_interpreter(ctx,3ULL,(uint64_t)0ULL);
 			}
 		}
 		else if ((((uint64_t)opc == (uint64_t)1ULL)))
@@ -1243,7 +1446,7 @@ void logical_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op
 		{
 			result = ((uint32_t)operand1 ^ (uint32_t)operand2);
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -1259,10 +1462,10 @@ void logical_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op
 			result = ((uint64_t)operand1 & (uint64_t)operand2);
 			if ((((uint64_t)opc == (uint64_t)3ULL)))
 			{
-				_sys_interpreter(ctx,0ULL,((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
-				_sys_interpreter(ctx,1ULL,((uint64_t)result == (uint64_t)0ULL));
-				_sys_interpreter(ctx,2ULL,0ULL);
-				_sys_interpreter(ctx,3ULL,0ULL);
+				_sys_interpreter(ctx,0ULL,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
+				_sys_interpreter(ctx,1ULL,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
+				_sys_interpreter(ctx,2ULL,(uint64_t)0ULL);
+				_sys_interpreter(ctx,3ULL,(uint64_t)0ULL);
 			}
 		}
 		else if ((((uint64_t)opc == (uint64_t)1ULL)))
@@ -1273,7 +1476,7 @@ void logical_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op
 		{
 			result = ((uint64_t)operand1 ^ (uint64_t)operand2);
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -1289,7 +1492,7 @@ void conditional_select_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 		uint32_t condition_pass = condition_holds_interpreter(ctx,cond);
 		if ((condition_pass))
 		{
-			X_interpreter(ctx,Rd,operand1);
+			X_interpreter(ctx,Rd,(uint64_t)operand1);
 		}
 		else
 		{
@@ -1301,7 +1504,7 @@ void conditional_select_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 			{
 				operand2 = ((uint32_t)operand2 + (uint32_t)1ULL);
 			}
-			X_interpreter(ctx,Rd,operand2);
+			X_interpreter(ctx,Rd,(uint64_t)operand2);
 		}
 	}
 	if (sf == 1ULL)
@@ -1311,7 +1514,7 @@ void conditional_select_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 		uint64_t condition_pass = condition_holds_interpreter(ctx,cond);
 		if ((condition_pass))
 		{
-			X_interpreter(ctx,Rd,operand1);
+			X_interpreter(ctx,Rd,(uint64_t)operand1);
 		}
 		else
 		{
@@ -1323,7 +1526,7 @@ void conditional_select_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 			{
 				operand2 = ((uint64_t)operand2 + (uint64_t)1ULL);
 			}
-			X_interpreter(ctx,Rd,operand2);
+			X_interpreter(ctx,Rd,(uint64_t)operand2);
 		}
 	}
 	
@@ -1349,10 +1552,10 @@ void conditional_compare_interpreter(interpreter_data* ctx, uint64_t sf, uint64_
 		}
 		else
 		{
-			_sys_interpreter(ctx,0ULL,((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,1ULL,((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,2ULL,((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,3ULL,((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,0ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,1ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,2ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 		}
 	}
 	if (sf == 1ULL)
@@ -1373,10 +1576,10 @@ void conditional_compare_interpreter(interpreter_data* ctx, uint64_t sf, uint64_
 		}
 		else
 		{
-			_sys_interpreter(ctx,0ULL,((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,1ULL,((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,2ULL,((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,3ULL,((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,0ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,1ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,2ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 		}
 	}
 	
@@ -1403,7 +1606,7 @@ void move_wide_immediate_interpreter(interpreter_data* ctx, uint64_t sf, uint64_
 		{
 			result = immediate;
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
@@ -1422,7 +1625,7 @@ void move_wide_immediate_interpreter(interpreter_data* ctx, uint64_t sf, uint64_
 		{
 			result = immediate;
 		}
-		X_interpreter(ctx,Rd,result);
+		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
 }
@@ -1436,7 +1639,1100 @@ void pc_rel_addressing_interpreter(interpreter_data* ctx, uint64_t op, uint64_t 
 		offset = ((uint64_t)offset << (uint64_t)12ULL);
 		instruction_pc = ((uint64_t)instruction_pc & (uint64_t)4095ULL);
 	}
-	X_interpreter(ctx,Rd,((uint64_t)instruction_pc + (uint64_t)offset));
+	X_interpreter(ctx,Rd,(uint64_t)((uint64_t)instruction_pc + (uint64_t)offset));
+}
+
+void load_store_register_post_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_imm_unscaled_interpreter(ctx,size,VR,opc,imm9,1ULL,Rn,Rt);
+}
+
+void load_store_register_pre_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_imm_unscaled_interpreter(ctx,size,VR,opc,imm9,3ULL,Rn,Rt);
+}
+
+void load_store_register_unscaled_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_imm_unscaled_interpreter(ctx,size,VR,opc,imm9,0ULL,Rn,Rt);
+}
+
+void load_store_register_pair_imm_offset_interpreter(interpreter_data* ctx, uint64_t opc, uint64_t VR, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_pair_imm_interpreter(ctx,opc,VR,2ULL,L,imm7,Rt2,Rn,Rt);
+}
+
+void load_store_register_pair_imm_post_interpreter(interpreter_data* ctx, uint64_t opc, uint64_t VR, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_pair_imm_interpreter(ctx,opc,VR,1ULL,L,imm7,Rt2,Rn,Rt);
+}
+
+void load_store_register_pair_imm_pre_interpreter(interpreter_data* ctx, uint64_t opc, uint64_t VR, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_pair_imm_interpreter(ctx,opc,VR,3ULL,L,imm7,Rt2,Rn,Rt);
+}
+
+void load_store_register_pair_imm_interpreter(interpreter_data* ctx, uint64_t opc, uint64_t VR, uint64_t wb, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t wback = ((uint64_t)wb != (uint64_t)2ULL);
+	uint64_t postindex = ((uint64_t)wb == (uint64_t)1ULL);
+	uint64_t memop = !L;
+	uint64_t is_signed = (((uint64_t)opc & (uint64_t)1ULL));
+	uint64_t scale;
+	if ((VR))
+	{
+		scale = ((uint64_t)2ULL + (uint64_t)opc);
+	}
+	else
+	{
+		scale = ((uint64_t)2ULL + (uint64_t)(((uint64_t)(((uint64_t)opc >> (uint64_t)1ULL)) & (uint64_t)1ULL)));
+	}
+	uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+	uint64_t offset = ((uint64_t)sign_extend_interpreter(ctx,imm7,7ULL) << (uint64_t)scale);
+	uint64_t dbytes = ((uint64_t)datasize / (uint64_t)8ULL);
+	uint64_t address = XSP_interpreter(ctx,Rn);
+	if ((!postindex))
+	{
+		address = ((uint64_t)address + (uint64_t)offset);
+	}
+	if (datasize == 8ULL)
+	{
+		if ((VR))
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint8_t d0 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint8_t d1 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				V_interpreter(ctx,Rt,(uint128_t)d0);
+				V_interpreter(ctx,Rt2,(uint128_t)d1);
+			}
+			else
+			{
+				mem_interpreter<uint8_t>(ctx,address,(uint8_t)V_interpreter(ctx,Rt));
+				mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint8_t)V_interpreter(ctx,Rt2));
+			}
+		}
+		else
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint64_t d0 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint64_t d1 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				if ((is_signed))
+				{
+					d0 = (uint64_t)sign_extend((uint32_t)d0);
+					d1 = (uint64_t)sign_extend((uint32_t)d1);
+				}
+				X_interpreter(ctx,Rt,d0);
+				X_interpreter(ctx,Rt2,d1);
+			}
+			else
+			{
+				mem_interpreter<uint8_t>(ctx,address,(uint8_t)X_interpreter(ctx,Rt));
+				mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint8_t)X_interpreter(ctx,Rt2));
+			}
+		}
+		if ((wback))
+		{
+			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
+			{
+				undefined_interpreter(ctx);
+			}
+			if ((postindex))
+			{
+				address = ((uint64_t)address + (uint64_t)offset);
+			}
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if (datasize == 16ULL)
+	{
+		if ((VR))
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint16_t d0 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint16_t d1 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				V_interpreter(ctx,Rt,(uint128_t)d0);
+				V_interpreter(ctx,Rt2,(uint128_t)d1);
+			}
+			else
+			{
+				mem_interpreter<uint16_t>(ctx,address,(uint16_t)V_interpreter(ctx,Rt));
+				mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint16_t)V_interpreter(ctx,Rt2));
+			}
+		}
+		else
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint64_t d0 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint64_t d1 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				if ((is_signed))
+				{
+					d0 = (uint64_t)sign_extend((uint32_t)d0);
+					d1 = (uint64_t)sign_extend((uint32_t)d1);
+				}
+				X_interpreter(ctx,Rt,d0);
+				X_interpreter(ctx,Rt2,d1);
+			}
+			else
+			{
+				mem_interpreter<uint16_t>(ctx,address,(uint16_t)X_interpreter(ctx,Rt));
+				mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint16_t)X_interpreter(ctx,Rt2));
+			}
+		}
+		if ((wback))
+		{
+			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
+			{
+				undefined_interpreter(ctx);
+			}
+			if ((postindex))
+			{
+				address = ((uint64_t)address + (uint64_t)offset);
+			}
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if (datasize == 32ULL)
+	{
+		if ((VR))
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint32_t d0 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint32_t d1 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				V_interpreter(ctx,Rt,(uint128_t)d0);
+				V_interpreter(ctx,Rt2,(uint128_t)d1);
+			}
+			else
+			{
+				mem_interpreter<uint32_t>(ctx,address,(uint32_t)V_interpreter(ctx,Rt));
+				mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint32_t)V_interpreter(ctx,Rt2));
+			}
+		}
+		else
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint64_t d0 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint64_t d1 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				if ((is_signed))
+				{
+					d0 = (uint64_t)sign_extend((uint32_t)d0);
+					d1 = (uint64_t)sign_extend((uint32_t)d1);
+				}
+				X_interpreter(ctx,Rt,d0);
+				X_interpreter(ctx,Rt2,d1);
+			}
+			else
+			{
+				mem_interpreter<uint32_t>(ctx,address,(uint32_t)X_interpreter(ctx,Rt));
+				mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint32_t)X_interpreter(ctx,Rt2));
+			}
+		}
+		if ((wback))
+		{
+			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
+			{
+				undefined_interpreter(ctx);
+			}
+			if ((postindex))
+			{
+				address = ((uint64_t)address + (uint64_t)offset);
+			}
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if (datasize == 64ULL)
+	{
+		if ((VR))
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint64_t d0 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint64_t d1 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				V_interpreter(ctx,Rt,(uint128_t)d0);
+				V_interpreter(ctx,Rt2,(uint128_t)d1);
+			}
+			else
+			{
+				mem_interpreter<uint64_t>(ctx,address,(uint64_t)V_interpreter(ctx,Rt));
+				mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint64_t)V_interpreter(ctx,Rt2));
+			}
+		}
+		else
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint64_t d0 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint64_t d1 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				if ((is_signed))
+				{
+					d0 = (uint64_t)sign_extend((uint32_t)d0);
+					d1 = (uint64_t)sign_extend((uint32_t)d1);
+				}
+				X_interpreter(ctx,Rt,d0);
+				X_interpreter(ctx,Rt2,d1);
+			}
+			else
+			{
+				mem_interpreter<uint64_t>(ctx,address,(uint64_t)X_interpreter(ctx,Rt));
+				mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint64_t)X_interpreter(ctx,Rt2));
+			}
+		}
+		if ((wback))
+		{
+			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
+			{
+				undefined_interpreter(ctx);
+			}
+			if ((postindex))
+			{
+				address = ((uint64_t)address + (uint64_t)offset);
+			}
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if (datasize == 128ULL)
+	{
+		if ((VR))
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint128_t d0 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint128_t d1 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				V_interpreter(ctx,Rt,(uint128_t)d0);
+				V_interpreter(ctx,Rt2,(uint128_t)d1);
+			}
+			else
+			{
+				mem_interpreter<uint128_t>(ctx,address,(uint128_t)V_interpreter(ctx,Rt));
+				mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint128_t)V_interpreter(ctx,Rt2));
+			}
+		}
+		else
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				uint64_t d0 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+				uint64_t d1 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+				if ((is_signed))
+				{
+					d0 = (uint64_t)sign_extend((uint32_t)d0);
+					d1 = (uint64_t)sign_extend((uint32_t)d1);
+				}
+				X_interpreter(ctx,Rt,d0);
+				X_interpreter(ctx,Rt2,d1);
+			}
+			else
+			{
+				mem_interpreter<uint128_t>(ctx,address,(uint128_t)X_interpreter(ctx,Rt));
+				mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint128_t)X_interpreter(ctx,Rt2));
+			}
+		}
+		if ((wback))
+		{
+			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
+			{
+				undefined_interpreter(ctx);
+			}
+			if ((postindex))
+			{
+				address = ((uint64_t)address + (uint64_t)offset);
+			}
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	
+}
+
+void load_store_register_imm_unsigned_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm12, uint64_t Rn, uint64_t Rt)
+{
+	if ((((uint64_t)((uint64_t)((uint64_t)size == (uint64_t)3ULL) && (uint64_t)((uint64_t)VR == (uint64_t)0ULL)) && (uint64_t)((uint64_t)opc == (uint64_t)2ULL))))
+	{
+		return;
+	}
+	uint64_t is_vector = ((uint64_t)VR == (uint64_t)1ULL);
+	uint64_t wback = 0ULL;
+	uint64_t postindex = 0ULL;
+	if ((is_vector))
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = ((uint64_t)(((uint64_t)bit_c_interpreter(ctx,opc,1ULL) << (uint64_t)2ULL)) | (uint64_t)size);
+		uint64_t offset = ((uint64_t)imm12 << (uint64_t)scale);
+		if ((((uint64_t)opc & (uint64_t)1ULL)))
+		memop = 0ULL;
+		else
+		memop = 1ULL;
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		uint64_t address = XSP_interpreter(ctx,Rn);
+		if ((!postindex))
+		{
+			address = ((uint64_t)address + (uint64_t)offset);
+		}
+		if (datasize == 8ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint8_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint8_t>(ctx,address,data);
+			}
+			else
+			{
+				uint8_t data = mem_interpreter<uint8_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		if (datasize == 16ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint16_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint16_t>(ctx,address,data);
+			}
+			else
+			{
+				uint16_t data = mem_interpreter<uint16_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		if (datasize == 32ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint32_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint32_t>(ctx,address,data);
+			}
+			else
+			{
+				uint32_t data = mem_interpreter<uint32_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		if (datasize == 64ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint64_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint64_t>(ctx,address,data);
+			}
+			else
+			{
+				uint64_t data = mem_interpreter<uint64_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		if (datasize == 128ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint128_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint128_t>(ctx,address,data);
+			}
+			else
+			{
+				uint128_t data = mem_interpreter<uint128_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		
+	}
+	else
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = size;
+		uint64_t offset = ((uint64_t)imm12 << (uint64_t)scale);
+		if ((((uint64_t)bit_c_interpreter(ctx,opc,1ULL) == (uint64_t)0ULL)))
+		{
+			if ((((uint64_t)opc & (uint64_t)1ULL)))
+			memop = 0ULL;
+			else
+			memop = 1ULL;
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			regsize = 64ULL;
+			else
+			regsize = 32ULL;
+			_signed = 0ULL;
+		}
+		else
+		{
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			{
+				undefined_interpreter(ctx);
+			}
+			else
+			{
+				memop = 0ULL;
+				if ((((uint64_t)opc & (uint64_t)1ULL)))
+				regsize = 32ULL;
+				else
+				regsize = 64ULL;
+				_signed = 1ULL;
+			}
+		}
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		uint64_t address = XSP_interpreter(ctx,Rn);
+		if ((!postindex))
+		{
+			address = ((uint64_t)address + (uint64_t)offset);
+		}
+		if (datasize == 8ULL)
+		{
+			if (regsize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint8_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint32_t)sign_extend((uint8_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			if (regsize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint8_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint64_t)sign_extend((uint8_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			
+		}
+		if (datasize == 16ULL)
+		{
+			if (regsize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint16_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint32_t)sign_extend((uint16_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			if (regsize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint16_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint64_t)sign_extend((uint16_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			
+		}
+		if (datasize == 32ULL)
+		{
+			if (regsize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint32_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint32_t)sign_extend((uint32_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			if (regsize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint32_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint64_t)sign_extend((uint32_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			
+		}
+		if (datasize == 64ULL)
+		{
+			if (regsize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint64_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint32_t)sign_extend((uint64_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			if (regsize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint64_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint64_t)sign_extend((uint64_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			
+		}
+		
+	}
+}
+
+void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t wb, uint64_t Rn, uint64_t Rt)
+{
+	if ((((uint64_t)((uint64_t)((uint64_t)size == (uint64_t)3ULL) && (uint64_t)((uint64_t)VR == (uint64_t)0ULL)) && (uint64_t)((uint64_t)opc == (uint64_t)2ULL))))
+	{
+		return;
+	}
+	uint64_t is_vector = ((uint64_t)VR == (uint64_t)1ULL);
+	uint64_t wback = ((uint64_t)wb != (uint64_t)0ULL);
+	uint64_t postindex = ((uint64_t)wb == (uint64_t)1ULL);
+	uint64_t offset = sign_extend_interpreter(ctx,imm9,9ULL);
+	if ((is_vector))
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = ((uint64_t)(((uint64_t)bit_c_interpreter(ctx,opc,1ULL) << (uint64_t)2ULL)) | (uint64_t)size);
+		if ((((uint64_t)opc & (uint64_t)1ULL)))
+		memop = 0ULL;
+		else
+		memop = 1ULL;
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		uint64_t address = XSP_interpreter(ctx,Rn);
+		if ((!postindex))
+		{
+			address = ((uint64_t)address + (uint64_t)offset);
+		}
+		if (datasize == 8ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint8_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint8_t>(ctx,address,data);
+			}
+			else
+			{
+				uint8_t data = mem_interpreter<uint8_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		if (datasize == 16ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint16_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint16_t>(ctx,address,data);
+			}
+			else
+			{
+				uint16_t data = mem_interpreter<uint16_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		if (datasize == 32ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint32_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint32_t>(ctx,address,data);
+			}
+			else
+			{
+				uint32_t data = mem_interpreter<uint32_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		if (datasize == 64ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint64_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint64_t>(ctx,address,data);
+			}
+			else
+			{
+				uint64_t data = mem_interpreter<uint64_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		if (datasize == 128ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint128_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint128_t>(ctx,address,data);
+			}
+			else
+			{
+				uint128_t data = mem_interpreter<uint128_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ((uint64_t)address + (uint64_t)offset);
+				}
+				XSP_interpreter(ctx,Rn,address);
+			}
+		}
+		
+	}
+	else
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = size;
+		if ((((uint64_t)bit_c_interpreter(ctx,opc,1ULL) == (uint64_t)0ULL)))
+		{
+			if ((((uint64_t)opc & (uint64_t)1ULL)))
+			memop = 0ULL;
+			else
+			memop = 1ULL;
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			regsize = 64ULL;
+			else
+			regsize = 32ULL;
+			_signed = 0ULL;
+		}
+		else
+		{
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			{
+				undefined_interpreter(ctx);
+			}
+			else
+			{
+				memop = 0ULL;
+				if ((((uint64_t)opc & (uint64_t)1ULL)))
+				regsize = 32ULL;
+				else
+				regsize = 64ULL;
+				_signed = 1ULL;
+			}
+		}
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		uint64_t address = XSP_interpreter(ctx,Rn);
+		if ((!postindex))
+		{
+			address = ((uint64_t)address + (uint64_t)offset);
+		}
+		if (datasize == 8ULL)
+		{
+			if (regsize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint8_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint32_t)sign_extend((uint8_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			if (regsize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint8_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint64_t)sign_extend((uint8_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			
+		}
+		if (datasize == 16ULL)
+		{
+			if (regsize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint16_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint32_t)sign_extend((uint16_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			if (regsize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint16_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint64_t)sign_extend((uint16_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			
+		}
+		if (datasize == 32ULL)
+		{
+			if (regsize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint32_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint32_t)sign_extend((uint32_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			if (regsize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint32_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint64_t)sign_extend((uint32_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			
+		}
+		if (datasize == 64ULL)
+		{
+			if (regsize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint64_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint32_t)sign_extend((uint64_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			if (regsize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = X_interpreter(ctx,Rt);
+					mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
+				}
+				else
+				{
+					uint64_t n = mem_interpreter<uint64_t>(ctx,address);
+					if ((_signed))
+					{
+						n = (uint64_t)sign_extend((uint64_t)n);
+					}
+					X_interpreter(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ((uint64_t)address + (uint64_t)offset);
+					}
+					XSP_interpreter(ctx,Rn,address);
+				}
+			}
+			
+		}
+		
+	}
 }
 
 void br_interpreter(interpreter_data* ctx, uint64_t Rn)
@@ -1557,6 +2853,11 @@ uint64_t bits_c_interpreter(interpreter_data* ctx, uint64_t source, uint64_t top
 	return ((uint64_t)(((uint64_t)source >> (uint64_t)bottom)) & (uint64_t)mask);
 }
 
+uint64_t bit_c_interpreter(interpreter_data* ctx, uint64_t source, uint64_t bit)
+{
+	return ((uint64_t)(((uint64_t)source >> (uint64_t)bit)) & (uint64_t)1ULL);
+}
+
 uint64_t rotate_right_bits_interpreter(interpreter_data* ctx, uint64_t source, uint64_t ammount, uint64_t bit_count)
 {
 	source = ((uint64_t)source & (uint64_t)ones_interpreter(ctx,bit_count));
@@ -1612,17 +2913,17 @@ O add_subtract_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_fl
 	}
 	if ((set_flags))
 	{
-		_sys_interpreter(ctx,0ULL,((O)(sign_extend((O)d) < sign_extend((O)0ULL))));
-		_sys_interpreter(ctx,1ULL,((O)d == (O)0ULL));
+		_sys_interpreter(ctx,0ULL,(uint64_t)((O)(sign_extend((O)d) < sign_extend((O)0ULL))));
+		_sys_interpreter(ctx,1ULL,(uint64_t)((O)d == (O)0ULL));
 		if ((is_add))
 		{
-			_sys_interpreter(ctx,2ULL,((O)d < (O)n));
-			_sys_interpreter(ctx,3ULL,((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)~(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
+			_sys_interpreter(ctx,2ULL,(uint64_t)((O)d < (O)n));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)~(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
 		}
 		else
 		{
-			_sys_interpreter(ctx,2ULL,((O)n >= (O)m));
-			_sys_interpreter(ctx,3ULL,((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
+			_sys_interpreter(ctx,2ULL,(uint64_t)((O)n >= (O)m));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
 		}
 	}
 	return d;
@@ -1642,17 +2943,17 @@ O add_subtract_carry_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t 
 	}
 	if ((set_flags))
 	{
-		_sys_interpreter(ctx,0ULL,((O)(sign_extend((O)d) < sign_extend((O)0ULL))));
-		_sys_interpreter(ctx,1ULL,((O)d == (O)0ULL));
+		_sys_interpreter(ctx,0ULL,(uint64_t)((O)(sign_extend((O)d) < sign_extend((O)0ULL))));
+		_sys_interpreter(ctx,1ULL,(uint64_t)((O)d == (O)0ULL));
 		if ((is_add))
 		{
-			_sys_interpreter(ctx,2ULL,((O)(((O)((O)d == (O)n) && (O)carry)) | (O)((O)d < (O)n)));
-			_sys_interpreter(ctx,3ULL,((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)~(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
+			_sys_interpreter(ctx,2ULL,(uint64_t)((O)(((O)((O)d == (O)n) && (O)carry)) | (O)((O)d < (O)n)));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)~(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
 		}
 		else
 		{
-			_sys_interpreter(ctx,2ULL,((O)(((O)((O)n == (O)m) && (O)carry)) | (O)((O)n > (O)m)));
-			_sys_interpreter(ctx,3ULL,((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
+			_sys_interpreter(ctx,2ULL,(uint64_t)((O)(((O)((O)n == (O)m) && (O)carry)) | (O)((O)n > (O)m)));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
 		}
 	}
 	return d;
@@ -1716,6 +3017,20 @@ void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint6
 	_branch_long_interpreter(ctx,branch_location);
 }
 
+template <typename O>
+void mem_interpreter(interpreter_data* ctx, uint64_t address, O value)
+{
+	address = translate_address_interpreter(ctx,address);
+	*(O*)address = value;
+}
+
+template <typename O>
+O mem_interpreter(interpreter_data* ctx, uint64_t address)
+{
+	address = translate_address_interpreter(ctx,address);
+	return *(O*)address;
+}
+
 uint64_t XSP_interpreter(interpreter_data* ctx, uint64_t reg_id)
 {
 	return _x_interpreter(ctx,reg_id);
@@ -1754,16 +3069,16 @@ void add_subtract_imm12_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 {
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(XSP_jit(ctx,Rn), O);
+		ir_operand operand1 = copy_new_raw_size(ctx, XSP_jit(ctx,Rn), O);
 		ir_operand operand2 = ir_operand::create_con(decode_add_subtract_imm_12_jit(ctx,imm12,sh), O);
-		ir_operand d = ir_operand::copy_new_raw_size(add_subtract_impl_jit(ctx,O,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL)), O);
+		ir_operand d = copy_new_raw_size(ctx, add_subtract_impl_jit(ctx,O,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL)), O);
 		if ((S))
 		{
-			X_jit(ctx,Rd,d);
+			X_jit(ctx,Rd,copy_new_raw_size(ctx, d, int64));
 		}
 		else
 		{
-			XSP_jit(ctx,Rd,d);
+			XSP_jit(ctx,Rd,copy_new_raw_size(ctx, d, int64));
 		}
 	}
 }
@@ -1773,10 +3088,10 @@ void add_subtract_shifted_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, u
 	uint64_t shift_ammount = imm6;
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
-		ir_operand operand2 = ir_operand::copy_new_raw_size(a_shift_reg_jit(ctx,O,Rm,shift,shift_ammount), O);
-		ir_operand result = ir_operand::copy_new_raw_size(add_subtract_impl_jit(ctx,O,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL)), O);
-		X_jit(ctx,Rd,result);
+		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
+		ir_operand operand2 = copy_new_raw_size(ctx, a_shift_reg_jit(ctx,O,Rm,shift,shift_ammount), O);
+		ir_operand result = copy_new_raw_size(ctx, add_subtract_impl_jit(ctx,O,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL)), O);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -1786,16 +3101,16 @@ void add_subtract_extended_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, 
 	{
 		uint64_t shift = imm3;
 		uint64_t extend_type = option;
-		ir_operand operand1 = ir_operand::copy_new_raw_size(XSP_jit(ctx,Rn), O);
-		ir_operand operand2 = ir_operand::copy_new_raw_size(a_extend_reg_jit(ctx,O,Rm,extend_type,shift), O);
-		ir_operand result = ir_operand::copy_new_raw_size(add_subtract_impl_jit(ctx,O,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL)), O);
+		ir_operand operand1 = copy_new_raw_size(ctx, XSP_jit(ctx,Rn), O);
+		ir_operand operand2 = copy_new_raw_size(ctx, a_extend_reg_jit(ctx,O,Rm,extend_type,shift), O);
+		ir_operand result = copy_new_raw_size(ctx, add_subtract_impl_jit(ctx,O,operand1,operand2,S,((uint64_t)op == (uint64_t)0ULL)), O);
 		if ((S))
 		{
-			X_jit(ctx,Rd,result);
+			X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 		}
 		else
 		{
-			XSP_jit(ctx,Rd,result);
+			XSP_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 		}
 	}
 }
@@ -1804,10 +3119,10 @@ void add_subtract_carry_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 {
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
-		ir_operand operand2 = ir_operand::copy_new_raw_size(X_jit(ctx,Rm), O);
-		ir_operand result = ir_operand::copy_new_raw_size(add_subtract_carry_impl_jit(ctx,O,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),ir_operand::copy_new_raw_size(_sys_jit(ctx,2ULL), O)), O);
-		X_jit(ctx,Rd,result);
+		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
+		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
+		ir_operand result = copy_new_raw_size(ctx, add_subtract_carry_impl_jit(ctx,O,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),copy_new_raw_size(ctx, _sys_jit(ctx,2ULL), O)), O);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -1815,8 +3130,8 @@ void shift_variable_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint64_
 {
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
-		ir_operand operand2 = ir_operand::copy_new_raw_size(X_jit(ctx,Rm), O);
+		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
+		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
 		uint64_t mask = ((uint64_t)(((uint64_t)32ULL << (uint64_t)sf)) - (uint64_t)1ULL);
 		ir_operand result;
 		operand2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand2, ir_operand::create_con(mask, O));
@@ -1836,7 +3151,7 @@ void shift_variable_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint64_
 		{
 			result = ssa_emit_context::emit_ssa(ctx, ir_rotate_right, operand1, operand2);
 		}
-		X_jit(ctx,Rd,result);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -1849,8 +3164,8 @@ void multiply_with_32_jit(ssa_emit_context* ctx, uint64_t U, uint64_t Rm, uint64
 	uint64_t is_signed = ((uint64_t)U == (uint64_t)0ULL);
 	if ((is_signed))
 	{
-		operand1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,ir_operand::copy_new_raw_size(operand1, int32), int64);
-		operand2 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,ir_operand::copy_new_raw_size(operand2, int32), int64);
+		operand1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, operand1, int32), int64);
+		operand2 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, operand2, int32), int64);
 	}
 	else
 	{
@@ -1890,9 +3205,9 @@ void multiply_additive_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint
 {
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
-		ir_operand operand2 = ir_operand::copy_new_raw_size(X_jit(ctx,Rm), O);
-		ir_operand operand3 = ir_operand::copy_new_raw_size(X_jit(ctx,Ra), O);
+		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
+		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
+		ir_operand operand3 = copy_new_raw_size(ctx, X_jit(ctx,Ra), O);
 		uint64_t is_add = ((uint64_t)o0 == (uint64_t)0ULL);
 		ir_operand result;
 		if ((is_add))
@@ -1903,7 +3218,7 @@ void multiply_additive_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint
 		{
 			result = ssa_emit_context::emit_ssa(ctx, ir_subtract, operand3, ssa_emit_context::emit_ssa(ctx, ir_multiply, operand1, operand2));
 		}
-		X_jit(ctx,Rd,result);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -1912,8 +3227,8 @@ void divide_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint64_t o1, ui
 	uint64_t is_signed = ((uint64_t)o1 == (uint64_t)1ULL);
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
-		ir_operand operand2 = ir_operand::copy_new_raw_size(X_jit(ctx,Rm), O);
+		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
+		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
 		ir_operand result;
 		{
 		    ir_operand end = ir_operation_block::create_label(ctx->ir);
@@ -1938,7 +3253,7 @@ void divide_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint64_t o1, ui
 					
 					    ir_operation_block::jump_if(ctx->ir,yes, condition);
 						{
-							X_jit(ctx,Rd,ssa_emit_context::emit_ssa(ctx, ir_divide_signed, operand1, operand2));
+							X_jit(ctx,Rd,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_divide_signed, operand1, operand2), int64));
 						}
 					    
 					    ir_operation_block::jump(ctx->ir,end);
@@ -1953,7 +3268,7 @@ void divide_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint64_t o1, ui
 				}
 				else
 				{
-					X_jit(ctx,Rd,ssa_emit_context::emit_ssa(ctx, ir_divide_unsigned, operand1, operand2));
+					X_jit(ctx,Rd,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_divide_unsigned, operand1, operand2), int64));
 				}
 			}
 		    
@@ -1974,14 +3289,14 @@ void rbit_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rn, uint64_t Rd)
 	uint64_t datasize = ((uint64_t)32ULL << (uint64_t)sf);
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
+		ir_operand operand = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 		ir_operand result = ir_operand::create_con(0ULL, O);
 		for (uint64_t i = 0; i < (datasize); i++)
 		{
 			ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, operand, ir_operand::create_con(i, O)), ir_operand::create_con(1ULL, O));
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, result, ssa_emit_context::emit_ssa(ctx, ir_shift_left, working, ir_operand::create_con((((uint64_t)((uint64_t)datasize - (uint64_t)i) - (uint64_t)1ULL)), O)));
 		}
-		X_jit(ctx,Rd,result);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -1990,15 +3305,15 @@ void rev16_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rn, uint64_t Rd)
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
 		uint64_t count = ((uint64_t)2ULL << (uint64_t)sf);
-		ir_operand working = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
+		ir_operand working = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 		ir_operand result = ir_operand::create_con(0ULL, O);
 		for (uint64_t i = 0; i < (count); i++)
 		{
 			ir_operand part = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, working, ir_operand::create_con((((uint64_t)i * (uint64_t)16ULL)), O)), ir_operand::create_con(65535ULL, O));
-			part = ir_operand::copy_new_raw_size(reverse_bytes_jit(ctx,O,part,2ULL), O);
+			part = copy_new_raw_size(ctx, reverse_bytes_jit(ctx,O,part,2ULL), O);
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, result, ssa_emit_context::emit_ssa(ctx, ir_shift_left, part, ir_operand::create_con((((uint64_t)i * (uint64_t)16ULL)), O)));
 		}
-		X_jit(ctx,Rd,result);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -2007,17 +3322,17 @@ void reverse_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uint64_t Rn, 
 	uint64_t datasize = ((uint64_t)32ULL << (uint64_t)sf);
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand working = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
+		ir_operand working = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 		ir_operand result;
 		if ((((uint64_t)sf == (uint64_t)opc)))
 		{
-			result = ir_operand::copy_new_raw_size(reverse_bytes_jit(ctx,O,working,((uint64_t)4ULL << (uint64_t)sf)), O);
+			result = copy_new_raw_size(ctx, reverse_bytes_jit(ctx,O,working,((uint64_t)4ULL << (uint64_t)sf)), O);
 		}
 		else
 		{
-			result = ir_operand::copy_new_raw_size(ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, reverse_bytes_jit(ctx,O,working,4ULL), ssa_emit_context::emit_ssa(ctx, ir_shift_left, reverse_bytes_jit(ctx,O,ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, working, ir_operand::create_con(32ULL, O)),4ULL), ir_operand::create_con(32ULL, O))), O);
+			result = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, reverse_bytes_jit(ctx,O,working,4ULL), ssa_emit_context::emit_ssa(ctx, ir_shift_left, reverse_bytes_jit(ctx,O,ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, working, ir_operand::create_con(32ULL, O)),4ULL), ir_operand::create_con(32ULL, O))), O);
 		}
-		X_jit(ctx,Rd,result);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -2026,7 +3341,7 @@ void count_leading_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t s, uint64_t 
 	uint64_t datasize = ((uint64_t)32ULL << (uint64_t)sf);
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
+		ir_operand operand = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 		ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
 		ir_operand done = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
 		ir_operand sig_bit;
@@ -2096,7 +3411,7 @@ void count_leading_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t s, uint64_t 
 			    ir_operation_block::mark_label(ctx->ir, end);
 			}
 		}
-		X_jit(ctx,Rd,result);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -2105,8 +3420,8 @@ void extr_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t N, uint64_t Rm, uint6
 	uint64_t datasize = ((uint64_t)32ULL << (uint64_t)sf);
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
-		ir_operand operand2 = ir_operand::copy_new_raw_size(X_jit(ctx,Rm), O);
+		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
+		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
 		uint64_t lsb = imms;
 		ir_operand result;
 		if ((((uint64_t)lsb == (uint64_t)0ULL)))
@@ -2121,7 +3436,7 @@ void extr_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t N, uint64_t Rm, uint6
 		{
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, operand2, ir_operand::create_con(lsb, O)), ssa_emit_context::emit_ssa(ctx, ir_shift_left, operand1, ir_operand::create_con((((uint64_t)datasize - (uint64_t)lsb)), O)));
 		}
-		X_jit(ctx,Rd,result);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -2154,14 +3469,14 @@ void bitfield_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uint64_t N, 
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
 		ir_operand dst;
-		ir_operand src = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
+		ir_operand src = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 		if ((inzero))
 		{
 			dst = ir_operand::create_con(0ULL, O);
 		}
 		else
 		{
-			dst = ir_operand::copy_new_raw_size(X_jit(ctx,Rd), O);
+			dst = copy_new_raw_size(ctx, X_jit(ctx,Rd), O);
 		}
 		ir_operand bot = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, dst, ir_operand::create_con(~wmask, O)), ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_rotate_right, src, ir_operand::create_con(immr, O)), ir_operand::create_con(wmask, O)));
 		ir_operand top;
@@ -2173,7 +3488,7 @@ void bitfield_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uint64_t N, 
 		{
 			top = dst;
 		}
-		X_jit(ctx,Rd,ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, top, ir_operand::create_con(~tmask, O)), ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, bot, ir_operand::create_con(tmask, O))));
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, top, ir_operand::create_con(~tmask, O)), ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, bot, ir_operand::create_con(tmask, O))), int64));
 	}
 }
 
@@ -2182,7 +3497,7 @@ void logical_immediate_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uin
 	uint64_t datasize = ((uint64_t)32ULL << (uint64_t)sf);
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
+		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 		ir_operand operand2 = ir_operand::create_con(decode_bitmask_tmask_jit(ctx,N,imms,immr,1ULL,datasize,0ULL), O);
 		ir_operand result;
 		if ((((uint64_t)opc == (uint64_t)0ULL)))
@@ -2200,14 +3515,14 @@ void logical_immediate_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uin
 		else if ((((uint64_t)opc == (uint64_t)3ULL)))
 		{
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand1, operand2);
-			X_jit(ctx,Rd,result);
-			_sys_jit(ctx,0ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)));
-			_sys_jit(ctx,1ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)));
+			X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
+			_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
+			_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
 			_sys_jit(ctx,2ULL,ir_operand::create_con(0ULL, int64));
 			_sys_jit(ctx,3ULL,ir_operand::create_con(0ULL, int64));
 			return;
 		}
-		XSP_jit(ctx,Rd,result);
+		XSP_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -2217,8 +3532,8 @@ void logical_shifted_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uint6
 	uint64_t shift_ammount = imm6;
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
-		ir_operand operand2 = ir_operand::copy_new_raw_size(a_shift_reg_jit(ctx,O,Rm,shift_type,shift_ammount), O);
+		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
+		ir_operand operand2 = copy_new_raw_size(ctx, a_shift_reg_jit(ctx,O,Rm,shift_type,shift_ammount), O);
 		if ((N))
 		{
 			operand2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, operand2);
@@ -2229,8 +3544,8 @@ void logical_shifted_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uint6
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand1, operand2);
 			if ((((uint64_t)opc == (uint64_t)3ULL)))
 			{
-				_sys_jit(ctx,0ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)));
-				_sys_jit(ctx,1ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)));
+				_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
+				_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
 				_sys_jit(ctx,2ULL,ir_operand::create_con(0ULL, int64));
 				_sys_jit(ctx,3ULL,ir_operand::create_con(0ULL, int64));
 			}
@@ -2243,7 +3558,7 @@ void logical_shifted_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uint6
 		{
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, operand1, operand2);
 		}
-		X_jit(ctx,Rd,result);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -2253,9 +3568,9 @@ void conditional_select_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 	uint64_t invert = op;
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
-		ir_operand operand2 = ir_operand::copy_new_raw_size(X_jit(ctx,Rm), O);
-		ir_operand condition_pass = ir_operand::copy_new_raw_size(condition_holds_jit(ctx,cond), O);
+		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
+		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
+		ir_operand condition_pass = copy_new_raw_size(ctx, condition_holds_jit(ctx,cond), O);
 		{
 		    ir_operand end = ir_operation_block::create_label(ctx->ir);
 		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
@@ -2272,14 +3587,14 @@ void conditional_select_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 				{
 					operand2 = ssa_emit_context::emit_ssa(ctx, ir_add, operand2, ir_operand::create_con(1ULL, O));
 				}
-				X_jit(ctx,Rd,operand2);
+				X_jit(ctx,Rd,copy_new_raw_size(ctx, operand2, int64));
 			}
 		    
 		    ir_operation_block::jump(ctx->ir,end);
 		    ir_operation_block::mark_label(ctx->ir, yes);
 		
 			{
-				X_jit(ctx,Rd,operand1);
+				X_jit(ctx,Rd,copy_new_raw_size(ctx, operand1, int64));
 			}
 		
 		    ir_operation_block::mark_label(ctx->ir, end);
@@ -2309,7 +3624,7 @@ void conditional_compare_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, ui
 		    ir_operation_block::mark_label(ctx->ir, yes);
 		
 			{
-				ir_operand operand1 = ir_operand::copy_new_raw_size(X_jit(ctx,Rn), O);
+				ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 				ir_operand operand2;
 				if ((mode))
 				{
@@ -2317,7 +3632,7 @@ void conditional_compare_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, ui
 				}
 				else
 				{
-					operand2 = ir_operand::copy_new_raw_size(X_jit(ctx,Rm), O);
+					operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
 				}
 				add_subtract_impl_jit(ctx,O,operand1,operand2,1ULL,((uint64_t)op == (uint64_t)0ULL));
 			}
@@ -2340,7 +3655,7 @@ void move_wide_immediate_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, u
 		}
 		else if ((((uint64_t)opc == (uint64_t)3ULL)))
 		{
-			result = ir_operand::copy_new_raw_size(X_jit(ctx,Rd), O);
+			result = copy_new_raw_size(ctx, X_jit(ctx,Rd), O);
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, result, ir_operand::create_con(~(((uint64_t)65535ULL << (uint64_t)shift)), O));
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, result, ir_operand::create_con(immediate, O));
 		}
@@ -2348,7 +3663,7 @@ void move_wide_immediate_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, u
 		{
 			result = ir_operand::create_con(immediate, O);
 		}
-		X_jit(ctx,Rd,result);
+		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
 
@@ -2362,6 +3677,350 @@ void pc_rel_addressing_jit(ssa_emit_context* ctx, uint64_t op, uint64_t immlo, u
 		instruction_pc = ((uint64_t)instruction_pc & (uint64_t)4095ULL);
 	}
 	X_jit(ctx,Rd,ir_operand::create_con(((uint64_t)instruction_pc + (uint64_t)offset), int64));
+}
+
+void load_store_register_post_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_imm_unscaled_jit(ctx,size,VR,opc,imm9,1ULL,Rn,Rt);
+}
+
+void load_store_register_pre_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_imm_unscaled_jit(ctx,size,VR,opc,imm9,3ULL,Rn,Rt);
+}
+
+void load_store_register_unscaled_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_imm_unscaled_jit(ctx,size,VR,opc,imm9,0ULL,Rn,Rt);
+}
+
+void load_store_register_pair_imm_offset_jit(ssa_emit_context* ctx, uint64_t opc, uint64_t VR, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_pair_imm_jit(ctx,opc,VR,2ULL,L,imm7,Rt2,Rn,Rt);
+}
+
+void load_store_register_pair_imm_post_jit(ssa_emit_context* ctx, uint64_t opc, uint64_t VR, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_pair_imm_jit(ctx,opc,VR,1ULL,L,imm7,Rt2,Rn,Rt);
+}
+
+void load_store_register_pair_imm_pre_jit(ssa_emit_context* ctx, uint64_t opc, uint64_t VR, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt)
+{
+	load_store_register_pair_imm_jit(ctx,opc,VR,3ULL,L,imm7,Rt2,Rn,Rt);
+}
+
+void load_store_register_pair_imm_jit(ssa_emit_context* ctx, uint64_t opc, uint64_t VR, uint64_t wb, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t wback = ((uint64_t)wb != (uint64_t)2ULL);
+	uint64_t postindex = ((uint64_t)wb == (uint64_t)1ULL);
+	uint64_t memop = !L;
+	uint64_t is_signed = (((uint64_t)opc & (uint64_t)1ULL));
+	uint64_t scale;
+	if ((VR))
+	{
+		scale = ((uint64_t)2ULL + (uint64_t)opc);
+	}
+	else
+	{
+		scale = ((uint64_t)2ULL + (uint64_t)(((uint64_t)(((uint64_t)opc >> (uint64_t)1ULL)) & (uint64_t)1ULL)));
+	}
+	uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+	uint64_t offset = ((uint64_t)sign_extend_jit(ctx,imm7,7ULL) << (uint64_t)scale);
+	uint64_t dbytes = ((uint64_t)datasize / (uint64_t)8ULL);
+	ir_operand address = XSP_jit(ctx,Rn);
+	if ((!postindex))
+	{
+		address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+	}
+	uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
+	{
+		if ((VR))
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				ir_operand d0 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(0ULL, int64))), S);
+				ir_operand d1 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64))), S);
+				V_jit(ctx,Rt,copy_new_raw_size(ctx, d0, int128));
+				V_jit(ctx,Rt2,copy_new_raw_size(ctx, d1, int128));
+			}
+			else
+			{
+				mem_jit(ctx,S,address,copy_new_raw_size(ctx, V_jit(ctx,Rt), S));
+				mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64)),copy_new_raw_size(ctx, V_jit(ctx,Rt2), S));
+			}
+		}
+		else
+		{
+			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			{
+				ir_operand d0 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(0ULL, int64))), int64);
+				ir_operand d1 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64))), int64);
+				if ((is_signed))
+				{
+					d0 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, d0, int32), int64);
+					d1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, d1, int32), int64);
+				}
+				X_jit(ctx,Rt,d0);
+				X_jit(ctx,Rt2,d1);
+			}
+			else
+			{
+				mem_jit(ctx,S,address,copy_new_raw_size(ctx, X_jit(ctx,Rt), S));
+				mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64)),copy_new_raw_size(ctx, X_jit(ctx,Rt2), S));
+			}
+		}
+		if ((wback))
+		{
+			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
+			{
+				undefined_jit(ctx);
+			}
+			if ((postindex))
+			{
+				address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+			}
+			XSP_jit(ctx,Rn,address);
+		}
+	}
+}
+
+void load_store_register_imm_unsigned_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm12, uint64_t Rn, uint64_t Rt)
+{
+	if ((((uint64_t)((uint64_t)((uint64_t)size == (uint64_t)3ULL) && (uint64_t)((uint64_t)VR == (uint64_t)0ULL)) && (uint64_t)((uint64_t)opc == (uint64_t)2ULL))))
+	{
+		return;
+	}
+	uint64_t is_vector = ((uint64_t)VR == (uint64_t)1ULL);
+	uint64_t wback = 0ULL;
+	uint64_t postindex = 0ULL;
+	if ((is_vector))
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = ((uint64_t)(((uint64_t)bit_c_jit(ctx,opc,1ULL) << (uint64_t)2ULL)) | (uint64_t)size);
+		uint64_t offset = ((uint64_t)imm12 << (uint64_t)scale);
+		if ((((uint64_t)opc & (uint64_t)1ULL)))
+		memop = 0ULL;
+		else
+		memop = 1ULL;
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		ir_operand address = XSP_jit(ctx,Rn);
+		if ((!postindex))
+		{
+			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+		}
+		uint64_t O = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				ir_operand data = copy_new_raw_size(ctx, V_jit(ctx,Rt), O);
+				mem_jit(ctx,O,address,data);
+			}
+			else
+			{
+				ir_operand data = copy_new_raw_size(ctx, mem_jit(ctx,O,address), O);
+				V_jit(ctx,Rt,copy_new_raw_size(ctx, data, int128));
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+				}
+				XSP_jit(ctx,Rn,address);
+			}
+		}
+	}
+	else
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = size;
+		uint64_t offset = ((uint64_t)imm12 << (uint64_t)scale);
+		if ((((uint64_t)bit_c_jit(ctx,opc,1ULL) == (uint64_t)0ULL)))
+		{
+			if ((((uint64_t)opc & (uint64_t)1ULL)))
+			memop = 0ULL;
+			else
+			memop = 1ULL;
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			regsize = 64ULL;
+			else
+			regsize = 32ULL;
+			_signed = 0ULL;
+		}
+		else
+		{
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			{
+				undefined_jit(ctx);
+			}
+			else
+			{
+				memop = 0ULL;
+				if ((((uint64_t)opc & (uint64_t)1ULL)))
+				regsize = 32ULL;
+				else
+				regsize = 64ULL;
+				_signed = 1ULL;
+			}
+		}
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		ir_operand address = XSP_jit(ctx,Rn);
+		if ((!postindex))
+		{
+			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+		}
+		uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : throw 0;
+		{
+			uint64_t R = regsize == 32ULL ? int32 : regsize == 64ULL ? int64 : throw 0;
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					ir_operand data = X_jit(ctx,Rt);
+					mem_jit(ctx,S,address,copy_new_raw_size(ctx, data, S));
+				}
+				else
+				{
+					ir_operand n = copy_new_raw_size(ctx, mem_jit(ctx,S,address), int64);
+					if ((_signed))
+					{
+						n = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, n, S), R), int64);
+					}
+					X_jit(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+					}
+					XSP_jit(ctx,Rn,address);
+				}
+			}
+		}
+	}
+}
+
+void load_store_register_imm_unscaled_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t wb, uint64_t Rn, uint64_t Rt)
+{
+	if ((((uint64_t)((uint64_t)((uint64_t)size == (uint64_t)3ULL) && (uint64_t)((uint64_t)VR == (uint64_t)0ULL)) && (uint64_t)((uint64_t)opc == (uint64_t)2ULL))))
+	{
+		return;
+	}
+	uint64_t is_vector = ((uint64_t)VR == (uint64_t)1ULL);
+	uint64_t wback = ((uint64_t)wb != (uint64_t)0ULL);
+	uint64_t postindex = ((uint64_t)wb == (uint64_t)1ULL);
+	uint64_t offset = sign_extend_jit(ctx,imm9,9ULL);
+	if ((is_vector))
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = ((uint64_t)(((uint64_t)bit_c_jit(ctx,opc,1ULL) << (uint64_t)2ULL)) | (uint64_t)size);
+		if ((((uint64_t)opc & (uint64_t)1ULL)))
+		memop = 0ULL;
+		else
+		memop = 1ULL;
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		ir_operand address = XSP_jit(ctx,Rn);
+		if ((!postindex))
+		{
+			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+		}
+		uint64_t O = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				ir_operand data = copy_new_raw_size(ctx, V_jit(ctx,Rt), O);
+				mem_jit(ctx,O,address,data);
+			}
+			else
+			{
+				ir_operand data = copy_new_raw_size(ctx, mem_jit(ctx,O,address), O);
+				V_jit(ctx,Rt,copy_new_raw_size(ctx, data, int128));
+			}
+			if ((wback))
+			{
+				if ((postindex))
+				{
+					address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+				}
+				XSP_jit(ctx,Rn,address);
+			}
+		}
+	}
+	else
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = size;
+		if ((((uint64_t)bit_c_jit(ctx,opc,1ULL) == (uint64_t)0ULL)))
+		{
+			if ((((uint64_t)opc & (uint64_t)1ULL)))
+			memop = 0ULL;
+			else
+			memop = 1ULL;
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			regsize = 64ULL;
+			else
+			regsize = 32ULL;
+			_signed = 0ULL;
+		}
+		else
+		{
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			{
+				undefined_jit(ctx);
+			}
+			else
+			{
+				memop = 0ULL;
+				if ((((uint64_t)opc & (uint64_t)1ULL)))
+				regsize = 32ULL;
+				else
+				regsize = 64ULL;
+				_signed = 1ULL;
+			}
+		}
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		ir_operand address = XSP_jit(ctx,Rn);
+		if ((!postindex))
+		{
+			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+		}
+		uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : throw 0;
+		{
+			uint64_t R = regsize == 32ULL ? int32 : regsize == 64ULL ? int64 : throw 0;
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					ir_operand data = X_jit(ctx,Rt);
+					mem_jit(ctx,S,address,copy_new_raw_size(ctx, data, S));
+				}
+				else
+				{
+					ir_operand n = copy_new_raw_size(ctx, mem_jit(ctx,S,address), int64);
+					if ((_signed))
+					{
+						n = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, n, S), R), int64);
+					}
+					X_jit(ctx,Rt,n);
+				}
+				if ((wback))
+				{
+					if ((postindex))
+					{
+						address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+					}
+					XSP_jit(ctx,Rn,address);
+				}
+			}
+		}
+	}
 }
 
 void br_jit(ssa_emit_context* ctx, uint64_t Rn)
@@ -2378,7 +4037,7 @@ uint64_t sign_extend_jit(ssa_emit_context* ctx, uint64_t source, uint64_t count)
 
 ir_operand a_shift_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t shift_type, uint64_t ammount)
 {
-	ir_operand result = ir_operand::copy_new_raw_size(X_jit(ctx,m), O);
+	ir_operand result = copy_new_raw_size(ctx, X_jit(ctx,m), O);
 	if ((((uint64_t)shift_type == (uint64_t)0ULL)))
 	{
 		return ssa_emit_context::emit_ssa(ctx, ir_shift_left, result, ir_operand::create_con(ammount, O));
@@ -2399,7 +4058,7 @@ ir_operand a_shift_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_
 
 ir_operand a_extend_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t extend_type, uint64_t shift)
 {
-	ir_operand val = ir_operand::copy_new_raw_size(X_jit(ctx,m), O);
+	ir_operand val = copy_new_raw_size(ctx, X_jit(ctx,m), O);
 	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
 	{
 		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(255ULL, O));
@@ -2414,15 +4073,15 @@ ir_operand a_extend_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64
 	}
 	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
 	{
-		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,ir_operand::copy_new_raw_size(val, int8), O);
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int8), O);
 	}
 	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
 	{
-		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,ir_operand::copy_new_raw_size(val, int16), O);
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int16), O);
 	}
 	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
 	{
-		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,ir_operand::copy_new_raw_size(val, int32), O);
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int32), O);
 	}
 	return ssa_emit_context::emit_ssa(ctx, ir_shift_left, val, ir_operand::create_con(shift, O));
 }
@@ -2479,6 +4138,11 @@ uint64_t bits_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t top, uint64
 	return ((uint64_t)(((uint64_t)source >> (uint64_t)bottom)) & (uint64_t)mask);
 }
 
+uint64_t bit_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t bit)
+{
+	return ((uint64_t)(((uint64_t)source >> (uint64_t)bit)) & (uint64_t)1ULL);
+}
+
 uint64_t rotate_right_bits_jit(ssa_emit_context* ctx, uint64_t source, uint64_t ammount, uint64_t bit_count)
 {
 	source = ((uint64_t)source & (uint64_t)ones_jit(ctx,bit_count));
@@ -2533,17 +4197,17 @@ ir_operand add_subtract_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n,
 	}
 	if ((set_flags))
 	{
-		_sys_jit(ctx,0ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, d, ir_operand::create_con(0ULL, O)));
-		_sys_jit(ctx,1ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, ir_operand::create_con(0ULL, O)));
+		_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, d, ir_operand::create_con(0ULL, O)), int64));
+		_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, ir_operand::create_con(0ULL, O)), int64));
 		if ((is_add))
 		{
-			_sys_jit(ctx,2ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, d, n));
-			_sys_jit(ctx,3ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m))), ir_operand::create_con(0ULL, O)));
+			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, d, n), int64));
+			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m))), ir_operand::create_con(0ULL, O)), int64));
 		}
 		else
 		{
-			_sys_jit(ctx,2ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_unsigned, n, m));
-			_sys_jit(ctx,3ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m)), ir_operand::create_con(0ULL, O)));
+			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_unsigned, n, m), int64));
+			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m)), ir_operand::create_con(0ULL, O)), int64));
 		}
 	}
 	return d;
@@ -2562,17 +4226,17 @@ ir_operand add_subtract_carry_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_oper
 	}
 	if ((set_flags))
 	{
-		_sys_jit(ctx,0ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, d, ir_operand::create_con(0ULL, O)));
-		_sys_jit(ctx,1ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, ir_operand::create_con(0ULL, O)));
+		_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, d, ir_operand::create_con(0ULL, O)), int64));
+		_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, ir_operand::create_con(0ULL, O)), int64));
 		if ((is_add))
 		{
-			_sys_jit(ctx,2ULL,ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, n), carry), ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, d, n)));
-			_sys_jit(ctx,3ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m))), ir_operand::create_con(0ULL, O)));
+			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, n), carry), ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, d, n)), int64));
+			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m))), ir_operand::create_con(0ULL, O)), int64));
 		}
 		else
 		{
-			_sys_jit(ctx,2ULL,ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, m), carry), ssa_emit_context::emit_ssa(ctx, ir_compare_greater_unsigned, n, m)));
-			_sys_jit(ctx,3ULL,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m)), ir_operand::create_con(0ULL, O)));
+			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, m), carry), ssa_emit_context::emit_ssa(ctx, ir_compare_greater_unsigned, n, m)), int64));
+			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m)), ir_operand::create_con(0ULL, O)), int64));
 		}
 	}
 	return d;
@@ -2580,10 +4244,10 @@ ir_operand add_subtract_carry_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_oper
 
 ir_operand condition_holds_jit(ssa_emit_context* ctx, uint64_t cond)
 {
-	ir_operand n = ir_operand::copy_new_raw_size(_sys_jit(ctx,0ULL), int8);
-	ir_operand z = ir_operand::copy_new_raw_size(_sys_jit(ctx,1ULL), int8);
-	ir_operand c = ir_operand::copy_new_raw_size(_sys_jit(ctx,2ULL), int8);
-	ir_operand v = ir_operand::copy_new_raw_size(_sys_jit(ctx,3ULL), int8);
+	ir_operand n = copy_new_raw_size(ctx, _sys_jit(ctx,0ULL), int8);
+	ir_operand z = copy_new_raw_size(ctx, _sys_jit(ctx,1ULL), int8);
+	ir_operand c = copy_new_raw_size(ctx, _sys_jit(ctx,2ULL), int8);
+	ir_operand v = copy_new_raw_size(ctx, _sys_jit(ctx,3ULL), int8);
 	uint64_t raw_condition = ((uint64_t)cond >> (uint64_t)1ULL);
 	ir_operand result;
 	if ((((uint64_t)raw_condition == (uint64_t)0ULL)))
@@ -2634,6 +4298,18 @@ void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link
 		X_jit(ctx,30ULL,link_address);
 	}
 	_branch_long_jit(ctx,branch_location);
+}
+
+void mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address, ir_operand value)
+{
+	address = translate_address_jit(ctx,address);
+	ssa_emit_context::store(ctx, address, value);
+}
+
+ir_operand mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address)
+{
+	address = translate_address_jit(ctx,address);
+	return ssa_emit_context::emit_ssa(ctx, ir_load, address, O);
 }
 
 ir_operand XSP_jit(ssa_emit_context* ctx, uint64_t reg_id)

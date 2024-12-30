@@ -12,6 +12,11 @@ static void emit_move(x86_pre_allocator_context* context, ir_operand destination
 {
 	assert_same_size({ destination, source });
 
+	if (ir_operand::are_equal(destination, source) && ir_operand::get_raw_size(&destination) < int64)
+	{
+		return;
+	}
+
 	if (ir_operand::get_raw_size(&destination) != ir_operand::get_raw_size(&source))
 	{
 		ir_operation_block::log(context->source_ir);
@@ -402,6 +407,29 @@ static void emit_as_is(x86_pre_allocator_context* result, ir_operation* operatio
 	);
 }
 
+static void emit_vector_insert(x86_pre_allocator_context* result, ir_operation* operation)
+{
+	assert_operand_count(operation, 1, 4);
+
+	ir_operand destination = operation->destinations[0];
+	ir_operand source_vector = operation->sources[0];
+	
+	ir_operand value = register_or_constant(result,operation->sources[1]);
+	ir_operand index = operation->sources[2];
+	ir_operand size = operation->sources[3];
+
+	assert_is_register(source_vector);
+	assert_is_size(source_vector, int128);
+
+	assert(ir_operand::get_raw_size(&value) <= int64);
+
+	assert_is_constant(index);
+	assert_is_constant(size);
+
+	emit_move(result, destination, source_vector);
+	ir_operation_block::emitds(result->ir, ir_vector_insert, destination, destination, value, index, size);
+}
+
 static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_allocator_context, ir_operation* operation)
 {
 	ir_instructions working_instruction = (ir_instructions)operation->instruction;
@@ -534,16 +562,35 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		}; break;
 
 		case ir_load:
-		case ir_store:
 		case ir_jump_if:
+		case ir_vector_zero:
 		{
 			emit_as_is(pre_allocator_context, operation);
 		}; break;
 
 		case ir_assert_false:
 		case ir_assert_true:
+		case ir_store:	//TODO this can be optimized
 		{
 			emit_with_possible_remaps(pre_allocator_context, operation);
+		}; break;
+
+		case ir_vector_extract:
+		{
+			assert_operand_count(operation, 1, 3);
+			
+			assert(!ir_operand::is_vector(&operation->destinations[0]));
+
+			assert_is_size(operation->sources[0], int128);
+			assert_is_constant(operation->sources[1]);
+			assert_is_constant(operation->sources[2]);
+
+			emit_as_is(pre_allocator_context, operation);
+		}; break;
+
+		case ir_vector_insert:
+		{
+			emit_vector_insert(pre_allocator_context, operation);
 		}; break;
 
 		case ir_conditional_select:

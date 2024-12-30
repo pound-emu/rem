@@ -567,6 +567,72 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			}
 		}; break;
 
+		case ir_vector_zero:
+		{
+			ir_operand destination = working_operation.destinations[0];
+
+			assert_is_size(destination, int128);
+
+			auto d = create_operand<Xbyak::Xmm>(destination);
+
+			c.xorps(d, d);
+		}; break;
+
+		case ir_vector_extract:
+		{
+			ir_operand destination = working_operation.destinations[0];
+
+			ir_operand source = working_operation.sources[0];
+			ir_operand index = working_operation.sources[1];
+			ir_operand size = working_operation.sources[2];
+
+			assert(!ir_operand::is_vector(&destination));
+
+			assert_is_size(source, int128);
+			assert_is_constant(index);
+			assert_is_constant(size);
+
+			auto src = create_operand<Xbyak::Xmm>(source);
+
+			switch (size.value)
+			{
+				case 8: 	c.pextrb(create_operand<Xbyak::Reg32>(destination), src, index.value); break;
+				case 16: 	c.pextrw(create_operand<Xbyak::Reg32>(destination), src, index.value); break;
+				case 32: 	c.pextrd(create_operand<Xbyak::Reg32>(destination), src, index.value); break;
+				case 64: 	c.pextrq(create_operand<Xbyak::Reg64>(destination), src, index.value); break;	
+				default: throw 0;
+			}
+
+		}; break;
+
+		case ir_vector_insert:
+		{
+			ir_operand destination = working_operation.destinations[0];
+
+			ir_operand source = working_operation.sources[0];
+			ir_operand value = working_operation.sources[1];
+			ir_operand index = working_operation.sources[2];
+			ir_operand size = working_operation.sources[3];
+
+			assert_same_registers(destination, source);
+
+			assert(!ir_operand::is_vector(&value));
+			assert_is_constant(index);
+			assert_is_constant(size);
+
+			auto d = create_operand<Xbyak::Xmm>(destination);
+
+			switch (size.value)
+			{
+				case 8: 	c.pinsrb(d, create_operand<Xbyak::Reg32>(value), index.value); break;
+				case 16: 	c.pinsrw(d, create_operand<Xbyak::Reg32>(value), index.value); break;
+				case 32: 	c.pinsrd(d, create_operand<Xbyak::Reg32>(value), index.value); break;
+				case 64: 	c.pinsrq(d, create_operand<Xbyak::Reg64>(value), index.value); break;
+				default: throw 0;
+			}
+
+		}; break;
+
 		default:
 		{
 			std::cout << "UNDEFINED X86 INSTRUCTION " << std::endl;

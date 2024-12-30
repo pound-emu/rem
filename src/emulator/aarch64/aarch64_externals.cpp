@@ -32,6 +32,13 @@ uint64_t _get_pc_interpreter(interpreter_data* ctx)
 
 void undefined_interpreter(interpreter_data* ctx){throw 0;};
 
+uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address)
+{
+    aarch64_process* process = ctx->process_context;
+
+    return (uint64_t)process->guest_memory_context.translate_address(process->guest_memory_context.base, address);
+}
+
 uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id)
 {
     aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
@@ -60,6 +67,23 @@ void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
     }
 }
 
+uint128_t V_interpreter(interpreter_data* ctx, uint64_t reg_id)
+{
+    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+
+    assert(reg_id >= 0 && reg_id <= 32);
+
+    return ((uint128_t*)((char*)ctx->register_data + offsets->q_offset))[reg_id];
+}
+
+void V_interpreter(interpreter_data* ctx, uint64_t reg_id, uint128_t value)
+{
+    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+
+    assert(reg_id >= 0 && reg_id <= 32);
+
+    ((uint128_t*)((char*)ctx->register_data + offsets->q_offset))[reg_id] = value;
+}
 
 ir_operand _x_jit(ssa_emit_context* ctx, uint64_t reg_id)
 {
@@ -114,3 +138,25 @@ uint64_t _get_pc_jit(ssa_emit_context* ctx)
 }
 
 void undefined_jit(ssa_emit_context* ctx){throw 0;};
+
+ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    aarch64_process* process = actx->process;
+
+    ir_operand result = ssa_emit_context::create_local(ctx, int64);
+
+    process->guest_memory_context.emit_translate_address(process->guest_memory_context.base, ctx, result, address);
+
+    return result;
+}
+
+ir_operand V_jit(ssa_emit_context* ctx, uint64_t reg_id)
+{
+    return aarch64_emit_context::get_v_raw((aarch64_emit_context*)ctx->context_data, reg_id);
+}
+
+void V_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
+{
+    aarch64_emit_context::set_v_raw((aarch64_emit_context*)ctx->context_data, reg_id, value);
+}

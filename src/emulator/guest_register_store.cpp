@@ -12,7 +12,7 @@ void guest_register_store::create(guest_register_store* result, ssa_emit_context
     for (int i = 0; i < guest_context_size; ++i)
     {
         result->guest_registers[i].free_guest = true;
-        result->guest_registers[i].mode = none;
+        result->guest_registers[i].mode = guest_usage_none;
     }
 }
 
@@ -47,7 +47,7 @@ ir_operand guest_register_store::request_guest_register(guest_register_store* gu
         throw 0;
     }
 
-    guest_register->mode |= guest_usage::read;
+    guest_register->mode |= guest_usage::guest_usage_read;
 
     return guest_register->raw_register;
 }
@@ -68,11 +68,11 @@ void guest_register_store::write_to_guest_register(guest_register_store* guest_r
 
     ir_operand raw_register = guest_register->raw_register;
 
-    new_value = ir_operand::copy_new_raw_size(new_value, raw_register.meta_data);
+    raw_register = ir_operand::copy_new_raw_size(raw_register, new_value.meta_data);
 
     ir_operation_block::emitds(ir, ir_move, raw_register, new_value);
 
-    guest_register->mode |= guest_usage::write;
+    guest_register->mode |= guest_usage::guest_usage_write;
 }
 
 void guest_register_store::emit_load_context(guest_register_store* guest_register_store_context)

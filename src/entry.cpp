@@ -72,16 +72,27 @@ static std::string disassemble_instruction(uint32_t instruction, bool* valid_ins
     return result;
 }
 
-static void test_single_instruction(uint32_t instruction)
+static bool test_single_instruction(uint32_t instruction)
 {
-    bool is_valid_instruction;
+    bool result_valid;
 
-    std::string ins = disassemble_instruction(instruction,&is_valid_instruction ) ;
+    std::string ins = disassemble_instruction(instruction,&result_valid);
 
-    if (ins == "undefined")
-        return;
+    assemble_instruction(ins, &result_valid);
 
-    std::cout << "Testing " << ins << std::endl;
+    if (ins == "undefined" || !result_valid)
+        return false;
+
+    if (skip_instruction(instruction) || !is_valid_instruction(instruction))
+    {
+        std::cout << "Skipped " << ins << std::endl;
+
+        return true;
+    }
+    else
+    {
+        std::cout << "Testing " << ins << std::endl;
+    }
 
     arm_unicorn_fuzzer tester;
     arm_unicorn_fuzzer::create(&tester);
@@ -92,13 +103,12 @@ static void test_single_instruction(uint32_t instruction)
     arm_unicorn_fuzzer::execute_code(&tester, 1);
 
     arm_unicorn_fuzzer::destroy(&tester);
+
+    return true;
 }
 
-static void test_random_instruction(int seed, int instruction, int mask)
+static bool test_random_instruction(int seed, int instruction, int mask)
 {
-    //ins 285212672
-	//mask 528482304
-
     srand(seed);
 
     uint32_t ins = instruction;
@@ -106,7 +116,7 @@ static void test_random_instruction(int seed, int instruction, int mask)
 
     bool valid;
 
-    test_single_instruction(ins);
+    return test_single_instruction(ins);
 }
 
 int main()
@@ -116,31 +126,43 @@ int main()
     aarch64_process p;
     aarch64_process::create(&p, {}, nullptr, {});
 
-    auto table = fixed_length_decoder<uint32_t>::get_table_by_name(&p.decoder, "add_subtract_carry");
+    auto table = fixed_length_decoder<uint32_t>::get_table_by_name(&p.decoder, "load_store_register_pair_imm_offset");
+
+    skip_uneeded = false;
 
     //bool valid;
-    //test_single_instruction(assemble_instruction("and x19, x16, #0xaaaaaaaaaaaaaaaa", &valid));
+    //test_single_instruction(assemble_instruction("ldpsw x4, x4, [x13, #0xdc]!", &valid));
 
     if (true)
     {
-        for (int i = 0; i < 100000; ++i)
+        int seed = 0;
+
+        while (1)
         {
             for (int i = 0; i < p.decoder.entries.size(); ++i)
             {
                 auto entry = p.decoder.entries[i];
 
-                test_random_instruction(i++, entry.instruction, entry.mask);
+                for (int k = 0; k < 100; ++k)
+                {
+                    while (!test_random_instruction(++seed, entry.instruction, entry.mask));
+                }
             }
         }
     }
     else
     {
-        auto entry = table;
-
-        for (int i = 0; i < 100000; ++i)
+        while (1)
         {
-            test_random_instruction(i++, entry.instruction, entry.mask);
+            auto entry = table;
+
+            for (int i = 0; i < 10000; ++i)
+            {
+                test_random_instruction(i, entry.instruction, entry.mask);
+            }
         }
+        
+
     }
 
     std::cout << "Every instruction tested is valid " << std::endl;
