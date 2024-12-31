@@ -5,7 +5,6 @@
 #include "capstone/headers/capstone/aarch64.h"
 #include "emulator/aarch64/aarch64_process.h"
 
-
 struct vec128
 {
     uint64_t d0;
@@ -79,8 +78,8 @@ static bool is_valid_instruction(uint32_t instruction)
         if ((instruction >> 26) & 1)
             return true;
 
-        if (n == 31)
-            return true;
+        //if (n == 31)
+        //    return true;
 
         if (n == t2 || n == t || t2 == t)
             return false;

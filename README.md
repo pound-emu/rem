@@ -37,7 +37,15 @@ Road Plan:
                                                 - Data-processing (3 source)                    [ ]
                                                 All the base instructions have been implamented. Limited support for extensions.
                                             - Branches, Exception Generating and System instructions
-                                                - Only implamented instruction is BR
+                                                - Compare and branch (immediate)                [X]
+                                                - Test and branch (immediate)                   [X]
+                                                - Unconditional branch (immediate)              [X]
+                                                - Conditional branch (immediate)                [ ] 
+                                                    BC.cond not implamented
+                                                - Unconditional branch (register)               [ ]
+                                                    - Ret
+                                                    - Br
+                                                    - Blr
                                             - Loads and Stores
                                                 - Load/store register pair (post-indexed)       [X]
                                                 - Load/store register pair (pre-indexed)        [X]
@@ -46,6 +54,7 @@ Road Plan:
                                                 - Load/store register (immediate post-indexed)  [X]
                                                 - Load/store register (immediate pre-indexed)   [X]
                                                 - Load/store register (unsigned immediate)      [X]
+                                                - Load/store register (register offset)         [X]
                                             - Data Processing -- Scalar Floating-Point and Advanced SIMD
                                                 - Not Started
     arm64 backend                       - [not started]

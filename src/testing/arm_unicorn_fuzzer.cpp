@@ -44,7 +44,9 @@ static void reset_registers(arm_unicorn_fuzzer* ctx, bool random)
     {
         for (int i = 0; i < 32; ++i)
         {
-            ctx->debug_arm_interpreted_function.x[i] = (1 << 16) + i;
+            ctx->debug_arm_interpreted_function.x[i] = (1 << 9) - 1;
+
+
         } 
     }
 

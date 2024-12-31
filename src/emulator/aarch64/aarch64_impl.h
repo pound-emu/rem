@@ -60,12 +60,19 @@ void load_store_register_pair_imm_pre_interpreter(interpreter_data* ctx, uint64_
 void load_store_register_pair_imm_interpreter(interpreter_data* ctx, uint64_t opc, uint64_t VR, uint64_t wb, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt);
 void load_store_register_imm_unsigned_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm12, uint64_t Rn, uint64_t Rt);
 void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t wb, uint64_t Rn, uint64_t Rt);
-void br_interpreter(interpreter_data* ctx, uint64_t Rn);
+void load_store_register_offset_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t Rm, uint64_t option, uint64_t S, uint64_t Rn, uint64_t Rt);
+void branch_register_interpreter(interpreter_data* ctx, uint64_t l, uint64_t Rn);
+void return_register_interpreter(interpreter_data* ctx, uint64_t Rn);
+void test_bit_branch_interpreter(interpreter_data* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt);
+void compare_and_branch_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt);
+void b_unconditional_interpreter(interpreter_data* ctx, uint64_t op, uint64_t imm26);
+void b_conditional_interpreter(interpreter_data* ctx, uint64_t imm19, uint64_t cond);
 uint64_t sign_extend_interpreter(interpreter_data* ctx, uint64_t source, uint64_t count);
 template <typename O>
 O a_shift_reg_interpreter(interpreter_data* ctx, uint64_t m, uint64_t shift_type, uint64_t ammount);
 template <typename O>
 O a_extend_reg_interpreter(interpreter_data* ctx, uint64_t m, uint64_t extend_type, uint64_t shift);
+uint64_t a_extend_reg_64_interpreter(interpreter_data* ctx, uint64_t m, uint64_t extend_type, uint64_t shift);
 template <typename O>
 O reverse_bytes_interpreter(interpreter_data* ctx, O source, uint64_t byte_count);
 uint64_t highest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t src, uint64_t size);
@@ -95,6 +102,8 @@ void _x_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value);//TH
 uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
 void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value);//THIS FUNCTION IS USER DEFINED
 void _branch_long_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
+void _branch_short_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
+void _branch_conditional_interpreter(interpreter_data* ctx, uint64_t yes, uint64_t no, uint64_t condition);//THIS FUNCTION IS USER DEFINED
 uint64_t _get_pc_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 void undefined_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address);//THIS FUNCTION IS USER DEFINED
@@ -132,10 +141,17 @@ void load_store_register_pair_imm_pre_jit(ssa_emit_context* ctx, uint64_t opc, u
 void load_store_register_pair_imm_jit(ssa_emit_context* ctx, uint64_t opc, uint64_t VR, uint64_t wb, uint64_t L, uint64_t imm7, uint64_t Rt2, uint64_t Rn, uint64_t Rt);
 void load_store_register_imm_unsigned_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm12, uint64_t Rn, uint64_t Rt);
 void load_store_register_imm_unscaled_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t wb, uint64_t Rn, uint64_t Rt);
-void br_jit(ssa_emit_context* ctx, uint64_t Rn);
+void load_store_register_offset_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t Rm, uint64_t option, uint64_t S, uint64_t Rn, uint64_t Rt);
+void branch_register_jit(ssa_emit_context* ctx, uint64_t l, uint64_t Rn);
+void return_register_jit(ssa_emit_context* ctx, uint64_t Rn);
+void test_bit_branch_jit(ssa_emit_context* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt);
+void compare_and_branch_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt);
+void b_unconditional_jit(ssa_emit_context* ctx, uint64_t op, uint64_t imm26);
+void b_conditional_jit(ssa_emit_context* ctx, uint64_t imm19, uint64_t cond);
 uint64_t sign_extend_jit(ssa_emit_context* ctx, uint64_t source, uint64_t count);
 ir_operand a_shift_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t shift_type, uint64_t ammount);
 ir_operand a_extend_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t extend_type, uint64_t shift);
+ir_operand a_extend_reg_64_jit(ssa_emit_context* ctx, uint64_t m, uint64_t extend_type, uint64_t shift);
 ir_operand reverse_bytes_jit(ssa_emit_context* ctx,uint64_t O, ir_operand source, uint64_t byte_count);
 uint64_t highest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t src, uint64_t size);
 uint64_t ones_jit(ssa_emit_context* ctx, uint64_t size);
@@ -160,6 +176,8 @@ void _x_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);//THIS FUN
 ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
 void _sys_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);//THIS FUNCTION IS USER DEFINED
 void _branch_long_jit(ssa_emit_context* ctx, ir_operand location);//THIS FUNCTION IS USER DEFINED
+void _branch_short_jit(ssa_emit_context* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
+void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t yes, uint64_t no, ir_operand condition);//THIS FUNCTION IS USER DEFINED
 uint64_t _get_pc_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 void undefined_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address);//THIS FUNCTION IS USER DEFINED

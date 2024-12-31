@@ -698,16 +698,122 @@ static void emit_load_store_register_imm_unsigned_jit(ssa_emit_context* ctx, uin
 	load_store_register_imm_unsigned_jit(ctx, size, VR, opc, imm12, Rn, Rt);
 }
 
-static void call_br_interpreter(interpreter_data* ctx, uint32_t instruction)
+static void call_load_store_register_offset_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int option = (instruction >> 13) & 7;
+	int S = (instruction >> 12) & 1;
 	int Rn = (instruction >> 5) & 31;
-	br_interpreter(ctx, Rn);
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_offset_interpreter(ctx, size, VR, opc, Rm, option, S, Rn, Rt);
 }
 
-static void emit_br_jit(ssa_emit_context* ctx, uint32_t instruction)
+static void emit_load_store_register_offset_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int VR = (instruction >> 26) & 1;
+	int opc = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int option = (instruction >> 13) & 7;
+	int S = (instruction >> 12) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_register_offset_jit(ctx, size, VR, opc, Rm, option, S, Rn, Rt);
+}
+
+static void call_branch_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int l = (instruction >> 21) & 1;
+	int Rn = (instruction >> 5) & 31;
+	branch_register_interpreter(ctx, l, Rn);
+}
+
+static void emit_branch_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int l = (instruction >> 21) & 1;
+	int Rn = (instruction >> 5) & 31;
+	branch_register_jit(ctx, l, Rn);
+}
+
+static void call_return_register_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int Rn = (instruction >> 5) & 31;
-	br_jit(ctx, Rn);
+	return_register_interpreter(ctx, Rn);
+}
+
+static void emit_return_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Rn = (instruction >> 5) & 31;
+	return_register_jit(ctx, Rn);
+}
+
+static void call_test_bit_branch_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int b5 = (instruction >> 31) & 1;
+	int op = (instruction >> 24) & 1;
+	int b40 = (instruction >> 19) & 31;
+	int imm14 = (instruction >> 5) & 16383;
+	int Rt = (instruction >> 0) & 31;
+	test_bit_branch_interpreter(ctx, b5, op, b40, imm14, Rt);
+}
+
+static void emit_test_bit_branch_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int b5 = (instruction >> 31) & 1;
+	int op = (instruction >> 24) & 1;
+	int b40 = (instruction >> 19) & 31;
+	int imm14 = (instruction >> 5) & 16383;
+	int Rt = (instruction >> 0) & 31;
+	test_bit_branch_jit(ctx, b5, op, b40, imm14, Rt);
+}
+
+static void call_compare_and_branch_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int op = (instruction >> 24) & 1;
+	int imm19 = (instruction >> 5) & 524287;
+	int Rt = (instruction >> 0) & 31;
+	compare_and_branch_interpreter(ctx, sf, op, imm19, Rt);
+}
+
+static void emit_compare_and_branch_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int op = (instruction >> 24) & 1;
+	int imm19 = (instruction >> 5) & 524287;
+	int Rt = (instruction >> 0) & 31;
+	compare_and_branch_jit(ctx, sf, op, imm19, Rt);
+}
+
+static void call_b_unconditional_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int op = (instruction >> 31) & 1;
+	int imm26 = (instruction >> 0) & 67108863;
+	b_unconditional_interpreter(ctx, op, imm26);
+}
+
+static void emit_b_unconditional_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int op = (instruction >> 31) & 1;
+	int imm26 = (instruction >> 0) & 67108863;
+	b_unconditional_jit(ctx, op, imm26);
+}
+
+static void call_b_conditional_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm19 = (instruction >> 5) & 524287;
+	int cond = (instruction >> 0) & 15;
+	b_conditional_interpreter(ctx, imm19, cond);
+}
+
+static void emit_b_conditional_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm19 = (instruction >> 5) & 524287;
+	int cond = (instruction >> 0) & 15;
+	b_conditional_jit(ctx, imm19, cond);
 }
 
 void init_aarch64_decoder(aarch64_process* process)
@@ -740,7 +846,13 @@ void init_aarch64_decoder(aarch64_process* process)
 	append_table(process, "--101-001-----------------------", (void*)emit_load_store_register_pair_imm_post_jit, (void*)call_load_store_register_pair_imm_post_interpreter, "load_store_register_pair_imm_post");
 	append_table(process, "--101-011-----------------------", (void*)emit_load_store_register_pair_imm_pre_jit, (void*)call_load_store_register_pair_imm_pre_interpreter, "load_store_register_pair_imm_pre");
 	append_table(process, "--111-01------------------------", (void*)emit_load_store_register_imm_unsigned_jit, (void*)call_load_store_register_imm_unsigned_interpreter, "load_store_register_imm_unsigned");
-	append_table(process, "1101011000011111000000-----00000", (void*)emit_br_jit, (void*)call_br_interpreter, "br");
+	append_table(process, "--111-00--1---------10----------", (void*)emit_load_store_register_offset_jit, (void*)call_load_store_register_offset_interpreter, "load_store_register_offset");
+	append_table(process, "1101011000-11111000000-----00000", (void*)emit_branch_register_jit, (void*)call_branch_register_interpreter, "branch_register");
+	append_table(process, "1101011001011111000000-----00000", (void*)emit_return_register_jit, (void*)call_return_register_interpreter, "return_register");
+	append_table(process, "-011011-------------------------", (void*)emit_test_bit_branch_jit, (void*)call_test_bit_branch_interpreter, "test_bit_branch");
+	append_table(process, "-011010-------------------------", (void*)emit_compare_and_branch_jit, (void*)call_compare_and_branch_interpreter, "compare_and_branch");
+	append_table(process, "-00101--------------------------", (void*)emit_b_unconditional_jit, (void*)call_b_unconditional_interpreter, "b_unconditional");
+	append_table(process, "01010100-------------------0----", (void*)emit_b_conditional_jit, (void*)call_b_conditional_interpreter, "b_conditional");
 }
 
 void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -1695,257 +1807,207 @@ void load_store_register_pair_imm_interpreter(interpreter_data* ctx, uint64_t op
 	{
 		address = ((uint64_t)address + (uint64_t)offset);
 	}
-	if (datasize == 8ULL)
 	{
-		if ((VR))
+		if (datasize == 8ULL)
 		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			if ((VR))
 			{
-				uint8_t d0 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint8_t d1 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				V_interpreter(ctx,Rt,(uint128_t)d0);
-				V_interpreter(ctx,Rt2,(uint128_t)d1);
-			}
-			else
-			{
-				mem_interpreter<uint8_t>(ctx,address,(uint8_t)V_interpreter(ctx,Rt));
-				mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint8_t)V_interpreter(ctx,Rt2));
-			}
-		}
-		else
-		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				uint64_t d0 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint64_t d1 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				if ((is_signed))
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
 				{
-					d0 = (uint64_t)sign_extend((uint32_t)d0);
-					d1 = (uint64_t)sign_extend((uint32_t)d1);
+					uint8_t d0 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint8_t d1 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					V_interpreter(ctx,Rt,(uint128_t)d0);
+					V_interpreter(ctx,Rt2,(uint128_t)d1);
 				}
-				X_interpreter(ctx,Rt,d0);
-				X_interpreter(ctx,Rt2,d1);
+				else
+				{
+					mem_interpreter<uint8_t>(ctx,address,(uint8_t)V_interpreter(ctx,Rt));
+					mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint8_t)V_interpreter(ctx,Rt2));
+				}
 			}
 			else
 			{
-				mem_interpreter<uint8_t>(ctx,address,(uint8_t)X_interpreter(ctx,Rt));
-				mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint8_t)X_interpreter(ctx,Rt2));
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					uint64_t d0 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint64_t d1 = mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					if ((is_signed))
+					{
+						d0 = (uint64_t)sign_extend((uint32_t)d0);
+						d1 = (uint64_t)sign_extend((uint32_t)d1);
+					}
+					X_interpreter(ctx,Rt,d0);
+					X_interpreter(ctx,Rt2,d1);
+				}
+				else
+				{
+					mem_interpreter<uint8_t>(ctx,address,(uint8_t)X_interpreter(ctx,Rt));
+					mem_interpreter<uint8_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint8_t)X_interpreter(ctx,Rt2));
+				}
 			}
 		}
-		if ((wback))
+		if (datasize == 16ULL)
 		{
-			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
+			if ((VR))
 			{
-				undefined_interpreter(ctx);
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					uint16_t d0 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint16_t d1 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					V_interpreter(ctx,Rt,(uint128_t)d0);
+					V_interpreter(ctx,Rt2,(uint128_t)d1);
+				}
+				else
+				{
+					mem_interpreter<uint16_t>(ctx,address,(uint16_t)V_interpreter(ctx,Rt));
+					mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint16_t)V_interpreter(ctx,Rt2));
+				}
 			}
-			if ((postindex))
+			else
 			{
-				address = ((uint64_t)address + (uint64_t)offset);
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					uint64_t d0 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint64_t d1 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					if ((is_signed))
+					{
+						d0 = (uint64_t)sign_extend((uint32_t)d0);
+						d1 = (uint64_t)sign_extend((uint32_t)d1);
+					}
+					X_interpreter(ctx,Rt,d0);
+					X_interpreter(ctx,Rt2,d1);
+				}
+				else
+				{
+					mem_interpreter<uint16_t>(ctx,address,(uint16_t)X_interpreter(ctx,Rt));
+					mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint16_t)X_interpreter(ctx,Rt2));
+				}
 			}
-			XSP_interpreter(ctx,Rn,address);
 		}
+		if (datasize == 32ULL)
+		{
+			if ((VR))
+			{
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					uint32_t d0 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint32_t d1 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					V_interpreter(ctx,Rt,(uint128_t)d0);
+					V_interpreter(ctx,Rt2,(uint128_t)d1);
+				}
+				else
+				{
+					mem_interpreter<uint32_t>(ctx,address,(uint32_t)V_interpreter(ctx,Rt));
+					mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint32_t)V_interpreter(ctx,Rt2));
+				}
+			}
+			else
+			{
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					uint64_t d0 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint64_t d1 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					if ((is_signed))
+					{
+						d0 = (uint64_t)sign_extend((uint32_t)d0);
+						d1 = (uint64_t)sign_extend((uint32_t)d1);
+					}
+					X_interpreter(ctx,Rt,d0);
+					X_interpreter(ctx,Rt2,d1);
+				}
+				else
+				{
+					mem_interpreter<uint32_t>(ctx,address,(uint32_t)X_interpreter(ctx,Rt));
+					mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint32_t)X_interpreter(ctx,Rt2));
+				}
+			}
+		}
+		if (datasize == 64ULL)
+		{
+			if ((VR))
+			{
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					uint64_t d0 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint64_t d1 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					V_interpreter(ctx,Rt,(uint128_t)d0);
+					V_interpreter(ctx,Rt2,(uint128_t)d1);
+				}
+				else
+				{
+					mem_interpreter<uint64_t>(ctx,address,(uint64_t)V_interpreter(ctx,Rt));
+					mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint64_t)V_interpreter(ctx,Rt2));
+				}
+			}
+			else
+			{
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					uint64_t d0 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint64_t d1 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					if ((is_signed))
+					{
+						d0 = (uint64_t)sign_extend((uint32_t)d0);
+						d1 = (uint64_t)sign_extend((uint32_t)d1);
+					}
+					X_interpreter(ctx,Rt,d0);
+					X_interpreter(ctx,Rt2,d1);
+				}
+				else
+				{
+					mem_interpreter<uint64_t>(ctx,address,(uint64_t)X_interpreter(ctx,Rt));
+					mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint64_t)X_interpreter(ctx,Rt2));
+				}
+			}
+		}
+		if (datasize == 128ULL)
+		{
+			if ((VR))
+			{
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					uint128_t d0 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint128_t d1 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					V_interpreter(ctx,Rt,(uint128_t)d0);
+					V_interpreter(ctx,Rt2,(uint128_t)d1);
+				}
+				else
+				{
+					mem_interpreter<uint128_t>(ctx,address,(uint128_t)V_interpreter(ctx,Rt));
+					mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint128_t)V_interpreter(ctx,Rt2));
+				}
+			}
+			else
+			{
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					uint64_t d0 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
+					uint64_t d1 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
+					if ((is_signed))
+					{
+						d0 = (uint64_t)sign_extend((uint32_t)d0);
+						d1 = (uint64_t)sign_extend((uint32_t)d1);
+					}
+					X_interpreter(ctx,Rt,d0);
+					X_interpreter(ctx,Rt2,d1);
+				}
+				else
+				{
+					mem_interpreter<uint128_t>(ctx,address,(uint128_t)X_interpreter(ctx,Rt));
+					mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint128_t)X_interpreter(ctx,Rt2));
+				}
+			}
+		}
+		
 	}
-	if (datasize == 16ULL)
+	if ((wback))
 	{
-		if ((VR))
+		if ((postindex))
 		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				uint16_t d0 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint16_t d1 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				V_interpreter(ctx,Rt,(uint128_t)d0);
-				V_interpreter(ctx,Rt2,(uint128_t)d1);
-			}
-			else
-			{
-				mem_interpreter<uint16_t>(ctx,address,(uint16_t)V_interpreter(ctx,Rt));
-				mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint16_t)V_interpreter(ctx,Rt2));
-			}
+			address = ((uint64_t)address + (uint64_t)offset);
 		}
-		else
-		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				uint64_t d0 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint64_t d1 = mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				if ((is_signed))
-				{
-					d0 = (uint64_t)sign_extend((uint32_t)d0);
-					d1 = (uint64_t)sign_extend((uint32_t)d1);
-				}
-				X_interpreter(ctx,Rt,d0);
-				X_interpreter(ctx,Rt2,d1);
-			}
-			else
-			{
-				mem_interpreter<uint16_t>(ctx,address,(uint16_t)X_interpreter(ctx,Rt));
-				mem_interpreter<uint16_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint16_t)X_interpreter(ctx,Rt2));
-			}
-		}
-		if ((wback))
-		{
-			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
-			{
-				undefined_interpreter(ctx);
-			}
-			if ((postindex))
-			{
-				address = ((uint64_t)address + (uint64_t)offset);
-			}
-			XSP_interpreter(ctx,Rn,address);
-		}
+		XSP_interpreter(ctx,Rn,address);
 	}
-	if (datasize == 32ULL)
-	{
-		if ((VR))
-		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				uint32_t d0 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint32_t d1 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				V_interpreter(ctx,Rt,(uint128_t)d0);
-				V_interpreter(ctx,Rt2,(uint128_t)d1);
-			}
-			else
-			{
-				mem_interpreter<uint32_t>(ctx,address,(uint32_t)V_interpreter(ctx,Rt));
-				mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint32_t)V_interpreter(ctx,Rt2));
-			}
-		}
-		else
-		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				uint64_t d0 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint64_t d1 = mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				if ((is_signed))
-				{
-					d0 = (uint64_t)sign_extend((uint32_t)d0);
-					d1 = (uint64_t)sign_extend((uint32_t)d1);
-				}
-				X_interpreter(ctx,Rt,d0);
-				X_interpreter(ctx,Rt2,d1);
-			}
-			else
-			{
-				mem_interpreter<uint32_t>(ctx,address,(uint32_t)X_interpreter(ctx,Rt));
-				mem_interpreter<uint32_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint32_t)X_interpreter(ctx,Rt2));
-			}
-		}
-		if ((wback))
-		{
-			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
-			{
-				undefined_interpreter(ctx);
-			}
-			if ((postindex))
-			{
-				address = ((uint64_t)address + (uint64_t)offset);
-			}
-			XSP_interpreter(ctx,Rn,address);
-		}
-	}
-	if (datasize == 64ULL)
-	{
-		if ((VR))
-		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				uint64_t d0 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint64_t d1 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				V_interpreter(ctx,Rt,(uint128_t)d0);
-				V_interpreter(ctx,Rt2,(uint128_t)d1);
-			}
-			else
-			{
-				mem_interpreter<uint64_t>(ctx,address,(uint64_t)V_interpreter(ctx,Rt));
-				mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint64_t)V_interpreter(ctx,Rt2));
-			}
-		}
-		else
-		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				uint64_t d0 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint64_t d1 = mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				if ((is_signed))
-				{
-					d0 = (uint64_t)sign_extend((uint32_t)d0);
-					d1 = (uint64_t)sign_extend((uint32_t)d1);
-				}
-				X_interpreter(ctx,Rt,d0);
-				X_interpreter(ctx,Rt2,d1);
-			}
-			else
-			{
-				mem_interpreter<uint64_t>(ctx,address,(uint64_t)X_interpreter(ctx,Rt));
-				mem_interpreter<uint64_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint64_t)X_interpreter(ctx,Rt2));
-			}
-		}
-		if ((wback))
-		{
-			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
-			{
-				undefined_interpreter(ctx);
-			}
-			if ((postindex))
-			{
-				address = ((uint64_t)address + (uint64_t)offset);
-			}
-			XSP_interpreter(ctx,Rn,address);
-		}
-	}
-	if (datasize == 128ULL)
-	{
-		if ((VR))
-		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				uint128_t d0 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint128_t d1 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				V_interpreter(ctx,Rt,(uint128_t)d0);
-				V_interpreter(ctx,Rt2,(uint128_t)d1);
-			}
-			else
-			{
-				mem_interpreter<uint128_t>(ctx,address,(uint128_t)V_interpreter(ctx,Rt));
-				mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint128_t)V_interpreter(ctx,Rt2));
-			}
-		}
-		else
-		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				uint64_t d0 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)0ULL));
-				uint64_t d1 = mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes));
-				if ((is_signed))
-				{
-					d0 = (uint64_t)sign_extend((uint32_t)d0);
-					d1 = (uint64_t)sign_extend((uint32_t)d1);
-				}
-				X_interpreter(ctx,Rt,d0);
-				X_interpreter(ctx,Rt2,d1);
-			}
-			else
-			{
-				mem_interpreter<uint128_t>(ctx,address,(uint128_t)X_interpreter(ctx,Rt));
-				mem_interpreter<uint128_t>(ctx,((uint64_t)address + (uint64_t)dbytes),(uint128_t)X_interpreter(ctx,Rt2));
-			}
-		}
-		if ((wback))
-		{
-			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
-			{
-				undefined_interpreter(ctx);
-			}
-			if ((postindex))
-			{
-				address = ((uint64_t)address + (uint64_t)offset);
-			}
-			XSP_interpreter(ctx,Rn,address);
-		}
-	}
-	
 }
 
 void load_store_register_imm_unsigned_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm12, uint64_t Rn, uint64_t Rt)
@@ -1974,112 +2036,82 @@ void load_store_register_imm_unsigned_interpreter(interpreter_data* ctx, uint64_
 		{
 			address = ((uint64_t)address + (uint64_t)offset);
 		}
-		if (datasize == 8ULL)
 		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			if (datasize == 8ULL)
 			{
-				uint8_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint8_t>(ctx,address,data);
-			}
-			else
-			{
-				uint8_t data = mem_interpreter<uint8_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
 				{
-					address = ((uint64_t)address + (uint64_t)offset);
+					uint8_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint8_t>(ctx,address,data);
 				}
-				XSP_interpreter(ctx,Rn,address);
+				else
+				{
+					uint8_t data = mem_interpreter<uint8_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
 			}
+			if (datasize == 16ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint16_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint16_t>(ctx,address,data);
+				}
+				else
+				{
+					uint16_t data = mem_interpreter<uint16_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
+			}
+			if (datasize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint32_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint32_t>(ctx,address,data);
+				}
+				else
+				{
+					uint32_t data = mem_interpreter<uint32_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
+			}
+			if (datasize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint64_t>(ctx,address,data);
+				}
+				else
+				{
+					uint64_t data = mem_interpreter<uint64_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
+			}
+			if (datasize == 128ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint128_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint128_t>(ctx,address,data);
+				}
+				else
+				{
+					uint128_t data = mem_interpreter<uint128_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
+			}
+			
 		}
-		if (datasize == 16ULL)
+		if ((wback))
 		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			if ((postindex))
 			{
-				uint16_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint16_t>(ctx,address,data);
+				address = ((uint64_t)address + (uint64_t)offset);
 			}
-			else
-			{
-				uint16_t data = mem_interpreter<uint16_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
-				{
-					address = ((uint64_t)address + (uint64_t)offset);
-				}
-				XSP_interpreter(ctx,Rn,address);
-			}
+			XSP_interpreter(ctx,Rn,address);
 		}
-		if (datasize == 32ULL)
-		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
-			{
-				uint32_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint32_t>(ctx,address,data);
-			}
-			else
-			{
-				uint32_t data = mem_interpreter<uint32_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
-				{
-					address = ((uint64_t)address + (uint64_t)offset);
-				}
-				XSP_interpreter(ctx,Rn,address);
-			}
-		}
-		if (datasize == 64ULL)
-		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
-			{
-				uint64_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint64_t>(ctx,address,data);
-			}
-			else
-			{
-				uint64_t data = mem_interpreter<uint64_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
-				{
-					address = ((uint64_t)address + (uint64_t)offset);
-				}
-				XSP_interpreter(ctx,Rn,address);
-			}
-		}
-		if (datasize == 128ULL)
-		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
-			{
-				uint128_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint128_t>(ctx,address,data);
-			}
-			else
-			{
-				uint128_t data = mem_interpreter<uint128_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
-				{
-					address = ((uint64_t)address + (uint64_t)offset);
-				}
-				XSP_interpreter(ctx,Rn,address);
-			}
-		}
-		
 	}
 	else
 	{
@@ -2122,223 +2154,169 @@ void load_store_register_imm_unsigned_interpreter(interpreter_data* ctx, uint64_
 		{
 			address = ((uint64_t)address + (uint64_t)offset);
 		}
-		if (datasize == 8ULL)
 		{
-			if (regsize == 32ULL)
+			if (datasize == 8ULL)
 			{
-				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				if (regsize == 32ULL)
 				{
-					uint64_t data = X_interpreter(ctx,Rt);
-					mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
-				}
-				else
-				{
-					uint64_t n = mem_interpreter<uint8_t>(ctx,address);
-					if ((_signed))
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
 					{
-						n = (uint32_t)sign_extend((uint8_t)n);
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
 					}
-					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
+					else
 					{
-						address = ((uint64_t)address + (uint64_t)offset);
+						uint64_t n = mem_interpreter<uint8_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint32_t)sign_extend((uint8_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
 					}
-					XSP_interpreter(ctx,Rn,address);
 				}
+				if (regsize == 64ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint8_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint64_t)sign_extend((uint8_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				
 			}
-			if (regsize == 64ULL)
+			if (datasize == 16ULL)
 			{
-				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				if (regsize == 32ULL)
 				{
-					uint64_t data = X_interpreter(ctx,Rt);
-					mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
-				}
-				else
-				{
-					uint64_t n = mem_interpreter<uint8_t>(ctx,address);
-					if ((_signed))
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
 					{
-						n = (uint64_t)sign_extend((uint8_t)n);
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
 					}
-					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
+					else
 					{
-						address = ((uint64_t)address + (uint64_t)offset);
+						uint64_t n = mem_interpreter<uint16_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint32_t)sign_extend((uint16_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
 					}
-					XSP_interpreter(ctx,Rn,address);
 				}
+				if (regsize == 64ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint16_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint64_t)sign_extend((uint16_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				
+			}
+			if (datasize == 32ULL)
+			{
+				if (regsize == 32ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint32_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint32_t)sign_extend((uint32_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				if (regsize == 64ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint32_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint64_t)sign_extend((uint32_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				
+			}
+			if (datasize == 64ULL)
+			{
+				if (regsize == 32ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint64_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint32_t)sign_extend((uint64_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				if (regsize == 64ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint64_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint64_t)sign_extend((uint64_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				
 			}
 			
 		}
-		if (datasize == 16ULL)
+		if ((wback))
 		{
-			if (regsize == 32ULL)
+			if ((postindex))
 			{
-				if ((((uint64_t)memop == (uint64_t)1ULL)))
-				{
-					uint64_t data = X_interpreter(ctx,Rt);
-					mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
-				}
-				else
-				{
-					uint64_t n = mem_interpreter<uint16_t>(ctx,address);
-					if ((_signed))
-					{
-						n = (uint32_t)sign_extend((uint16_t)n);
-					}
-					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
+				address = ((uint64_t)address + (uint64_t)offset);
 			}
-			if (regsize == 64ULL)
-			{
-				if ((((uint64_t)memop == (uint64_t)1ULL)))
-				{
-					uint64_t data = X_interpreter(ctx,Rt);
-					mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
-				}
-				else
-				{
-					uint64_t n = mem_interpreter<uint16_t>(ctx,address);
-					if ((_signed))
-					{
-						n = (uint64_t)sign_extend((uint16_t)n);
-					}
-					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
-			}
-			
+			XSP_interpreter(ctx,Rn,address);
 		}
-		if (datasize == 32ULL)
-		{
-			if (regsize == 32ULL)
-			{
-				if ((((uint64_t)memop == (uint64_t)1ULL)))
-				{
-					uint64_t data = X_interpreter(ctx,Rt);
-					mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
-				}
-				else
-				{
-					uint64_t n = mem_interpreter<uint32_t>(ctx,address);
-					if ((_signed))
-					{
-						n = (uint32_t)sign_extend((uint32_t)n);
-					}
-					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
-			}
-			if (regsize == 64ULL)
-			{
-				if ((((uint64_t)memop == (uint64_t)1ULL)))
-				{
-					uint64_t data = X_interpreter(ctx,Rt);
-					mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
-				}
-				else
-				{
-					uint64_t n = mem_interpreter<uint32_t>(ctx,address);
-					if ((_signed))
-					{
-						n = (uint64_t)sign_extend((uint32_t)n);
-					}
-					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
-			}
-			
-		}
-		if (datasize == 64ULL)
-		{
-			if (regsize == 32ULL)
-			{
-				if ((((uint64_t)memop == (uint64_t)1ULL)))
-				{
-					uint64_t data = X_interpreter(ctx,Rt);
-					mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
-				}
-				else
-				{
-					uint64_t n = mem_interpreter<uint64_t>(ctx,address);
-					if ((_signed))
-					{
-						n = (uint32_t)sign_extend((uint64_t)n);
-					}
-					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
-			}
-			if (regsize == 64ULL)
-			{
-				if ((((uint64_t)memop == (uint64_t)1ULL)))
-				{
-					uint64_t data = X_interpreter(ctx,Rt);
-					mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
-				}
-				else
-				{
-					uint64_t n = mem_interpreter<uint64_t>(ctx,address);
-					if ((_signed))
-					{
-						n = (uint64_t)sign_extend((uint64_t)n);
-					}
-					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
-			}
-			
-		}
-		
 	}
 }
 
@@ -2368,112 +2346,82 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 		{
 			address = ((uint64_t)address + (uint64_t)offset);
 		}
-		if (datasize == 8ULL)
 		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			if (datasize == 8ULL)
 			{
-				uint8_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint8_t>(ctx,address,data);
-			}
-			else
-			{
-				uint8_t data = mem_interpreter<uint8_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
 				{
-					address = ((uint64_t)address + (uint64_t)offset);
+					uint8_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint8_t>(ctx,address,data);
 				}
-				XSP_interpreter(ctx,Rn,address);
+				else
+				{
+					uint8_t data = mem_interpreter<uint8_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
 			}
+			if (datasize == 16ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint16_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint16_t>(ctx,address,data);
+				}
+				else
+				{
+					uint16_t data = mem_interpreter<uint16_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
+			}
+			if (datasize == 32ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint32_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint32_t>(ctx,address,data);
+				}
+				else
+				{
+					uint32_t data = mem_interpreter<uint32_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
+			}
+			if (datasize == 64ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint64_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint64_t>(ctx,address,data);
+				}
+				else
+				{
+					uint64_t data = mem_interpreter<uint64_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
+			}
+			if (datasize == 128ULL)
+			{
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				{
+					uint128_t data = V_interpreter(ctx,Rt);
+					mem_interpreter<uint128_t>(ctx,address,data);
+				}
+				else
+				{
+					uint128_t data = mem_interpreter<uint128_t>(ctx,address);
+					V_interpreter(ctx,Rt,(uint128_t)data);
+				}
+			}
+			
 		}
-		if (datasize == 16ULL)
+		if ((wback))
 		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			if ((postindex))
 			{
-				uint16_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint16_t>(ctx,address,data);
+				address = ((uint64_t)address + (uint64_t)offset);
 			}
-			else
-			{
-				uint16_t data = mem_interpreter<uint16_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
-				{
-					address = ((uint64_t)address + (uint64_t)offset);
-				}
-				XSP_interpreter(ctx,Rn,address);
-			}
+			XSP_interpreter(ctx,Rn,address);
 		}
-		if (datasize == 32ULL)
-		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
-			{
-				uint32_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint32_t>(ctx,address,data);
-			}
-			else
-			{
-				uint32_t data = mem_interpreter<uint32_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
-				{
-					address = ((uint64_t)address + (uint64_t)offset);
-				}
-				XSP_interpreter(ctx,Rn,address);
-			}
-		}
-		if (datasize == 64ULL)
-		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
-			{
-				uint64_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint64_t>(ctx,address,data);
-			}
-			else
-			{
-				uint64_t data = mem_interpreter<uint64_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
-				{
-					address = ((uint64_t)address + (uint64_t)offset);
-				}
-				XSP_interpreter(ctx,Rn,address);
-			}
-		}
-		if (datasize == 128ULL)
-		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
-			{
-				uint128_t data = V_interpreter(ctx,Rt);
-				mem_interpreter<uint128_t>(ctx,address,data);
-			}
-			else
-			{
-				uint128_t data = mem_interpreter<uint128_t>(ctx,address);
-				V_interpreter(ctx,Rt,(uint128_t)data);
-			}
-			if ((wback))
-			{
-				if ((postindex))
-				{
-					address = ((uint64_t)address + (uint64_t)offset);
-				}
-				XSP_interpreter(ctx,Rn,address);
-			}
-		}
-		
 	}
 	else
 	{
@@ -2515,6 +2463,300 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 		{
 			address = ((uint64_t)address + (uint64_t)offset);
 		}
+		{
+			if (datasize == 8ULL)
+			{
+				if (regsize == 32ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint8_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint32_t)sign_extend((uint8_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				if (regsize == 64ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint8_t>(ctx,address,(uint8_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint8_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint64_t)sign_extend((uint8_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				
+			}
+			if (datasize == 16ULL)
+			{
+				if (regsize == 32ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint16_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint32_t)sign_extend((uint16_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				if (regsize == 64ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint16_t>(ctx,address,(uint16_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint16_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint64_t)sign_extend((uint16_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				
+			}
+			if (datasize == 32ULL)
+			{
+				if (regsize == 32ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint32_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint32_t)sign_extend((uint32_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				if (regsize == 64ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint32_t>(ctx,address,(uint32_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint32_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint64_t)sign_extend((uint32_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				
+			}
+			if (datasize == 64ULL)
+			{
+				if (regsize == 32ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint64_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint32_t)sign_extend((uint64_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				if (regsize == 64ULL)
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						uint64_t data = X_interpreter(ctx,Rt);
+						mem_interpreter<uint64_t>(ctx,address,(uint64_t)data);
+					}
+					else
+					{
+						uint64_t n = mem_interpreter<uint64_t>(ctx,address);
+						if ((_signed))
+						{
+							n = (uint64_t)sign_extend((uint64_t)n);
+						}
+						X_interpreter(ctx,Rt,n);
+					}
+				}
+				
+			}
+			
+		}
+		if ((wback))
+		{
+			if ((postindex))
+			{
+				address = ((uint64_t)address + (uint64_t)offset);
+			}
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+}
+
+void load_store_register_offset_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t Rm, uint64_t option, uint64_t S, uint64_t Rn, uint64_t Rt)
+{
+	if ((((uint64_t)((uint64_t)((uint64_t)size == (uint64_t)3ULL) && (uint64_t)((uint64_t)VR == (uint64_t)0ULL)) && (uint64_t)((uint64_t)opc == (uint64_t)2ULL))))
+	{
+		return;
+	}
+	uint64_t is_vector = ((uint64_t)VR == (uint64_t)1ULL);
+	uint64_t wback = 0ULL;
+	uint64_t postindex = 0ULL;
+	if ((is_vector))
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = ((uint64_t)(((uint64_t)bit_c_interpreter(ctx,opc,1ULL) << (uint64_t)2ULL)) | (uint64_t)size);
+		uint64_t shift = ((uint64_t)scale * (uint64_t)S);
+		uint64_t offset = a_extend_reg_64_interpreter(ctx,Rm,option,shift);
+		if ((((uint64_t)opc & (uint64_t)1ULL)))
+		memop = 0ULL;
+		else
+		memop = 1ULL;
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		uint64_t address = ((uint64_t)XSP_interpreter(ctx,Rn) + (uint64_t)offset);
+		if (datasize == 8ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint8_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint8_t>(ctx,address,data);
+			}
+			else
+			{
+				uint8_t data = mem_interpreter<uint8_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+		}
+		if (datasize == 16ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint16_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint16_t>(ctx,address,data);
+			}
+			else
+			{
+				uint16_t data = mem_interpreter<uint16_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+		}
+		if (datasize == 32ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint32_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint32_t>(ctx,address,data);
+			}
+			else
+			{
+				uint32_t data = mem_interpreter<uint32_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+		}
+		if (datasize == 64ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint64_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint64_t>(ctx,address,data);
+			}
+			else
+			{
+				uint64_t data = mem_interpreter<uint64_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+		}
+		if (datasize == 128ULL)
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				uint128_t data = V_interpreter(ctx,Rt);
+				mem_interpreter<uint128_t>(ctx,address,data);
+			}
+			else
+			{
+				uint128_t data = mem_interpreter<uint128_t>(ctx,address);
+				V_interpreter(ctx,Rt,(uint128_t)data);
+			}
+		}
+		
+	}
+	else
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = size;
+		uint64_t shift = ((uint64_t)scale * (uint64_t)S);
+		uint64_t offset = a_extend_reg_64_interpreter(ctx,Rm,option,shift);
+		if ((((uint64_t)bit_c_interpreter(ctx,opc,1ULL) == (uint64_t)0ULL)))
+		{
+			if ((((uint64_t)opc & (uint64_t)1ULL)))
+			memop = 0ULL;
+			else
+			memop = 1ULL;
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			regsize = 64ULL;
+			else
+			regsize = 32ULL;
+			_signed = 0ULL;
+		}
+		else
+		{
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			{
+				undefined_interpreter(ctx);
+			}
+			else
+			{
+				memop = 0ULL;
+				if ((((uint64_t)opc & (uint64_t)1ULL)))
+				regsize = 32ULL;
+				else
+				regsize = 64ULL;
+				_signed = 1ULL;
+			}
+		}
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		uint64_t address = ((uint64_t)XSP_interpreter(ctx,Rn) + (uint64_t)offset);
 		if (datasize == 8ULL)
 		{
 			if (regsize == 32ULL)
@@ -2533,14 +2775,6 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 					}
 					X_interpreter(ctx,Rt,n);
 				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
 			}
 			if (regsize == 64ULL)
 			{
@@ -2557,14 +2791,6 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 						n = (uint64_t)sign_extend((uint8_t)n);
 					}
 					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
 				}
 			}
 			
@@ -2587,14 +2813,6 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 					}
 					X_interpreter(ctx,Rt,n);
 				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
 			}
 			if (regsize == 64ULL)
 			{
@@ -2611,14 +2829,6 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 						n = (uint64_t)sign_extend((uint16_t)n);
 					}
 					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
 				}
 			}
 			
@@ -2641,14 +2851,6 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 					}
 					X_interpreter(ctx,Rt,n);
 				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
 			}
 			if (regsize == 64ULL)
 			{
@@ -2665,14 +2867,6 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 						n = (uint64_t)sign_extend((uint32_t)n);
 					}
 					X_interpreter(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
 				}
 			}
 			
@@ -2695,14 +2889,6 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 					}
 					X_interpreter(ctx,Rt,n);
 				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
 			}
 			if (regsize == 64ULL)
 			{
@@ -2720,14 +2906,6 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 					}
 					X_interpreter(ctx,Rt,n);
 				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ((uint64_t)address + (uint64_t)offset);
-					}
-					XSP_interpreter(ctx,Rn,address);
-				}
 			}
 			
 		}
@@ -2735,9 +2913,79 @@ void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_
 	}
 }
 
-void br_interpreter(interpreter_data* ctx, uint64_t Rn)
+void branch_register_interpreter(interpreter_data* ctx, uint64_t l, uint64_t Rn)
+{
+	branch_long_universal_interpreter(ctx,Rn,l);
+}
+
+void return_register_interpreter(interpreter_data* ctx, uint64_t Rn)
 {
 	branch_long_universal_interpreter(ctx,Rn,0ULL);
+}
+
+void test_bit_branch_interpreter(interpreter_data* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt)
+{
+	uint64_t bit_pos = ((uint64_t)b40 + (uint64_t)(((uint64_t)b5 << (uint64_t)5ULL)));
+	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm14,14ULL)) << (uint64_t)2ULL);
+	uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+	uint64_t src = X_interpreter(ctx,Rt);
+	uint8_t branch_pass = ((uint64_t)(((uint64_t)(((uint64_t)src >> (uint64_t)bit_pos)) & (uint64_t)1ULL)) == (uint64_t)op);
+	_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)branch_pass);
+}
+
+void compare_and_branch_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt)
+{
+	if (sf == 0ULL)
+	{
+		uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+		uint64_t operand = X_interpreter(ctx,Rt);
+		uint8_t branch_pass;
+		if ((!op))
+		{
+			branch_pass = ((uint64_t)operand == (uint64_t)0ULL);
+		}
+		else
+		{
+			branch_pass = ((uint64_t)operand != (uint64_t)0ULL);
+		}
+		_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)branch_pass);
+	}
+	if (sf == 1ULL)
+	{
+		uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+		uint64_t operand = X_interpreter(ctx,Rt);
+		uint8_t branch_pass;
+		if ((!op))
+		{
+			branch_pass = ((uint64_t)operand == (uint64_t)0ULL);
+		}
+		else
+		{
+			branch_pass = ((uint64_t)operand != (uint64_t)0ULL);
+		}
+		_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)branch_pass);
+	}
+	
+}
+
+void b_unconditional_interpreter(interpreter_data* ctx, uint64_t op, uint64_t imm26)
+{
+	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm26,26ULL)) << (uint64_t)2ULL);
+	if ((op))
+	{
+		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+		X_interpreter(ctx,30ULL,(uint64_t)next_location);
+	}
+	_branch_short_interpreter(ctx,new_location);
+}
+
+void b_conditional_interpreter(interpreter_data* ctx, uint64_t imm19, uint64_t cond)
+{
+	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+	uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+	_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)condition_holds_interpreter(ctx,cond));
 }
 
 uint64_t sign_extend_interpreter(interpreter_data* ctx, uint64_t source, uint64_t count)
@@ -2798,6 +3046,36 @@ O a_extend_reg_interpreter(interpreter_data* ctx, uint64_t m, uint64_t extend_ty
 		val = (O)sign_extend((uint32_t)val);
 	}
 	return ((O)val << (O)shift);
+}
+
+uint64_t a_extend_reg_64_interpreter(interpreter_data* ctx, uint64_t m, uint64_t extend_type, uint64_t shift)
+{
+	uint64_t val = X_interpreter(ctx,m);
+	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
+	{
+		val = ((uint64_t)val & (uint64_t)255ULL);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
+	{
+		val = ((uint64_t)val & (uint64_t)65535ULL);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
+	{
+		val = ((uint64_t)val & (uint64_t)4294967295ULL);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
+	{
+		val = (uint64_t)sign_extend((uint8_t)val);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
+	{
+		val = (uint64_t)sign_extend((uint16_t)val);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
+	{
+		val = (uint64_t)sign_extend((uint32_t)val);
+	}
+	return ((uint64_t)val << (uint64_t)shift);
 }
 
 template <typename O>
@@ -3732,55 +4010,53 @@ void load_store_register_pair_imm_jit(ssa_emit_context* ctx, uint64_t opc, uint6
 	{
 		address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
 	}
-	uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
 	{
-		if ((VR))
+		uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
 		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
+			if ((VR))
 			{
-				ir_operand d0 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(0ULL, int64))), S);
-				ir_operand d1 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64))), S);
-				V_jit(ctx,Rt,copy_new_raw_size(ctx, d0, int128));
-				V_jit(ctx,Rt2,copy_new_raw_size(ctx, d1, int128));
-			}
-			else
-			{
-				mem_jit(ctx,S,address,copy_new_raw_size(ctx, V_jit(ctx,Rt), S));
-				mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64)),copy_new_raw_size(ctx, V_jit(ctx,Rt2), S));
-			}
-		}
-		else
-		{
-			if ((((uint64_t)memop == (uint64_t)0ULL)))
-			{
-				ir_operand d0 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(0ULL, int64))), int64);
-				ir_operand d1 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64))), int64);
-				if ((is_signed))
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
 				{
-					d0 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, d0, int32), int64);
-					d1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, d1, int32), int64);
+					ir_operand d0 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(0ULL, int64))), S);
+					ir_operand d1 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64))), S);
+					V_jit(ctx,Rt,copy_new_raw_size(ctx, d0, int128));
+					V_jit(ctx,Rt2,copy_new_raw_size(ctx, d1, int128));
 				}
-				X_jit(ctx,Rt,d0);
-				X_jit(ctx,Rt2,d1);
+				else
+				{
+					mem_jit(ctx,S,address,copy_new_raw_size(ctx, V_jit(ctx,Rt), S));
+					mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64)),copy_new_raw_size(ctx, V_jit(ctx,Rt2), S));
+				}
 			}
 			else
 			{
-				mem_jit(ctx,S,address,copy_new_raw_size(ctx, X_jit(ctx,Rt), S));
-				mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64)),copy_new_raw_size(ctx, X_jit(ctx,Rt2), S));
+				if ((((uint64_t)memop == (uint64_t)0ULL)))
+				{
+					ir_operand d0 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(0ULL, int64))), int64);
+					ir_operand d1 = copy_new_raw_size(ctx, mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64))), int64);
+					if ((is_signed))
+					{
+						d0 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, d0, int32), int64);
+						d1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, d1, int32), int64);
+					}
+					X_jit(ctx,Rt,d0);
+					X_jit(ctx,Rt2,d1);
+				}
+				else
+				{
+					mem_jit(ctx,S,address,copy_new_raw_size(ctx, X_jit(ctx,Rt), S));
+					mem_jit(ctx,S,ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(dbytes, int64)),copy_new_raw_size(ctx, X_jit(ctx,Rt2), S));
+				}
 			}
 		}
-		if ((wback))
+	}
+	if ((wback))
+	{
+		if ((postindex))
 		{
-			if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)Rn != (uint64_t)31ULL) && (uint64_t)(((uint64_t)((uint64_t)((uint64_t)Rt == (uint64_t)Rn) || (uint64_t)((uint64_t)Rt2 == (uint64_t)Rn)) || (uint64_t)((uint64_t)Rt == (uint64_t)Rt2)))) && (uint64_t)!VR) && (uint64_t)((uint64_t)memop == (uint64_t)0ULL))))
-			{
-				undefined_jit(ctx);
-			}
-			if ((postindex))
-			{
-				address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
-			}
-			XSP_jit(ctx,Rn,address);
+			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
 		}
+		XSP_jit(ctx,Rn,address);
 	}
 }
 
@@ -3810,26 +4086,28 @@ void load_store_register_imm_unsigned_jit(ssa_emit_context* ctx, uint64_t size, 
 		{
 			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
 		}
-		uint64_t O = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
 		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			uint64_t O = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
 			{
-				ir_operand data = copy_new_raw_size(ctx, V_jit(ctx,Rt), O);
-				mem_jit(ctx,O,address,data);
-			}
-			else
-			{
-				ir_operand data = copy_new_raw_size(ctx, mem_jit(ctx,O,address), O);
-				V_jit(ctx,Rt,copy_new_raw_size(ctx, data, int128));
-			}
-			if ((wback))
-			{
-				if ((postindex))
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
 				{
-					address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+					ir_operand data = copy_new_raw_size(ctx, V_jit(ctx,Rt), O);
+					mem_jit(ctx,O,address,data);
 				}
-				XSP_jit(ctx,Rn,address);
+				else
+				{
+					ir_operand data = copy_new_raw_size(ctx, mem_jit(ctx,O,address), O);
+					V_jit(ctx,Rt,copy_new_raw_size(ctx, data, int128));
+				}
 			}
+		}
+		if ((wback))
+		{
+			if ((postindex))
+			{
+				address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+			}
+			XSP_jit(ctx,Rn,address);
 		}
 	}
 	else
@@ -3873,33 +4151,35 @@ void load_store_register_imm_unsigned_jit(ssa_emit_context* ctx, uint64_t size, 
 		{
 			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
 		}
-		uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : throw 0;
 		{
-			uint64_t R = regsize == 32ULL ? int32 : regsize == 64ULL ? int64 : throw 0;
+			uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : throw 0;
 			{
-				if ((((uint64_t)memop == (uint64_t)1ULL)))
+				uint64_t R = regsize == 32ULL ? int32 : regsize == 64ULL ? int64 : throw 0;
 				{
-					ir_operand data = X_jit(ctx,Rt);
-					mem_jit(ctx,S,address,copy_new_raw_size(ctx, data, S));
-				}
-				else
-				{
-					ir_operand n = copy_new_raw_size(ctx, mem_jit(ctx,S,address), int64);
-					if ((_signed))
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
 					{
-						n = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, n, S), R), int64);
+						ir_operand data = X_jit(ctx,Rt);
+						mem_jit(ctx,S,address,copy_new_raw_size(ctx, data, S));
 					}
-					X_jit(ctx,Rt,n);
-				}
-				if ((wback))
-				{
-					if ((postindex))
+					else
 					{
-						address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+						ir_operand n = copy_new_raw_size(ctx, mem_jit(ctx,S,address), int64);
+						if ((_signed))
+						{
+							n = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, n, S), R), int64);
+						}
+						X_jit(ctx,Rt,n);
 					}
-					XSP_jit(ctx,Rn,address);
 				}
 			}
+		}
+		if ((wback))
+		{
+			if ((postindex))
+			{
+				address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+			}
+			XSP_jit(ctx,Rn,address);
 		}
 	}
 }
@@ -3930,26 +4210,28 @@ void load_store_register_imm_unscaled_jit(ssa_emit_context* ctx, uint64_t size, 
 		{
 			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
 		}
-		uint64_t O = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
 		{
-			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			uint64_t O = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
 			{
-				ir_operand data = copy_new_raw_size(ctx, V_jit(ctx,Rt), O);
-				mem_jit(ctx,O,address,data);
-			}
-			else
-			{
-				ir_operand data = copy_new_raw_size(ctx, mem_jit(ctx,O,address), O);
-				V_jit(ctx,Rt,copy_new_raw_size(ctx, data, int128));
-			}
-			if ((wback))
-			{
-				if ((postindex))
+				if ((((uint64_t)memop == (uint64_t)1ULL)))
 				{
-					address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+					ir_operand data = copy_new_raw_size(ctx, V_jit(ctx,Rt), O);
+					mem_jit(ctx,O,address,data);
 				}
-				XSP_jit(ctx,Rn,address);
+				else
+				{
+					ir_operand data = copy_new_raw_size(ctx, mem_jit(ctx,O,address), O);
+					V_jit(ctx,Rt,copy_new_raw_size(ctx, data, int128));
+				}
 			}
+		}
+		if ((wback))
+		{
+			if ((postindex))
+			{
+				address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+			}
+			XSP_jit(ctx,Rn,address);
 		}
 	}
 	else
@@ -3992,6 +4274,114 @@ void load_store_register_imm_unscaled_jit(ssa_emit_context* ctx, uint64_t size, 
 		{
 			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
 		}
+		{
+			uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : throw 0;
+			{
+				uint64_t R = regsize == 32ULL ? int32 : regsize == 64ULL ? int64 : throw 0;
+				{
+					if ((((uint64_t)memop == (uint64_t)1ULL)))
+					{
+						ir_operand data = X_jit(ctx,Rt);
+						mem_jit(ctx,S,address,copy_new_raw_size(ctx, data, S));
+					}
+					else
+					{
+						ir_operand n = copy_new_raw_size(ctx, mem_jit(ctx,S,address), int64);
+						if ((_signed))
+						{
+							n = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, n, S), R), int64);
+						}
+						X_jit(ctx,Rt,n);
+					}
+				}
+			}
+		}
+		if ((wback))
+		{
+			if ((postindex))
+			{
+				address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
+			}
+			XSP_jit(ctx,Rn,address);
+		}
+	}
+}
+
+void load_store_register_offset_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t Rm, uint64_t option, uint64_t S, uint64_t Rn, uint64_t Rt)
+{
+	if ((((uint64_t)((uint64_t)((uint64_t)size == (uint64_t)3ULL) && (uint64_t)((uint64_t)VR == (uint64_t)0ULL)) && (uint64_t)((uint64_t)opc == (uint64_t)2ULL))))
+	{
+		return;
+	}
+	uint64_t is_vector = ((uint64_t)VR == (uint64_t)1ULL);
+	uint64_t wback = 0ULL;
+	uint64_t postindex = 0ULL;
+	if ((is_vector))
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = ((uint64_t)(((uint64_t)bit_c_jit(ctx,opc,1ULL) << (uint64_t)2ULL)) | (uint64_t)size);
+		uint64_t shift = ((uint64_t)scale * (uint64_t)S);
+		ir_operand offset = a_extend_reg_64_jit(ctx,Rm,option,shift);
+		if ((((uint64_t)opc & (uint64_t)1ULL)))
+		memop = 0ULL;
+		else
+		memop = 1ULL;
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		ir_operand address = ssa_emit_context::emit_ssa(ctx, ir_add, XSP_jit(ctx,Rn), offset);
+		uint64_t O = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : datasize == 128ULL ? int128 : throw 0;
+		{
+			if ((((uint64_t)memop == (uint64_t)1ULL)))
+			{
+				ir_operand data = copy_new_raw_size(ctx, V_jit(ctx,Rt), O);
+				mem_jit(ctx,O,address,data);
+			}
+			else
+			{
+				ir_operand data = copy_new_raw_size(ctx, mem_jit(ctx,O,address), O);
+				V_jit(ctx,Rt,copy_new_raw_size(ctx, data, int128));
+			}
+		}
+	}
+	else
+	{
+		uint64_t memop;
+		uint64_t regsize;
+		uint64_t _signed;
+		uint64_t scale = size;
+		uint64_t shift = ((uint64_t)scale * (uint64_t)S);
+		ir_operand offset = a_extend_reg_64_jit(ctx,Rm,option,shift);
+		if ((((uint64_t)bit_c_jit(ctx,opc,1ULL) == (uint64_t)0ULL)))
+		{
+			if ((((uint64_t)opc & (uint64_t)1ULL)))
+			memop = 0ULL;
+			else
+			memop = 1ULL;
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			regsize = 64ULL;
+			else
+			regsize = 32ULL;
+			_signed = 0ULL;
+		}
+		else
+		{
+			if ((((uint64_t)size == (uint64_t)3ULL)))
+			{
+				undefined_jit(ctx);
+			}
+			else
+			{
+				memop = 0ULL;
+				if ((((uint64_t)opc & (uint64_t)1ULL)))
+				regsize = 32ULL;
+				else
+				regsize = 64ULL;
+				_signed = 1ULL;
+			}
+		}
+		uint64_t datasize = ((uint64_t)8ULL << (uint64_t)scale);
+		ir_operand address = ssa_emit_context::emit_ssa(ctx, ir_add, XSP_jit(ctx,Rn), offset);
 		uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : throw 0;
 		{
 			uint64_t R = regsize == 32ULL ? int32 : regsize == 64ULL ? int64 : throw 0;
@@ -4010,22 +4400,67 @@ void load_store_register_imm_unscaled_jit(ssa_emit_context* ctx, uint64_t size, 
 					}
 					X_jit(ctx,Rt,n);
 				}
-				if ((wback))
-				{
-					if ((postindex))
-					{
-						address = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offset, int64));
-					}
-					XSP_jit(ctx,Rn,address);
-				}
 			}
 		}
 	}
 }
 
-void br_jit(ssa_emit_context* ctx, uint64_t Rn)
+void branch_register_jit(ssa_emit_context* ctx, uint64_t l, uint64_t Rn)
+{
+	branch_long_universal_jit(ctx,Rn,l);
+}
+
+void return_register_jit(ssa_emit_context* ctx, uint64_t Rn)
 {
 	branch_long_universal_jit(ctx,Rn,0ULL);
+}
+
+void test_bit_branch_jit(ssa_emit_context* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt)
+{
+	uint64_t bit_pos = ((uint64_t)b40 + (uint64_t)(((uint64_t)b5 << (uint64_t)5ULL)));
+	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_jit(ctx) + (uint64_t)sign_extend_jit(ctx,imm14,14ULL)) << (uint64_t)2ULL);
+	uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
+	ir_operand src = X_jit(ctx,Rt);
+	ir_operand branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, src, ir_operand::create_con(bit_pos, int64)), ir_operand::create_con(1ULL, int64)), ir_operand::create_con(op, int64)), int8);
+	_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, branch_pass, int64));
+}
+
+void compare_and_branch_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt)
+{
+	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
+	{
+		uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_jit(ctx) + (uint64_t)sign_extend_jit(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+		uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
+		ir_operand operand = X_jit(ctx,Rt);
+		ir_operand branch_pass;
+		if ((!op))
+		{
+			branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, operand, ir_operand::create_con(0ULL, int64)), int8);
+		}
+		else
+		{
+			branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_not_equal, operand, ir_operand::create_con(0ULL, int64)), int8);
+		}
+		_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, branch_pass, int64));
+	}
+}
+
+void b_unconditional_jit(ssa_emit_context* ctx, uint64_t op, uint64_t imm26)
+{
+	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_jit(ctx) + (uint64_t)sign_extend_jit(ctx,imm26,26ULL)) << (uint64_t)2ULL);
+	if ((op))
+	{
+		uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
+		X_jit(ctx,30ULL,ir_operand::create_con(next_location, int64));
+	}
+	_branch_short_jit(ctx,new_location);
+}
+
+void b_conditional_jit(ssa_emit_context* ctx, uint64_t imm19, uint64_t cond)
+{
+	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_jit(ctx) + (uint64_t)sign_extend_jit(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+	uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
+	_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, condition_holds_jit(ctx,cond), int64));
 }
 
 uint64_t sign_extend_jit(ssa_emit_context* ctx, uint64_t source, uint64_t count)
@@ -4084,6 +4519,36 @@ ir_operand a_extend_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64
 		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int32), O);
 	}
 	return ssa_emit_context::emit_ssa(ctx, ir_shift_left, val, ir_operand::create_con(shift, O));
+}
+
+ir_operand a_extend_reg_64_jit(ssa_emit_context* ctx, uint64_t m, uint64_t extend_type, uint64_t shift)
+{
+	ir_operand val = X_jit(ctx,m);
+	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(255ULL, int64));
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(65535ULL, int64));
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(4294967295ULL, int64));
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int8), int64);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int16), int64);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int32), int64);
+	}
+	return ssa_emit_context::emit_ssa(ctx, ir_shift_left, val, ir_operand::create_con(shift, int64));
 }
 
 ir_operand reverse_bytes_jit(ssa_emit_context* ctx,uint64_t O, ir_operand source, uint64_t byte_count)

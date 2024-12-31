@@ -126,12 +126,12 @@ int main()
     aarch64_process p;
     aarch64_process::create(&p, {}, nullptr, {});
 
-    auto table = fixed_length_decoder<uint32_t>::get_table_by_name(&p.decoder, "load_store_register_pair_imm_offset");
+    auto table = fixed_length_decoder<uint32_t>::get_table_by_name(&p.decoder, "load_store_register_offset");
 
     skip_uneeded = false;
 
-    //bool valid;
-    //test_single_instruction(assemble_instruction("ldpsw x4, x4, [x13, #0xdc]!", &valid));
+    bool valid;
+    test_single_instruction(assemble_instruction("ldr x0, [x1, x2]", &valid));
 
     if (true)
     {
