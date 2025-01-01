@@ -2926,7 +2926,7 @@ void return_register_interpreter(interpreter_data* ctx, uint64_t Rn)
 void test_bit_branch_interpreter(interpreter_data* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt)
 {
 	uint64_t bit_pos = ((uint64_t)b40 + (uint64_t)(((uint64_t)b5 << (uint64_t)5ULL)));
-	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm14,14ULL)) << (uint64_t)2ULL);
+	uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm14,14ULL) << (uint64_t)2ULL)));
 	uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
 	uint64_t src = X_interpreter(ctx,Rt);
 	uint8_t branch_pass = ((uint64_t)(((uint64_t)(((uint64_t)src >> (uint64_t)bit_pos)) & (uint64_t)1ULL)) == (uint64_t)op);
@@ -2937,7 +2937,7 @@ void compare_and_branch_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 {
 	if (sf == 0ULL)
 	{
-		uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+		uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm19,19ULL) << (uint64_t)2ULL)));
 		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
 		uint64_t operand = X_interpreter(ctx,Rt);
 		uint8_t branch_pass;
@@ -2953,7 +2953,7 @@ void compare_and_branch_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 	}
 	if (sf == 1ULL)
 	{
-		uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+		uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm19,19ULL) << (uint64_t)2ULL)));
 		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
 		uint64_t operand = X_interpreter(ctx,Rt);
 		uint8_t branch_pass;
@@ -2972,7 +2972,7 @@ void compare_and_branch_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 
 void b_unconditional_interpreter(interpreter_data* ctx, uint64_t op, uint64_t imm26)
 {
-	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm26,26ULL)) << (uint64_t)2ULL);
+	uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm26,26ULL) << (uint64_t)2ULL)));
 	if ((op))
 	{
 		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
@@ -2983,7 +2983,7 @@ void b_unconditional_interpreter(interpreter_data* ctx, uint64_t op, uint64_t im
 
 void b_conditional_interpreter(interpreter_data* ctx, uint64_t imm19, uint64_t cond)
 {
-	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)sign_extend_interpreter(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+	uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm19,19ULL) << (uint64_t)2ULL)));
 	uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
 	_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)condition_holds_interpreter(ctx,cond));
 }
@@ -4418,7 +4418,7 @@ void return_register_jit(ssa_emit_context* ctx, uint64_t Rn)
 void test_bit_branch_jit(ssa_emit_context* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt)
 {
 	uint64_t bit_pos = ((uint64_t)b40 + (uint64_t)(((uint64_t)b5 << (uint64_t)5ULL)));
-	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_jit(ctx) + (uint64_t)sign_extend_jit(ctx,imm14,14ULL)) << (uint64_t)2ULL);
+	uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm14,14ULL) << (uint64_t)2ULL)));
 	uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
 	ir_operand src = X_jit(ctx,Rt);
 	ir_operand branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, src, ir_operand::create_con(bit_pos, int64)), ir_operand::create_con(1ULL, int64)), ir_operand::create_con(op, int64)), int8);
@@ -4429,7 +4429,7 @@ void compare_and_branch_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 {
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : throw 0;
 	{
-		uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_jit(ctx) + (uint64_t)sign_extend_jit(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+		uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm19,19ULL) << (uint64_t)2ULL)));
 		uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
 		ir_operand operand = X_jit(ctx,Rt);
 		ir_operand branch_pass;
@@ -4447,7 +4447,7 @@ void compare_and_branch_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 
 void b_unconditional_jit(ssa_emit_context* ctx, uint64_t op, uint64_t imm26)
 {
-	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_jit(ctx) + (uint64_t)sign_extend_jit(ctx,imm26,26ULL)) << (uint64_t)2ULL);
+	uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm26,26ULL) << (uint64_t)2ULL)));
 	if ((op))
 	{
 		uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
@@ -4458,7 +4458,7 @@ void b_unconditional_jit(ssa_emit_context* ctx, uint64_t op, uint64_t imm26)
 
 void b_conditional_jit(ssa_emit_context* ctx, uint64_t imm19, uint64_t cond)
 {
-	uint64_t new_location = ((uint64_t)((uint64_t)_get_pc_jit(ctx) + (uint64_t)sign_extend_jit(ctx,imm19,19ULL)) << (uint64_t)2ULL);
+	uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm19,19ULL) << (uint64_t)2ULL)));
 	uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
 	_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, condition_holds_jit(ctx,cond), int64));
 }

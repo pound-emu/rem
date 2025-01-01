@@ -2,6 +2,9 @@
 #include "aarch64/aarch64_emit_context.h"
 #include "jit/jit_context.h"
 #include "aarch64/aarch64_impl.h"
+#include <iostream>
+
+#include <iomanip>
 
 void guest_process::create(guest_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, aarch64_context_offsets arm_guest_data)
 {
@@ -26,6 +29,20 @@ uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_func
     void* arguments[] = { arm_context };
 
     return jit_context::call_jitted_function(process->host_jit_context, (void*)function_to_execute.raw_function, (uint64_t*)arguments);
+}
+
+static uint32_t reverse_bytes(uint32_t source)
+{
+    uint32_t result = 0;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        int s_bit = (3 - i) * 8;
+
+        result |= ((source >> s_bit) & 255) << (i * 8);
+    }
+
+    return result;
 }
 
 guest_function guest_process::translate_function(translate_request_data* data)
@@ -85,7 +102,7 @@ guest_function guest_process::translate_function(translate_request_data* data)
 
                 if (instruction_table == nullptr)
                 {
-                    std::cout << std::hex << "Undefined Instruction " << raw_instruction << std::endl;
+                    std::cout << "Undefined instruction " << std::hex << reverse_bytes(raw_instruction);
 
                     throw 0;
                 }
@@ -145,7 +162,7 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         if (table == nullptr)
         {
-            std::cout << std::hex << "undefined instruction " << instruction << std::endl;
+            std::cout << "Undefined instruction " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
 
             throw 0;
         }
@@ -154,13 +171,22 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         ((void(*)(interpreter_data*, uint32_t))table->interpret)(&interpreter, instruction);
 
-        if (interpreter.branch_type & branch_type::long_branch)
+        if (interpreter.branch_type == branch_type::long_branch)
         { 
             break;
+        }
+        else if (interpreter.branch_type == branch_type::short_branch)
+        {
+            continue;
         }
         else if (interpreter.branch_type == branch_type::no_branch)
         {
             interpreter.current_pc += 4;
+        }
+        else
+        {
+            assert(false);
+            throw 0;
         }
     }
 

@@ -36,10 +36,10 @@ uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id)
 
     switch (reg_id)
     {
-        case 0: return *(uint64_t*)((char*)ctx->register_data + offsets->n_offset) & 1;break;
-        case 1: return *(uint64_t*)((char*)ctx->register_data + offsets->z_offset) & 1;break;
-        case 2: return *(uint64_t*)((char*)ctx->register_data + offsets->c_offset) & 1;break;
-        case 3: return *(uint64_t*)((char*)ctx->register_data + offsets->v_offset) & 1;break;
+        case 0: return *((char*)ctx->register_data + offsets->n_offset) & 1;break;
+        case 1: return *((char*)ctx->register_data + offsets->z_offset) & 1;break;
+        case 2: return *((char*)ctx->register_data + offsets->c_offset) & 1;break;
+        case 3: return *((char*)ctx->register_data + offsets->v_offset) & 1;break;
         default: throw 0;
     }
 }
@@ -50,10 +50,10 @@ void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 
     switch (reg_id)
     {
-        case 0: *(uint64_t*)((char*)ctx->register_data + offsets->n_offset) = value & 1;break;
-        case 1: *(uint64_t*)((char*)ctx->register_data + offsets->z_offset) = value & 1;break;
-        case 2: *(uint64_t*)((char*)ctx->register_data + offsets->c_offset) = value & 1;break;
-        case 3: *(uint64_t*)((char*)ctx->register_data + offsets->v_offset) = value & 1;break;
+        case 0: *((char*)ctx->register_data + offsets->n_offset) = value & 1;break;
+        case 1: *((char*)ctx->register_data + offsets->z_offset) = value & 1;break;
+        case 2: *((char*)ctx->register_data + offsets->c_offset) = value & 1;break;
+        case 3: *((char*)ctx->register_data + offsets->v_offset) = value & 1;break;
         default: throw 0;
     }
 }
