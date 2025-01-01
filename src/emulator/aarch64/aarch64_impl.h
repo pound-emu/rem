@@ -1,11 +1,11 @@
 #include <inttypes.h>
 #include "emulator/ssa_emit_context.h"
 #include "aarch64_context_offsets.h"
-#include "aarch64_process.h"
+#include "emulator/guest_process.h"
 
 struct interpreter_data
 {
-    aarch64_process*    process_context;
+    guest_process*    process_context;
     void*               register_data;
     uint64_t            current_pc;
     int                 branch_type;
@@ -27,7 +27,7 @@ struct uint128_t
     }
 };
 
-void init_aarch64_decoder(aarch64_process* process);
+void init_aarch64_decoder(guest_process* process);
 
 //INTERPRETER
 void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd);

@@ -4,6 +4,8 @@
 #include "keystone/headers/keystone/arm64.h"
 #include "capstone/headers/capstone/capstone.h"
 
+#include "export/exports.h"
+
 bool keystone_open = false;
 bool capstone_open = false;
 ks_engine* ks;
@@ -123,8 +125,8 @@ int main()
 {
     int i = 0;
     
-    aarch64_process p;
-    aarch64_process::create(&p, {}, nullptr, {});
+    guest_process p;
+    guest_process::create(&p, {}, nullptr, {});
 
     auto table = fixed_length_decoder<uint32_t>::get_table_by_name(&p.decoder, "load_store_register_offset");
 

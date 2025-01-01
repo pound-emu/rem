@@ -9,13 +9,13 @@
 #include <vector>
 
 struct ssa_emit_context;
-struct aarch64_process;
+struct guest_process;
 
 struct aarch64_emit_context
 {
     ssa_emit_context*                                           ssa;
     ir_operation_block*                                         raw_ir;
-    aarch64_process*                                            process;
+    guest_process*                                              process;
 
     std::unordered_map<uint64_t, ir_operand>                    basic_block_labels;
     std::unordered_set<uint64_t>                                basic_block_translate_que;
@@ -28,12 +28,13 @@ struct aarch64_emit_context
                     
     ir_operand                                                  context_pointer;
                     
-    static void                                                 create(aarch64_process* process, aarch64_emit_context* result, ssa_emit_context* ir);
+    static void                                                 create(guest_process* process, aarch64_emit_context* result, ssa_emit_context* ir);
     static void                                                 init_context(aarch64_emit_context* ctx);
     static void                                                 emit_load_context(aarch64_emit_context* ctx);
     static void                                                 emit_store_context(aarch64_emit_context* ctx);
     static bool                                                 basic_block_translated(aarch64_emit_context* ctx, uint64_t block);
     static void                                                 branch_long(aarch64_emit_context* ctx, ir_operand new_location);
+    static void                                                 branch_short(aarch64_emit_context* ctx, ir_operand new_location);
     static void                                                 emit_context_movement(aarch64_emit_context* ctx);
 
     static ir_operand                                           get_x_raw(aarch64_emit_context* ctx, int index);

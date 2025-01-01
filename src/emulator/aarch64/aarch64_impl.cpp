@@ -2,7 +2,7 @@
 #include "string.h"
 #include "tools/big_number.h"
 
-static void append_table(aarch64_process* process, std::string encoding, void* emit, void* interperate, std::string name)
+static void append_table(guest_process* process, std::string encoding, void* emit, void* interperate, std::string name)
 {
 	uint32_t instruction = 0;
 	uint32_t mask = 0;
@@ -816,7 +816,7 @@ static void emit_b_conditional_jit(ssa_emit_context* ctx, uint32_t instruction)
 	b_conditional_jit(ctx, imm19, cond);
 }
 
-void init_aarch64_decoder(aarch64_process* process)
+void init_aarch64_decoder(guest_process* process)
 {
 	append_table(process, "---100010-----------------------", (void*)emit_add_subtract_imm12_jit, (void*)call_add_subtract_imm12_interpreter, "add_subtract_imm12");
 	append_table(process, "---01011--0---------------------", (void*)emit_add_subtract_shifted_jit, (void*)call_add_subtract_shifted_interpreter, "add_subtract_shifted");

@@ -1,8 +1,8 @@
 #include "aarch64_emit_context.h"
 #include "emulator/ssa_emit_context.h"
-#include "aarch64_process.h"
+#include "emulator/guest_process.h"
 
-void aarch64_emit_context::create(aarch64_process* process, aarch64_emit_context* result, ssa_emit_context* ssa)
+void aarch64_emit_context::create(guest_process* process, aarch64_emit_context* result, ssa_emit_context* ssa)
 {
     result->ssa = ssa;
     result->raw_ir = ssa->ir;
@@ -14,7 +14,7 @@ void aarch64_emit_context::create(aarch64_process* process, aarch64_emit_context
 void aarch64_emit_context::init_context(aarch64_emit_context* ctx)
 {
     ir_operation_block* ir = ctx->raw_ir;
-    aarch64_process* process = ctx->process;
+    guest_process* process = ctx->process;
 
     ctx->context_pointer = ssa_emit_context::create_global(ctx->ssa, int64);
 

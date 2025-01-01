@@ -3,7 +3,7 @@
 
 #include "unicorn/headers/unicorn.h"
 #include "capstone/headers/capstone/aarch64.h"
-#include "emulator/aarch64/aarch64_process.h"
+#include "emulator/guest_process.h"
 
 struct vec128
 {

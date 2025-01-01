@@ -1,9 +1,9 @@
-#include "aarch64_process.h"
-#include "aarch64_emit_context.h"
+#include "guest_process.h"
+#include "aarch64/aarch64_emit_context.h"
 #include "jit/jit_context.h"
-#include "aarch64_impl.h"
+#include "aarch64/aarch64_impl.h"
 
-void aarch64_process::create(aarch64_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, aarch64_context_offsets arm_guest_data)
+void guest_process::create(guest_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, aarch64_context_offsets arm_guest_data)
 {
     result->guest_memory_context = guest_memory_context;
     result->host_jit_context = host_jit_context;
@@ -12,13 +12,13 @@ void aarch64_process::create(aarch64_process* result, guest_memory guest_memory_
     init_aarch64_decoder(result);
 }
 
-uint64_t aarch64_process::jit_function(aarch64_process* process, uint64_t guest_function_address, void* arm_context)
+uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_function_address, void* arm_context)
 {
     translate_request_data translator_request = 
     {
         process,
         guest_function_address,
-        aarch64_process::translate_function
+        guest_process::translate_function
     };
     
     guest_function function_to_execute = guest_function_store::get_or_translate_function(&process->guest_functions, guest_function_address, &translator_request);
@@ -28,10 +28,10 @@ uint64_t aarch64_process::jit_function(aarch64_process* process, uint64_t guest_
     return jit_context::call_jitted_function(process->host_jit_context, (void*)function_to_execute.raw_function, (uint64_t*)arguments);
 }
 
-guest_function aarch64_process::translate_function(translate_request_data* data)
+guest_function guest_process::translate_function(translate_request_data* data)
 {
     uint64_t entry_address = data->address;
-    aarch64_process* process = (aarch64_process*)data->process;
+    guest_process* process = (guest_process*)data->process;
 
     arena_allocator allocator = arena_allocator::create(10 * 1024 * 1024);
 
@@ -103,13 +103,9 @@ guest_function aarch64_process::translate_function(translate_request_data* data)
                 {
                     working_address += 4;
                 }
-                else if (aarch64_emit.branch_state == long_branch)
+                else //if (aarch64_emit.branch_state == long_branch)
                 {
                     break;
-                }
-                else
-                {
-                    throw 0;
                 }
             }
         }
@@ -131,7 +127,7 @@ guest_function aarch64_process::translate_function(translate_request_data* data)
     return result;
 }
 
-uint64_t aarch64_process::interperate_function(aarch64_process* process, uint64_t guest_function, void* arm_context)
+uint64_t guest_process::interperate_function(guest_process* process, uint64_t guest_function, void* arm_context)
 {
     interpreter_data interpreter;
 

@@ -138,8 +138,8 @@ void arm_unicorn_fuzzer::execute_code(arm_unicorn_fuzzer* context, uint64_t inst
 
     reset_registers(context, !skip_instruction(ins, true));
 
-    aarch64_process my_process;
-    aarch64_process::create(&my_process, {interpreter_memory.data(), base_plus_va, base_plus_va_jit},&context->my_jit_context,
+    guest_process my_process;
+    guest_process::create(&my_process, {interpreter_memory.data(), base_plus_va, base_plus_va_jit},&context->my_jit_context,
         {
             offsetof(arm64_context, arm64_context::x),
             offsetof(arm64_context, arm64_context::q),
@@ -160,12 +160,12 @@ void arm_unicorn_fuzzer::execute_code(arm_unicorn_fuzzer* context, uint64_t inst
 
     if (uc_emu_start(context->uc,0, -1, -1, instruction_count) != UC_ERR_OK) {throw 0;}
 
-    aarch64_process::interperate_function(&my_process, 0, &context->debug_arm_interpreted_function);
+    guest_process::interperate_function(&my_process, 0, &context->debug_arm_interpreted_function);
     validate_context(context, context->debug_arm_interpreted_function);
 
     my_process.guest_memory_context.base = jit_memory.data();
 
-    aarch64_process::jit_function(&my_process, 0, &context->debug_arm_jited_function);
+    guest_process::jit_function(&my_process, 0, &context->debug_arm_jited_function);
     validate_context(context, context->debug_arm_jited_function);
 
     if (((ins >> 25) & 0b101) == 0b100)
