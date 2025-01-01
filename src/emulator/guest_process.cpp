@@ -130,8 +130,6 @@ guest_function guest_process::translate_function(translate_request_data* data)
 
     aarch64_emit_context::emit_context_movement(&aarch64_emit);
 
-    //ir_operation_block::log(raw_ir);
-
     void* code = jit_context::compile_code(process->host_jit_context, raw_ir, compiler_flags::check_undefined_behavior);
 
     guest_function result;
@@ -171,22 +169,13 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         ((void(*)(interpreter_data*, uint32_t))table->interpret)(&interpreter, instruction);
 
-        if (interpreter.branch_type == branch_type::long_branch)
-        { 
-            break;
-        }
-        else if (interpreter.branch_type == branch_type::short_branch)
-        {
-            continue;
-        }
-        else if (interpreter.branch_type == branch_type::no_branch)
+        if (interpreter.branch_type == branch_type::no_branch)
         {
             interpreter.current_pc += 4;
         }
-        else
+        else if (interpreter.branch_type == branch_type::svc_branch)
         {
-            assert(false);
-            throw 0;
+            break;
         }
     }
 

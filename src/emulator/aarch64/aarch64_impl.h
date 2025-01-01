@@ -25,6 +25,30 @@ struct uint128_t
         data[0] = source;
         data[1] = 0;
     }
+    
+    static void insert(uint128_t& data, int index, int size, uint64_t value)
+    {
+        switch (size)
+        {
+            case 8:     *((uint8_t*)&data + index) = value;     break;
+            case 16:    *((uint16_t*)&data + index) = value;    break;
+            case 32:    *((uint32_t*)&data + index) = value;    break;
+            case 64:    *((uint64_t*)&data + index) = value;    break;
+            default: throw 0;
+        }
+    }
+
+    static uint64_t extract(uint128_t& data, int index, int size)
+    {
+        switch (size)
+        {
+            case 8:     return *((uint8_t*)&data + index);     break;
+            case 16:    return *((uint16_t*)&data + index);    break;
+            case 32:    return *((uint32_t*)&data + index);    break;
+            case 64:    return *((uint64_t*)&data + index);    break;
+            default: throw 0;
+        }
+    }
 };
 
 void init_aarch64_decoder(guest_process* process);
@@ -67,6 +91,7 @@ void test_bit_branch_interpreter(interpreter_data* ctx, uint64_t b5, uint64_t op
 void compare_and_branch_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt);
 void b_unconditional_interpreter(interpreter_data* ctx, uint64_t op, uint64_t imm26);
 void b_conditional_interpreter(interpreter_data* ctx, uint64_t imm19, uint64_t cond);
+void svc_interpreter(interpreter_data* ctx, uint64_t imm16);
 uint64_t sign_extend_interpreter(interpreter_data* ctx, uint64_t source, uint64_t count);
 template <typename O>
 O a_shift_reg_interpreter(interpreter_data* ctx, uint64_t m, uint64_t shift_type, uint64_t ammount);
@@ -89,6 +114,8 @@ template <typename O>
 O add_subtract_carry_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_flags, uint64_t is_add, O carry);
 uint8_t condition_holds_interpreter(interpreter_data* ctx, uint64_t cond);
 void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint64_t link);
+uint64_t lowest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t source);
+void dup_general_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, uint64_t Rn, uint64_t Rd);
 template <typename O>
 void mem_interpreter(interpreter_data* ctx, uint64_t address, O value);
 template <typename O>
@@ -109,6 +136,7 @@ void undefined_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINE
 uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address);//THIS FUNCTION IS USER DEFINED
 uint128_t V_interpreter(interpreter_data* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
 void V_interpreter(interpreter_data* ctx, uint64_t reg_id, uint128_t value);//THIS FUNCTION IS USER DEFINED
+void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED
 
 //JIT
 void add_subtract_imm12_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd);
@@ -148,6 +176,7 @@ void test_bit_branch_jit(ssa_emit_context* ctx, uint64_t b5, uint64_t op, uint64
 void compare_and_branch_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt);
 void b_unconditional_jit(ssa_emit_context* ctx, uint64_t op, uint64_t imm26);
 void b_conditional_jit(ssa_emit_context* ctx, uint64_t imm19, uint64_t cond);
+void svc_jit(ssa_emit_context* ctx, uint64_t imm16);
 uint64_t sign_extend_jit(ssa_emit_context* ctx, uint64_t source, uint64_t count);
 ir_operand a_shift_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t shift_type, uint64_t ammount);
 ir_operand a_extend_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t extend_type, uint64_t shift);
@@ -165,6 +194,8 @@ ir_operand add_subtract_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n,
 ir_operand add_subtract_carry_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add, ir_operand carry);
 ir_operand condition_holds_jit(ssa_emit_context* ctx, uint64_t cond);
 void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link);
+uint64_t lowest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t source);
+void dup_general_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t imm5, uint64_t Rn, uint64_t Rd);
 void mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address, ir_operand value);
 ir_operand mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address);
 ir_operand XSP_jit(ssa_emit_context* ctx, uint64_t reg_id);
@@ -183,3 +214,4 @@ void undefined_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address);//THIS FUNCTION IS USER DEFINED
 ir_operand V_jit(ssa_emit_context* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
 void V_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);//THIS FUNCTION IS USER DEFINED
+void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED

@@ -112,3 +112,10 @@ uint64_t _get_pc_interpreter(interpreter_data* ctx)
 }
 
 void undefined_interpreter(interpreter_data* ctx){throw 0;};
+
+void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc)
+{
+    guest_process* process = (guest_process*)ctx->process_context;
+
+    ((void(*)(void*, int))process->svc_function)(process, svc);
+}

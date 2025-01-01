@@ -27,12 +27,14 @@ static void base_plus_va_jit(void* memory, ssa_emit_context* ir, ir_operand dest
 
 extern "C"
 {
-    EXPORT void* create_rem_context(void* memory, aarch64_context_offsets* context_offsets)
+    EXPORT void* create_rem_context(void* memory, aarch64_context_offsets* context_offsets, void* svc)
     {
         external_context* result = new external_context;
 
         jit_context::create(&result->memory, 1ULL * 1024 * 1024 * 1024, get_abi());
         guest_process::create(&result->process, {memory, base_plus_va, base_plus_va_jit}, &result->memory, *context_offsets);
+
+        result->process.svc_function = svc;
 
         return result;
     }

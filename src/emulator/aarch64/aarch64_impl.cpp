@@ -816,6 +816,36 @@ static void emit_b_conditional_jit(ssa_emit_context* ctx, uint32_t instruction)
 	b_conditional_jit(ctx, imm19, cond);
 }
 
+static void call_svc_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm16 = (instruction >> 5) & 65535;
+	svc_interpreter(ctx, imm16);
+}
+
+static void emit_svc_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm16 = (instruction >> 5) & 65535;
+	svc_jit(ctx, imm16);
+}
+
+static void call_dup_general_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int imm5 = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	dup_general_interpreter(ctx, Q, imm5, Rn, Rd);
+}
+
+static void emit_dup_general_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int imm5 = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	dup_general_jit(ctx, Q, imm5, Rn, Rd);
+}
+
 void init_aarch64_decoder(guest_process* process)
 {
 	append_table(process, "---100010-----------------------", (void*)emit_add_subtract_imm12_jit, (void*)call_add_subtract_imm12_interpreter, "add_subtract_imm12");
@@ -853,6 +883,8 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "-011010-------------------------", (void*)emit_compare_and_branch_jit, (void*)call_compare_and_branch_interpreter, "compare_and_branch");
 	append_table(process, "-00101--------------------------", (void*)emit_b_unconditional_jit, (void*)call_b_unconditional_interpreter, "b_unconditional");
 	append_table(process, "01010100-------------------0----", (void*)emit_b_conditional_jit, (void*)call_b_conditional_interpreter, "b_conditional");
+	append_table(process, "11010100000----------------00001", (void*)emit_svc_jit, (void*)call_svc_interpreter, "svc");
+	append_table(process, "0-001110000-----000011----------", (void*)emit_dup_general_jit, (void*)call_dup_general_interpreter, "dup_general");
 }
 
 void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -1749,7 +1781,7 @@ void pc_rel_addressing_interpreter(interpreter_data* ctx, uint64_t op, uint64_t 
 	if ((op))
 	{
 		offset = ((uint64_t)offset << (uint64_t)12ULL);
-		instruction_pc = ((uint64_t)instruction_pc & (uint64_t)4095ULL);
+		instruction_pc = ((uint64_t)instruction_pc & (uint64_t)~4095ULL);
 	}
 	X_interpreter(ctx,Rd,(uint64_t)((uint64_t)instruction_pc + (uint64_t)offset));
 }
@@ -2988,6 +3020,11 @@ void b_conditional_interpreter(interpreter_data* ctx, uint64_t imm19, uint64_t c
 	_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)condition_holds_interpreter(ctx,cond));
 }
 
+void svc_interpreter(interpreter_data* ctx, uint64_t imm16)
+{
+	call_supervisor_interpreter(ctx,imm16);
+}
+
 uint64_t sign_extend_interpreter(interpreter_data* ctx, uint64_t source, uint64_t count)
 {
 	uint64_t max = 64ULL;
@@ -3293,6 +3330,35 @@ void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint6
 		X_interpreter(ctx,30ULL,link_address);
 	}
 	_branch_long_interpreter(ctx,branch_location);
+}
+
+uint64_t lowest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t source)
+{
+	uint64_t size = 32ULL;
+	for (uint64_t i = 0; i < (size); i++)
+	{
+		uint64_t working_bit = ((uint64_t)(((uint64_t)source >> (uint64_t)i)) & (uint64_t)1ULL);
+		if ((working_bit))
+		{
+			return i;
+		}
+	}
+	return size;
+}
+
+void dup_general_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_interpreter(ctx,bits_c_interpreter(ctx,imm5,3ULL,0ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t element = X_interpreter(ctx,Rn);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint128_t::insert(result, e, esize, element);
+	}
+	V_interpreter(ctx,Rd,result);
 }
 
 template <typename O>
@@ -3952,7 +4018,7 @@ void pc_rel_addressing_jit(ssa_emit_context* ctx, uint64_t op, uint64_t immlo, u
 	if ((op))
 	{
 		offset = ((uint64_t)offset << (uint64_t)12ULL);
-		instruction_pc = ((uint64_t)instruction_pc & (uint64_t)4095ULL);
+		instruction_pc = ((uint64_t)instruction_pc & (uint64_t)~4095ULL);
 	}
 	X_jit(ctx,Rd,ir_operand::create_con(((uint64_t)instruction_pc + (uint64_t)offset), int64));
 }
@@ -4463,6 +4529,11 @@ void b_conditional_jit(ssa_emit_context* ctx, uint64_t imm19, uint64_t cond)
 	_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, condition_holds_jit(ctx,cond), int64));
 }
 
+void svc_jit(ssa_emit_context* ctx, uint64_t imm16)
+{
+	call_supervisor_jit(ctx,imm16);
+}
+
 uint64_t sign_extend_jit(ssa_emit_context* ctx, uint64_t source, uint64_t count)
 {
 	uint64_t max = 64ULL;
@@ -4763,6 +4834,35 @@ void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link
 		X_jit(ctx,30ULL,link_address);
 	}
 	_branch_long_jit(ctx,branch_location);
+}
+
+uint64_t lowest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t source)
+{
+	uint64_t size = 32ULL;
+	for (uint64_t i = 0; i < (size); i++)
+	{
+		uint64_t working_bit = ((uint64_t)(((uint64_t)source >> (uint64_t)i)) & (uint64_t)1ULL);
+		if ((working_bit))
+		{
+			return i;
+		}
+	}
+	return size;
+}
+
+void dup_general_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t imm5, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_jit(ctx,bits_c_jit(ctx,imm5,3ULL,0ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	ir_operand element = X_jit(ctx,Rn);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
+	}
+	V_jit(ctx,Rd,result);
 }
 
 void mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address, ir_operand value)

@@ -88,3 +88,22 @@ void ssa_emit_context::store(ssa_emit_context* ctx, ir_operand physical_address,
 {
     ir_operation_block::emits(ctx->ir, ir_store, physical_address, value);
 }
+
+void ssa_emit_context::vector_insert(ssa_emit_context* ctx, ir_operand result, int index, int size, ir_operand value)
+{
+    ir_operation_block::emitds(ctx->ir, ir_vector_insert, result, result, value, ir_operand::create_con(index), ir_operand::create_con(size));
+}
+
+ir_operand ssa_emit_context::vector_extract(ssa_emit_context* ctx, ir_operand source, int index, int size)
+{
+    ir_operand result = ssa_emit_context::create_local(ctx, int64);
+		
+    ir_operation_block::emitds(ctx->ir, ir_vector_extract, result, source, ir_operand::create_con(0), ir_operand::create_con(64));
+
+    return result;
+}
+
+ir_operand ssa_emit_context::vector_zero(ssa_emit_context* ctx)
+{
+    return ssa_emit_context::emit_ssa(ctx, ir_vector_zero, int128);
+}

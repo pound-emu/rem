@@ -7,8 +7,6 @@ set(LIBRARY_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/libraries/)
 
 project(${PROJECT_SHARED})
 
-include(FetchContent)
-
 add_definitions(-std=c++17)
 add_compile_definitions(XBYAK64)
 
