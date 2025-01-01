@@ -1,10 +1,12 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 
 set(PROJECT rem)
 set(SOURCE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/)
 set(LIBRARY_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/libraries/)
 
 project(${PROJECT})
+
+include(FetchContent)
 
 add_definitions(-std=c++17)
 add_compile_definitions(XBYAK64)
@@ -19,8 +21,26 @@ include_directories(${PROJECT} ${SOURCE_DIRECTORY})
 
 add_executable(${PROJECT} ${SOURCES} ${HEADERS})
 
-target_link_libraries(rem PUBLIC ${LIBRARY_DIRECTORY}unicorn/libunicorn.a)
-target_link_libraries(rem PUBLIC ${LIBRARY_DIRECTORY}capstone/libcapstone.a)
-target_link_libraries(rem PUBLIC ${LIBRARY_DIRECTORY}keystone/libkeystone.a)
+FetchContent_Declare(
+    unicorn
+    GIT_REPOSITORY https://github.com/unicorn-engine/unicorn.git
+    GIT_SHALLOW ON
+)
 
-set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
+FetchContent_Declare(
+    capstone
+    GIT_REPOSITORY https://github.com/capstone-engine/capstone.git
+    GIT_SHALLOW ON
+)
+
+FetchContent_Declare(
+    keystone
+    GIT_REPOSITORY https://github.com/keystone-engine/keystone.git
+    GIT_SHALLOW ON
+)
+
+FetchContent_MakeAvailable(unicorn capstone keystone)
+
+target_link_libraries(rem PUBLIC unicorn)
+target_link_libraries(rem PUBLIC capstone)
+target_link_libraries(rem PUBLIC keystone)
