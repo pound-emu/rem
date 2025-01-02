@@ -56,6 +56,8 @@ static Xbyak::Operand create_operand(ir_operand value)
 
 	assert(false);
 
+	std::cout << "BAD SIZE" << std::endl;
+
 	throw 0;
 }
 
@@ -161,6 +163,37 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 					c.pop(Xbyak::Reg64(i));
 				}
 			}
+
+		}; break;
+
+		case ir_compare_and_swap:
+		{
+			assert_operand_count(&working_operation, 1, 3);
+
+			assert_is_register(working_operation.destinations[0]);
+
+			assert_is_register(working_operation.sources[0]);
+			assert_is_x86_register(working_operation.sources[1], 0);
+			assert_is_register(working_operation.sources[2]);
+			
+			Xbyak::Reg64 _address = create_operand<Xbyak::Reg64>(working_operation.sources[0]);
+
+			int size = ir_operand::get_raw_size(&working_operation.destinations[0]);
+
+			switch (size)
+			{
+				case int8: 	c.cmpxchg(c.ptr[_address], create_operand<Xbyak::Reg8>(working_operation.sources[2])); break;
+				case int16: c.cmpxchg(c.ptr[_address], create_operand<Xbyak::Reg16>(working_operation.sources[2])); break;
+				case int32: c.cmpxchg(c.ptr[_address], create_operand<Xbyak::Reg32>(working_operation.sources[2])); break;
+				case int64: c.cmpxchg(c.ptr[_address], create_operand<Xbyak::Reg64>(working_operation.sources[2])); break;
+				default:
+					std::cout << "BAD SIZE" << std::endl;
+				
+				 	throw 0;
+			}
+
+			c.setz(create_operand<Xbyak::Reg8>(working_operation.destinations[0]));
+			c.and_(create_operand<Xbyak::Reg64>(working_operation.destinations[0]), 1);
 
 		}; break;
 
@@ -548,6 +581,8 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			}
 			else
 			{
+				std::cout << "BAD SIZE" << std::endl;
+
 				assert(false);
 
 				throw 0;

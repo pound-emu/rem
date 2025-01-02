@@ -471,6 +471,8 @@ static void emit_external_call(x86_pre_allocator_context* result, ir_operation* 
 
 		ir_operation_block::emitds(result->ir, ir_instructions::ir_external_call,  RAX(int64), function);
 
+		emit_move(result,operation->destinations[0],RAX(operation->destinations[0].meta_data));
+
 		ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_unlock, RAX(int64));
 
 		for (int i = 0; i < abi_count; ++i)
@@ -482,6 +484,27 @@ static void emit_external_call(x86_pre_allocator_context* result, ir_operation* 
 	{
 		throw 0;
 	}
+}
+
+static void emit_compare_and_swap(x86_pre_allocator_context* result, ir_operation* operation)
+{
+	assert_operand_count(operation, 1, 3);
+
+	ir_operand destination = operation->destinations[0];
+	ir_operand address = register_or_constant(result,operation->sources[0]);
+	ir_operand expecting = register_or_constant(result,operation->sources[1]);
+	ir_operand to_swap = register_or_constant(result,operation->sources[2]);
+
+	assert_same_size({destination, expecting, to_swap});
+
+	ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_lock, RAX(int64));
+
+	ir_operand rax = RAX(expecting.meta_data);
+
+	emit_move(result, rax, expecting);
+	ir_operation_block::emitds(result->ir, ir_compare_and_swap, destination, address, rax, to_swap);
+
+	ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_unlock, RAX(int64));
 }
 
 static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_allocator_context, ir_operation* operation, os_information os)
@@ -666,6 +689,11 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case ir_external_call:
 		{
 			emit_external_call(pre_allocator_context, operation, os);
+		}; break;
+
+		case ir_compare_and_swap:
+		{
+			emit_compare_and_swap(pre_allocator_context, operation);
 		}; break;
 
 		default: 
