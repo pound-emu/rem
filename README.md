@@ -57,7 +57,6 @@ Road Plan:
                                                 - Load/store register (register offset)         [X]
                                             - Data Processing -- Scalar Floating-Point and Advanced SIMD
                                                 - Advanced SIMD copy                            [X]
-                                                    - DUP (general)
     arm64 backend                       - [not started]
     Complete riscv frontend             - [not started]
     Power PC 32                         - [not started]

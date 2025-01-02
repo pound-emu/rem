@@ -98,7 +98,7 @@ ir_operand ssa_emit_context::vector_extract(ssa_emit_context* ctx, ir_operand so
 {
     ir_operand result = ssa_emit_context::create_local(ctx, int64);
 		
-    ir_operation_block::emitds(ctx->ir, ir_vector_extract, result, source, ir_operand::create_con(0), ir_operand::create_con(64));
+    ir_operation_block::emitds(ctx->ir, ir_vector_extract, result, source, ir_operand::create_con(index), ir_operand::create_con(size));
 
     return result;
 }

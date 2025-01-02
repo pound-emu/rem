@@ -18,6 +18,11 @@ void guest_register_store::create(guest_register_store* result, ssa_emit_context
 
 void guest_register_store::create_register(guest_register_store* guest_register_store_context, int offset, uint64_t type)
 {
+    if (offset == -1)
+    {
+        throw 0;
+    }
+
     assert(offset <= guest_register_store_context->guest_context_size);
 
     guest_register* result = &guest_register_store_context->guest_registers[offset];
@@ -28,6 +33,13 @@ void guest_register_store::create_register(guest_register_store* guest_register_
     for (int i = 0; i < size; ++i)
     {
         assert(result[i].free_guest);
+
+        if (!result[i].free_guest)
+        {
+            std::cout << "REGISTER " << i << " ALREADY DEFINED !!!" << std::endl;
+
+            throw 0;
+        }
     }
 
     result->free_guest = false;
@@ -42,6 +54,8 @@ ir_operand guest_register_store::request_guest_register(guest_register_store* gu
 
     if (guest_register->free_guest)
     {
+        std::cout << "REGISTER " << index << " NOT DEFINED !!!" << std::endl;
+
         assert(false);
 
         throw 0;
@@ -61,6 +75,8 @@ void guest_register_store::write_to_guest_register(guest_register_store* guest_r
 
     if (guest_register->free_guest)
     {
+        std::cout << "REGISTER " << index << " NOT DEFINED !!!" << std::endl;
+
         assert(false);
 
         throw 0;

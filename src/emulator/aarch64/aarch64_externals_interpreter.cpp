@@ -1,13 +1,55 @@
 #include "aarch64_impl.h"
 #include "aarch64_emit_context.h"
+#include <iostream>
+#include <iomanip>
+#include <mutex>
+
+std::mutex global_lock;
 
 //Memory
+
 
 uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address)
 {
     guest_process* process = ctx->process_context;
 
     return (uint64_t)process->guest_memory_context.translate_address(process->guest_memory_context.base, address);
+}
+
+template<typename T>
+T compare_and_swap_impl(uint64_t address_src, T expecting, T to_swap)
+{
+    T* address = (T*)address_src;
+
+    if (*address == expecting)
+    {
+        *address = to_swap;
+
+        return true;
+    }
+
+    return false;
+}
+
+uint64_t _compare_and_swap_interpreter(interpreter_data* ctx, uint64_t physical_address, uint64_t expecting, uint64_t to_swap, uint64_t size)
+{
+    global_lock.lock();
+
+    bool result;
+
+    switch (size)
+    {
+        case 8:     result = compare_and_swap_impl<uint8_t>(physical_address, expecting, to_swap); break;
+        case 16:    result = compare_and_swap_impl<uint16_t>(physical_address, expecting, to_swap); break;
+        case 32:    result = compare_and_swap_impl<uint32_t>(physical_address, expecting, to_swap); break;
+        case 64:    result = compare_and_swap_impl<uint64_t>(physical_address, expecting, to_swap); break;
+        case 128:   result = compare_and_swap_impl<uint128_t>(physical_address, expecting, to_swap); break;
+        default:    assert(false); throw 0;
+    }
+
+    global_lock.unlock();
+
+    return result;
 }
 
 //Registers 
@@ -36,10 +78,16 @@ uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id)
 
     switch (reg_id)
     {
-        case 0: return *((char*)ctx->register_data + offsets->n_offset) & 1;break;
-        case 1: return *((char*)ctx->register_data + offsets->z_offset) & 1;break;
-        case 2: return *((char*)ctx->register_data + offsets->c_offset) & 1;break;
-        case 3: return *((char*)ctx->register_data + offsets->v_offset) & 1;break;
+        case nzcv_n:            return *((char*)ctx->register_data + offsets->n_offset) & 1;
+        case nzcv_z:            return *((char*)ctx->register_data + offsets->z_offset) & 1;
+        case nzcv_c:            return *((char*)ctx->register_data + offsets->c_offset) & 1;
+        case nzcv_v:            return *((char*)ctx->register_data + offsets->v_offset) & 1;
+        case fpcr:              return *(uint64_t*)((uint64_t)ctx->register_data + offsets->fpcr_offset);
+        case fpsr:              return *(uint64_t*)((uint64_t)ctx->register_data + offsets->fpsr_offset);
+        case exclusive_value:   return *(uint64_t*)((uint64_t)ctx->register_data + offsets->exclusive_value_offset);
+        case exclusive_address: return *(uint64_t*)((uint64_t)ctx->register_data + offsets->exclusive_address_offset);
+        case thread_local_0:    return *(uint64_t*)((uint64_t)ctx->register_data + offsets->thread_local_0);
+        case thread_local_1:    return *(uint64_t*)((uint64_t)ctx->register_data + offsets->thread_local_1);
         default: throw 0;
     }
 }
@@ -50,10 +98,16 @@ void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 
     switch (reg_id)
     {
-        case 0: *((char*)ctx->register_data + offsets->n_offset) = value & 1;break;
-        case 1: *((char*)ctx->register_data + offsets->z_offset) = value & 1;break;
-        case 2: *((char*)ctx->register_data + offsets->c_offset) = value & 1;break;
-        case 3: *((char*)ctx->register_data + offsets->v_offset) = value & 1;break;
+        case nzcv_n:            *((char*)ctx->register_data + offsets->n_offset) = value & 1;                                   break;
+        case nzcv_z:            *((char*)ctx->register_data + offsets->z_offset) = value & 1;                                   break;
+        case nzcv_c:            *((char*)ctx->register_data + offsets->c_offset) = value & 1;                                   break;
+        case nzcv_v:            *((char*)ctx->register_data + offsets->v_offset) = value & 1;                                   break;
+        case fpcr:              *(uint64_t*)((uint64_t)ctx->register_data + offsets->fpcr_offset) = value;                      break;
+        case fpsr:              *(uint64_t*)((uint64_t)ctx->register_data + offsets->fpsr_offset) = value;                      break;
+        case exclusive_value:   *(uint64_t*)((uint64_t)ctx->register_data + offsets->exclusive_value_offset) = value;           break;
+        case exclusive_address: *(uint64_t*)((uint64_t)ctx->register_data + offsets->exclusive_address_offset) = value;         break;
+        case thread_local_0:    *(uint64_t*)((uint64_t)ctx->register_data + offsets->thread_local_0) = value;                   break;
+        case thread_local_1:    *(uint64_t*)((uint64_t)ctx->register_data + offsets->thread_local_1) = value;                   break;
         default: throw 0;
     }
 }
@@ -113,9 +167,33 @@ uint64_t _get_pc_interpreter(interpreter_data* ctx)
 
 void undefined_interpreter(interpreter_data* ctx){throw 0;};
 
+static uint32_t reverse_bytes(uint32_t source)
+{
+    uint32_t result = 0;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        int s_bit = (3 - i) * 8;
+
+        result |= ((source >> s_bit) & 255) << (i * 8);
+    }
+
+    return result;
+}
+
+void undefined_with_interpreter(interpreter_data* ctx, uint64_t value)
+{
+    uint32_t instruction = ctx->current_instruction;
+
+    std::cout << "ERROR " << value << std::endl;
+    std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
+
+    throw 0;
+}
+
 void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc)
 {
     guest_process* process = (guest_process*)ctx->process_context;
 
-    ((void(*)(void*, int))process->svc_function)(process, svc);
+    ((void(*)(void*, int))process->svc_function)(ctx->process_context, svc);
 }

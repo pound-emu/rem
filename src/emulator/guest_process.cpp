@@ -12,6 +12,9 @@ void guest_process::create(guest_process* result, guest_memory guest_memory_cont
     result->host_jit_context = host_jit_context;
     result->guest_context_offset_data = arm_guest_data;
 
+    result->svc_function = nullptr;
+    result->debug_mode = false;
+
     init_aarch64_decoder(result);
 }
 
@@ -27,7 +30,7 @@ uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_func
     guest_function function_to_execute = guest_function_store::get_or_translate_function(&process->guest_functions, guest_function_address, &translator_request);
 
     void* arguments[] = { arm_context };
-
+    
     return jit_context::call_jitted_function(process->host_jit_context, (void*)function_to_execute.raw_function, (uint64_t*)arguments);
 }
 
@@ -120,7 +123,7 @@ guest_function guest_process::translate_function(translate_request_data* data)
                 {
                     working_address += 4;
                 }
-                else //if (aarch64_emit.branch_state == long_branch)
+                else
                 {
                     break;
                 }
@@ -130,7 +133,7 @@ guest_function guest_process::translate_function(translate_request_data* data)
 
     aarch64_emit_context::emit_context_movement(&aarch64_emit);
 
-    void* code = jit_context::compile_code(process->host_jit_context, raw_ir, compiler_flags::check_undefined_behavior);
+    void* code = jit_context::compile_code(process->host_jit_context, raw_ir,(compiler_flags)0);
 
     guest_function result;
 
@@ -156,11 +159,13 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         uint32_t instruction = *(uint32_t*)physical_memory;
 
+        interpreter.current_instruction = instruction;
+
         auto table = fixed_length_decoder<uint32_t>::decode_slow(&process->decoder, instruction);
 
         if (table == nullptr)
         {
-            std::cout << "Undefined instruction " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
+            std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
 
             throw 0;
         }
@@ -169,11 +174,11 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         ((void(*)(interpreter_data*, uint32_t))table->interpret)(&interpreter, instruction);
 
-        if (interpreter.branch_type == branch_type::no_branch)
+        if (interpreter.branch_type == no_branch)
         {
             interpreter.current_pc += 4;
         }
-        else if (interpreter.branch_type == branch_type::svc_branch)
+        else if (interpreter.branch_type == long_branch && interpreter.process_context->debug_mode)
         {
             break;
         }

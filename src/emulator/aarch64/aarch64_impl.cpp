@@ -724,6 +724,30 @@ static void emit_load_store_register_offset_jit(ssa_emit_context* ctx, uint32_t 
 	load_store_register_offset_jit(ctx, size, VR, opc, Rm, option, S, Rn, Rt);
 }
 
+static void call_load_store_exclusive_ordered_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int ordered = (instruction >> 23) & 1;
+	int L = (instruction >> 22) & 1;
+	int Rs = (instruction >> 16) & 31;
+	int o0 = (instruction >> 15) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_exclusive_ordered_interpreter(ctx, size, ordered, L, Rs, o0, Rn, Rt);
+}
+
+static void emit_load_store_exclusive_ordered_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int size = (instruction >> 30) & 3;
+	int ordered = (instruction >> 23) & 1;
+	int L = (instruction >> 22) & 1;
+	int Rs = (instruction >> 16) & 31;
+	int o0 = (instruction >> 15) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	load_store_exclusive_ordered_jit(ctx, size, ordered, L, Rs, o0, Rn, Rt);
+}
+
 static void call_branch_register_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int l = (instruction >> 21) & 1;
@@ -846,6 +870,180 @@ static void emit_dup_general_jit(ssa_emit_context* ctx, uint32_t instruction)
 	dup_general_jit(ctx, Q, imm5, Rn, Rd);
 }
 
+static void call_dup_element_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm5 = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	dup_element_scalar_interpreter(ctx, imm5, Rn, Rd);
+}
+
+static void emit_dup_element_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm5 = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	dup_element_scalar_jit(ctx, imm5, Rn, Rd);
+}
+
+static void call_dup_element_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int imm5 = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	dup_element_vector_interpreter(ctx, Q, imm5, Rn, Rd);
+}
+
+static void emit_dup_element_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int imm5 = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	dup_element_vector_jit(ctx, Q, imm5, Rn, Rd);
+}
+
+static void call_move_to_gp_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int imm5 = (instruction >> 16) & 31;
+	int U = (instruction >> 12) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	move_to_gp_interpreter(ctx, Q, imm5, U, Rn, Rd);
+}
+
+static void emit_move_to_gp_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int imm5 = (instruction >> 16) & 31;
+	int U = (instruction >> 12) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	move_to_gp_jit(ctx, Q, imm5, U, Rn, Rd);
+}
+
+static void call_ins_general_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm5 = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	ins_general_interpreter(ctx, imm5, Rn, Rd);
+}
+
+static void emit_ins_general_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm5 = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	ins_general_jit(ctx, imm5, Rn, Rd);
+}
+
+static void call_ins_element_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm5 = (instruction >> 16) & 31;
+	int imm4 = (instruction >> 11) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	ins_element_interpreter(ctx, imm5, imm4, Rn, Rd);
+}
+
+static void emit_ins_element_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm5 = (instruction >> 16) & 31;
+	int imm4 = (instruction >> 11) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	ins_element_jit(ctx, imm5, imm4, Rn, Rd);
+}
+
+static void call_movi_immediate_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int op = (instruction >> 29) & 1;
+	int immhi = (instruction >> 16) & 7;
+	int cmode = (instruction >> 12) & 15;
+	int immlo = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	movi_immediate_interpreter(ctx, Q, op, immhi, cmode, immlo, Rd);
+}
+
+static void emit_movi_immediate_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int op = (instruction >> 29) & 1;
+	int immhi = (instruction >> 16) & 7;
+	int cmode = (instruction >> 12) & 15;
+	int immlo = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	movi_immediate_jit(ctx, Q, op, immhi, cmode, immlo, Rd);
+}
+
+static void call_msr_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm15 = (instruction >> 5) & 32767;
+	int Rt = (instruction >> 0) & 31;
+	msr_register_interpreter(ctx, imm15, Rt);
+}
+
+static void emit_msr_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm15 = (instruction >> 5) & 32767;
+	int Rt = (instruction >> 0) & 31;
+	msr_register_jit(ctx, imm15, Rt);
+}
+
+static void call_mrs_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm15 = (instruction >> 5) & 32767;
+	int Rt = (instruction >> 0) & 31;
+	mrs_register_interpreter(ctx, imm15, Rt);
+}
+
+static void emit_mrs_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm15 = (instruction >> 5) & 32767;
+	int Rt = (instruction >> 0) & 31;
+	mrs_register_jit(ctx, imm15, Rt);
+}
+
+static void call_hints_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm7 = (instruction >> 5) & 127;
+	hints_interpreter(ctx, imm7);
+}
+
+static void emit_hints_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm7 = (instruction >> 5) & 127;
+	hints_jit(ctx, imm7);
+}
+
+static void call_dmb_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int CRm = (instruction >> 8) & 15;
+	dmb_interpreter(ctx, CRm);
+}
+
+static void emit_dmb_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int CRm = (instruction >> 8) & 15;
+	dmb_jit(ctx, CRm);
+}
+
+static void call_clrex_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int CRm = (instruction >> 8) & 15;
+	clrex_interpreter(ctx, CRm);
+}
+
+static void emit_clrex_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int CRm = (instruction >> 8) & 15;
+	clrex_jit(ctx, CRm);
+}
+
 void init_aarch64_decoder(guest_process* process)
 {
 	append_table(process, "---100010-----------------------", (void*)emit_add_subtract_imm12_jit, (void*)call_add_subtract_imm12_interpreter, "add_subtract_imm12");
@@ -877,6 +1075,7 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "--101-011-----------------------", (void*)emit_load_store_register_pair_imm_pre_jit, (void*)call_load_store_register_pair_imm_pre_interpreter, "load_store_register_pair_imm_pre");
 	append_table(process, "--111-01------------------------", (void*)emit_load_store_register_imm_unsigned_jit, (void*)call_load_store_register_imm_unsigned_interpreter, "load_store_register_imm_unsigned");
 	append_table(process, "--111-00--1---------10----------", (void*)emit_load_store_register_offset_jit, (void*)call_load_store_register_offset_interpreter, "load_store_register_offset");
+	append_table(process, "--001000--0------11111----------", (void*)emit_load_store_exclusive_ordered_jit, (void*)call_load_store_exclusive_ordered_interpreter, "load_store_exclusive_ordered");
 	append_table(process, "1101011000-11111000000-----00000", (void*)emit_branch_register_jit, (void*)call_branch_register_interpreter, "branch_register");
 	append_table(process, "1101011001011111000000-----00000", (void*)emit_return_register_jit, (void*)call_return_register_interpreter, "return_register");
 	append_table(process, "-011011-------------------------", (void*)emit_test_bit_branch_jit, (void*)call_test_bit_branch_interpreter, "test_bit_branch");
@@ -885,6 +1084,17 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "01010100-------------------0----", (void*)emit_b_conditional_jit, (void*)call_b_conditional_interpreter, "b_conditional");
 	append_table(process, "11010100000----------------00001", (void*)emit_svc_jit, (void*)call_svc_interpreter, "svc");
 	append_table(process, "0-001110000-----000011----------", (void*)emit_dup_general_jit, (void*)call_dup_general_interpreter, "dup_general");
+	append_table(process, "01011110000-----000001----------", (void*)emit_dup_element_scalar_jit, (void*)call_dup_element_scalar_interpreter, "dup_element_scalar");
+	append_table(process, "0-001110000-----000001----------", (void*)emit_dup_element_vector_jit, (void*)call_dup_element_vector_interpreter, "dup_element_vector");
+	append_table(process, "0-001110000-----001-11----------", (void*)emit_move_to_gp_jit, (void*)call_move_to_gp_interpreter, "move_to_gp");
+	append_table(process, "01001110000-----000111----------", (void*)emit_ins_general_jit, (void*)call_ins_general_interpreter, "ins_general");
+	append_table(process, "01101110000-----0----1----------", (void*)emit_ins_element_jit, (void*)call_ins_element_interpreter, "ins_element");
+	append_table(process, "0--0111100000-------01----------", (void*)emit_movi_immediate_jit, (void*)call_movi_immediate_interpreter, "movi_immediate");
+	append_table(process, "110101010001--------------------", (void*)emit_msr_register_jit, (void*)call_msr_register_interpreter, "msr_register");
+	append_table(process, "110101010011--------------------", (void*)emit_mrs_register_jit, (void*)call_mrs_register_interpreter, "mrs_register");
+	append_table(process, "11010101000000110010-------11111", (void*)emit_hints_jit, (void*)call_hints_interpreter, "hints");
+	append_table(process, "11010101000000110011----10111111", (void*)emit_dmb_jit, (void*)call_dmb_interpreter, "dmb");
+	append_table(process, "11010101000000110011----01011111", (void*)emit_clrex_jit, (void*)call_clrex_interpreter, "clrex");
 }
 
 void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -983,14 +1193,14 @@ void add_subtract_carry_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 	{
 		uint32_t operand1 = X_interpreter(ctx,Rn);
 		uint32_t operand2 = X_interpreter(ctx,Rm);
-		uint32_t result = add_subtract_carry_impl_interpreter<uint32_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint32_t)_sys_interpreter(ctx,2ULL));
+		uint32_t result = add_subtract_carry_impl_interpreter<uint32_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint32_t)_sys_interpreter(ctx,nzcv_c));
 		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
 		uint64_t operand1 = X_interpreter(ctx,Rn);
 		uint64_t operand2 = X_interpreter(ctx,Rm);
-		uint64_t result = add_subtract_carry_impl_interpreter<uint64_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint64_t)_sys_interpreter(ctx,2ULL));
+		uint64_t result = add_subtract_carry_impl_interpreter<uint64_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint64_t)_sys_interpreter(ctx,nzcv_c));
 		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
@@ -1518,10 +1728,10 @@ void logical_immediate_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t 
 		{
 			result = ((uint32_t)operand1 & (uint32_t)operand2);
 			X_interpreter(ctx,Rd,(uint64_t)result);
-			_sys_interpreter(ctx,0ULL,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
-			_sys_interpreter(ctx,1ULL,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
-			_sys_interpreter(ctx,2ULL,(uint64_t)0ULL);
-			_sys_interpreter(ctx,3ULL,(uint64_t)0ULL);
+			_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
+			_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
+			_sys_interpreter(ctx,nzcv_c,(uint64_t)0ULL);
+			_sys_interpreter(ctx,nzcv_v,(uint64_t)0ULL);
 			return;
 		}
 		XSP_interpreter(ctx,Rd,(uint64_t)result);
@@ -1547,10 +1757,10 @@ void logical_immediate_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t 
 		{
 			result = ((uint64_t)operand1 & (uint64_t)operand2);
 			X_interpreter(ctx,Rd,(uint64_t)result);
-			_sys_interpreter(ctx,0ULL,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
-			_sys_interpreter(ctx,1ULL,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
-			_sys_interpreter(ctx,2ULL,(uint64_t)0ULL);
-			_sys_interpreter(ctx,3ULL,(uint64_t)0ULL);
+			_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
+			_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
+			_sys_interpreter(ctx,nzcv_c,(uint64_t)0ULL);
+			_sys_interpreter(ctx,nzcv_v,(uint64_t)0ULL);
 			return;
 		}
 		XSP_interpreter(ctx,Rd,(uint64_t)result);
@@ -1576,10 +1786,10 @@ void logical_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op
 			result = ((uint32_t)operand1 & (uint32_t)operand2);
 			if ((((uint64_t)opc == (uint64_t)3ULL)))
 			{
-				_sys_interpreter(ctx,0ULL,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
-				_sys_interpreter(ctx,1ULL,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
-				_sys_interpreter(ctx,2ULL,(uint64_t)0ULL);
-				_sys_interpreter(ctx,3ULL,(uint64_t)0ULL);
+				_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
+				_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
+				_sys_interpreter(ctx,nzcv_c,(uint64_t)0ULL);
+				_sys_interpreter(ctx,nzcv_v,(uint64_t)0ULL);
 			}
 		}
 		else if ((((uint64_t)opc == (uint64_t)1ULL)))
@@ -1606,10 +1816,10 @@ void logical_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op
 			result = ((uint64_t)operand1 & (uint64_t)operand2);
 			if ((((uint64_t)opc == (uint64_t)3ULL)))
 			{
-				_sys_interpreter(ctx,0ULL,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
-				_sys_interpreter(ctx,1ULL,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
-				_sys_interpreter(ctx,2ULL,(uint64_t)0ULL);
-				_sys_interpreter(ctx,3ULL,(uint64_t)0ULL);
+				_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
+				_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
+				_sys_interpreter(ctx,nzcv_c,(uint64_t)0ULL);
+				_sys_interpreter(ctx,nzcv_v,(uint64_t)0ULL);
 			}
 		}
 		else if ((((uint64_t)opc == (uint64_t)1ULL)))
@@ -1696,10 +1906,10 @@ void conditional_compare_interpreter(interpreter_data* ctx, uint64_t sf, uint64_
 		}
 		else
 		{
-			_sys_interpreter(ctx,0ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,1ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,2ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,3ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,nzcv_c,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,nzcv_v,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 		}
 	}
 	if (sf == 1ULL)
@@ -1720,10 +1930,10 @@ void conditional_compare_interpreter(interpreter_data* ctx, uint64_t sf, uint64_
 		}
 		else
 		{
-			_sys_interpreter(ctx,0ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,1ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,2ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,3ULL,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,nzcv_c,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,nzcv_v,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 		}
 	}
 	
@@ -2945,6 +3155,165 @@ void load_store_register_offset_interpreter(interpreter_data* ctx, uint64_t size
 	}
 }
 
+void load_store_exclusive_ordered_interpreter(interpreter_data* ctx, uint64_t size, uint64_t ordered, uint64_t L, uint64_t Rs, uint64_t o0, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t is_exclusive = ((uint64_t)ordered == (uint64_t)0ULL);
+	if ((L))
+	{
+		load_exclusive_interpreter(ctx,is_exclusive,size,Rn,Rt);
+	}
+	else
+	{
+		store_exclusive_interpreter(ctx,is_exclusive,size,Rn,Rt,Rs);
+	}
+}
+
+void load_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t datasize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t address = XSP_interpreter(ctx,Rn);
+	if (datasize == 8ULL)
+	{
+		uint8_t value = mem_interpreter<uint8_t>(ctx,address);
+		if ((is_exclusive))
+		{
+			_sys_interpreter(ctx,exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
+			_sys_interpreter(ctx,exclusive_value,(uint64_t)value);
+		}
+		X_interpreter(ctx,Rt,(uint64_t)value);
+	}
+	if (datasize == 16ULL)
+	{
+		uint16_t value = mem_interpreter<uint16_t>(ctx,address);
+		if ((is_exclusive))
+		{
+			_sys_interpreter(ctx,exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
+			_sys_interpreter(ctx,exclusive_value,(uint64_t)value);
+		}
+		X_interpreter(ctx,Rt,(uint64_t)value);
+	}
+	if (datasize == 32ULL)
+	{
+		uint32_t value = mem_interpreter<uint32_t>(ctx,address);
+		if ((is_exclusive))
+		{
+			_sys_interpreter(ctx,exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
+			_sys_interpreter(ctx,exclusive_value,(uint64_t)value);
+		}
+		X_interpreter(ctx,Rt,(uint64_t)value);
+	}
+	if (datasize == 64ULL)
+	{
+		uint64_t value = mem_interpreter<uint64_t>(ctx,address);
+		if ((is_exclusive))
+		{
+			_sys_interpreter(ctx,exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
+			_sys_interpreter(ctx,exclusive_value,(uint64_t)value);
+		}
+		X_interpreter(ctx,Rt,(uint64_t)value);
+	}
+	
+}
+
+void store_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t Rs)
+{
+	uint64_t datasize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t address = XSP_interpreter(ctx,Rn);
+	if (datasize == 8ULL)
+	{
+		if ((is_exclusive))
+		{
+			uint64_t mask = ~63ULL;
+			uint64_t _exclusive_address = _sys_interpreter(ctx,exclusive_address);
+			if ((((uint64_t)_exclusive_address == (uint64_t)(((uint64_t)address & (uint64_t)mask)))))
+			{
+				uint8_t to_swap = X_interpreter(ctx,Rt);
+				uint8_t expecting = _sys_interpreter(ctx,exclusive_value);
+				uint8_t cas_success = compare_and_swap_interpreter(ctx,address,(uint64_t)expecting,(uint64_t)to_swap,datasize);
+				X_interpreter(ctx,Rs,(uint64_t)((uint8_t)cas_success ^ (uint8_t)1ULL));
+			}
+			else
+			{
+				X_interpreter(ctx,Rs,(uint64_t)1ULL);
+			}
+		}
+		else
+		{
+			mem_interpreter<uint8_t>(ctx,address,(uint8_t)X_interpreter(ctx,Rt));
+		}
+	}
+	if (datasize == 16ULL)
+	{
+		if ((is_exclusive))
+		{
+			uint64_t mask = ~63ULL;
+			uint64_t _exclusive_address = _sys_interpreter(ctx,exclusive_address);
+			if ((((uint64_t)_exclusive_address == (uint64_t)(((uint64_t)address & (uint64_t)mask)))))
+			{
+				uint16_t to_swap = X_interpreter(ctx,Rt);
+				uint16_t expecting = _sys_interpreter(ctx,exclusive_value);
+				uint16_t cas_success = compare_and_swap_interpreter(ctx,address,(uint64_t)expecting,(uint64_t)to_swap,datasize);
+				X_interpreter(ctx,Rs,(uint64_t)((uint16_t)cas_success ^ (uint16_t)1ULL));
+			}
+			else
+			{
+				X_interpreter(ctx,Rs,(uint64_t)1ULL);
+			}
+		}
+		else
+		{
+			mem_interpreter<uint16_t>(ctx,address,(uint16_t)X_interpreter(ctx,Rt));
+		}
+	}
+	if (datasize == 32ULL)
+	{
+		if ((is_exclusive))
+		{
+			uint64_t mask = ~63ULL;
+			uint64_t _exclusive_address = _sys_interpreter(ctx,exclusive_address);
+			if ((((uint64_t)_exclusive_address == (uint64_t)(((uint64_t)address & (uint64_t)mask)))))
+			{
+				uint32_t to_swap = X_interpreter(ctx,Rt);
+				uint32_t expecting = _sys_interpreter(ctx,exclusive_value);
+				uint32_t cas_success = compare_and_swap_interpreter(ctx,address,(uint64_t)expecting,(uint64_t)to_swap,datasize);
+				X_interpreter(ctx,Rs,(uint64_t)((uint32_t)cas_success ^ (uint32_t)1ULL));
+			}
+			else
+			{
+				X_interpreter(ctx,Rs,(uint64_t)1ULL);
+			}
+		}
+		else
+		{
+			mem_interpreter<uint32_t>(ctx,address,(uint32_t)X_interpreter(ctx,Rt));
+		}
+	}
+	if (datasize == 64ULL)
+	{
+		if ((is_exclusive))
+		{
+			uint64_t mask = ~63ULL;
+			uint64_t _exclusive_address = _sys_interpreter(ctx,exclusive_address);
+			if ((((uint64_t)_exclusive_address == (uint64_t)(((uint64_t)address & (uint64_t)mask)))))
+			{
+				uint64_t to_swap = X_interpreter(ctx,Rt);
+				uint64_t expecting = _sys_interpreter(ctx,exclusive_value);
+				uint64_t cas_success = compare_and_swap_interpreter(ctx,address,(uint64_t)expecting,(uint64_t)to_swap,datasize);
+				X_interpreter(ctx,Rs,(uint64_t)((uint64_t)cas_success ^ (uint64_t)1ULL));
+			}
+			else
+			{
+				X_interpreter(ctx,Rs,(uint64_t)1ULL);
+			}
+		}
+		else
+		{
+			mem_interpreter<uint64_t>(ctx,address,(uint64_t)X_interpreter(ctx,Rt));
+		}
+	}
+	
+}
+
 void branch_register_interpreter(interpreter_data* ctx, uint64_t l, uint64_t Rn)
 {
 	branch_long_universal_interpreter(ctx,Rn,l);
@@ -3346,6 +3715,102 @@ uint64_t lowest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t source)
 	return size;
 }
 
+void dup_element_interpreter(interpreter_data* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d)
+{
+	uint128_t operand = V_interpreter(ctx,n);
+	uint128_t result = 0;
+	uint64_t element = uint128_t::extract(operand, index, esize);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint128_t::insert(result, e, esize, element);
+	}
+	V_interpreter(ctx,d,result);
+}
+
+uint64_t expand_imm_interpreter(interpreter_data* ctx, uint64_t op, uint64_t cmode, uint64_t imm8)
+{
+	uint64_t imm64 = 0ULL;
+	uint64_t cmode_test = bits_c_interpreter(ctx,cmode,3ULL,1ULL);
+	if ((((uint64_t)cmode_test == (uint64_t)0ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,imm8,32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)1ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)8ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)2ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)16ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)3ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)24ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)4ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,imm8,16ULL,4ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)5ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)8ULL),16ULL,4ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)6ULL)))
+	{
+		if ((((uint64_t)(((uint64_t)cmode & (uint64_t)1ULL)) == (uint64_t)0ULL)))
+		{
+			imm64 = replicate_c_interpreter(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)8ULL)) | (uint64_t)ones_interpreter(ctx,8ULL)),32ULL,2ULL);
+		}
+		else
+		{
+			imm64 = replicate_c_interpreter(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)16ULL)) | (uint64_t)ones_interpreter(ctx,16ULL)),32ULL,2ULL);
+		}
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)7ULL)))
+	{
+		if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
+		{
+			imm64 = replicate_c_interpreter(ctx,imm8,8ULL,8ULL);
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
+		{
+			for (uint64_t i = 0; i < (8ULL); i++)
+			{
+				uint64_t part = ((uint64_t)(((uint64_t)0ULL - (uint64_t)(((uint64_t)(((uint64_t)imm8 >> (uint64_t)i)) & (uint64_t)1ULL)))) & (uint64_t)255ULL);
+				imm64 = ((uint64_t)imm64 | (uint64_t)(((uint64_t)part << (uint64_t)(((uint64_t)i * (uint64_t)8ULL)))));
+			}
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
+		{
+			uint64_t p0 = bit_c_interpreter(ctx,imm8,7ULL);
+			uint64_t p1 = ((uint64_t)(~(bit_c_interpreter(ctx,imm8,6ULL))) & (uint64_t)1ULL);
+			uint64_t p2 = replicate_c_interpreter(ctx,bit_c_interpreter(ctx,imm8,6ULL),1ULL,5ULL);
+			uint64_t p3 = bits_c_interpreter(ctx,imm8,5ULL,0ULL);
+			uint64_t p4 = 0ULL;
+			uint64_t working = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)19ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)19ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL) + (uint64_t)1ULL)))));
+			imm64 = replicate_c_interpreter(ctx,working,32ULL,2ULL);
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
+		{
+			uint64_t p0 = bit_c_interpreter(ctx,imm8,7ULL);
+			uint64_t p1 = ((uint64_t)(~(bit_c_interpreter(ctx,imm8,6ULL))) & (uint64_t)1ULL);
+			uint64_t p2 = replicate_c_interpreter(ctx,bit_c_interpreter(ctx,imm8,6ULL),1ULL,8ULL);
+			uint64_t p3 = bits_c_interpreter(ctx,imm8,5ULL,0ULL);
+			uint64_t p4 = 0ULL;
+			imm64 = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)48ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)48ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL) + (uint64_t)1ULL)))));
+		}
+		else
+		{
+			undefined_interpreter(ctx);
+		}
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	return imm64;
+}
+
 void dup_general_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, uint64_t Rn, uint64_t Rd)
 {
 	uint64_t size = lowest_bit_set_c_interpreter(ctx,bits_c_interpreter(ctx,imm5,3ULL,0ULL));
@@ -3359,6 +3824,231 @@ void dup_general_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, u
 		uint128_t::insert(result, e, esize, element);
 	}
 	V_interpreter(ctx,Rd,result);
+}
+
+void dup_element_scalar_interpreter(interpreter_data* ctx, uint64_t imm5, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_interpreter(ctx,bits_c_interpreter(ctx,imm5,3ULL,0ULL));
+	uint64_t index = bits_c_interpreter(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)bit_c_interpreter(ctx,imm5,4ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = esize;
+	uint64_t elements = 1ULL;
+	dup_element_interpreter(ctx,index,esize,elements,Rn,Rd);
+}
+
+void dup_element_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_interpreter(ctx,bits_c_interpreter(ctx,imm5,3ULL,0ULL));
+	uint64_t index = bits_c_interpreter(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)bit_c_interpreter(ctx,imm5,4ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	dup_element_interpreter(ctx,index,esize,elements,Rn,Rd);
+}
+
+void move_to_gp_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_interpreter(ctx,bits_c_interpreter(ctx,imm5,3ULL,0ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)32ULL << (uint64_t)Q);
+	uint64_t index = bits_c_interpreter(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	uint128_t operand = V_interpreter(ctx,Rn);
+	if (esize == 8ULL)
+	{
+		if (datasize == 32ULL)
+		{
+			uint32_t working_operand = uint128_t::extract(operand, index, esize);
+			if ((!U))
+			{
+				working_operand = (uint32_t)sign_extend((uint8_t)working_operand);
+			}
+			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+		}
+		if (datasize == 64ULL)
+		{
+			uint64_t working_operand = uint128_t::extract(operand, index, esize);
+			if ((!U))
+			{
+				working_operand = (uint64_t)sign_extend((uint8_t)working_operand);
+			}
+			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+		}
+		
+	}
+	if (esize == 16ULL)
+	{
+		if (datasize == 32ULL)
+		{
+			uint32_t working_operand = uint128_t::extract(operand, index, esize);
+			if ((!U))
+			{
+				working_operand = (uint32_t)sign_extend((uint16_t)working_operand);
+			}
+			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+		}
+		if (datasize == 64ULL)
+		{
+			uint64_t working_operand = uint128_t::extract(operand, index, esize);
+			if ((!U))
+			{
+				working_operand = (uint64_t)sign_extend((uint16_t)working_operand);
+			}
+			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+		}
+		
+	}
+	if (esize == 32ULL)
+	{
+		if (datasize == 32ULL)
+		{
+			uint32_t working_operand = uint128_t::extract(operand, index, esize);
+			if ((!U))
+			{
+				working_operand = (uint32_t)sign_extend((uint32_t)working_operand);
+			}
+			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+		}
+		if (datasize == 64ULL)
+		{
+			uint64_t working_operand = uint128_t::extract(operand, index, esize);
+			if ((!U))
+			{
+				working_operand = (uint64_t)sign_extend((uint32_t)working_operand);
+			}
+			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+		}
+		
+	}
+	if (esize == 64ULL)
+	{
+		if (datasize == 32ULL)
+		{
+			uint32_t working_operand = uint128_t::extract(operand, index, esize);
+			if ((!U))
+			{
+				working_operand = (uint32_t)sign_extend((uint64_t)working_operand);
+			}
+			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+		}
+		if (datasize == 64ULL)
+		{
+			uint64_t working_operand = uint128_t::extract(operand, index, esize);
+			if ((!U))
+			{
+				working_operand = (uint64_t)sign_extend((uint64_t)working_operand);
+			}
+			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+		}
+		
+	}
+	
+}
+
+void ins_general_interpreter(interpreter_data* ctx, uint64_t imm5, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_interpreter(ctx,bits_c_interpreter(ctx,imm5,3ULL,0ULL));
+	uint64_t index = bits_c_interpreter(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t element = X_interpreter(ctx,Rn);
+	uint128_t result = V_interpreter(ctx,Rd);
+	uint128_t::insert(result, index, esize, element);
+	V_interpreter(ctx,Rd,result);
+}
+
+void ins_element_interpreter(interpreter_data* ctx, uint64_t imm5, uint64_t imm4, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_interpreter(ctx,bits_c_interpreter(ctx,imm5,3ULL,0ULL));
+	uint64_t dst_index = bits_c_interpreter(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	uint64_t src_index = bits_c_interpreter(ctx,imm4,3ULL,size);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = V_interpreter(ctx,Rd);
+	uint128_t::insert(result, dst_index, esize, (uint128_t::extract(operand, src_index, esize)));
+	V_interpreter(ctx,Rd,result);
+}
+
+void movi_immediate_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t op, uint64_t immhi, uint64_t cmode, uint64_t immlo, uint64_t Rd)
+{
+	uint64_t d = Rd;
+	uint64_t imm8 = ((uint64_t)(((uint64_t)immhi << (uint64_t)5ULL)) | (uint64_t)immlo);
+	uint64_t cmode_helper = ((uint64_t)(((uint64_t)cmode << (uint64_t)1ULL)) | (uint64_t)op);
+	uint64_t mode = 0ULL;
+	if ((((uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)19ULL)) == (uint64_t)2ULL)) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)27ULL)) == (uint64_t)18ULL)))))
+	{
+		mode = 0ULL;
+	}
+	else if ((((uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)19ULL)) == (uint64_t)3ULL)) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)27ULL)) == (uint64_t)19ULL)))))
+	{
+		mode = 1ULL;
+	}
+	else if ((((uint64_t)((uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)19ULL)) == (uint64_t)1ULL)) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)27ULL)) == (uint64_t)17ULL))) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)29ULL)) == (uint64_t)25ULL)))))
+	{
+		mode = 2ULL;
+	}
+	else if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)19ULL)) == (uint64_t)0ULL)) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)27ULL)) == (uint64_t)16ULL))) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)29ULL)) == (uint64_t)24ULL))) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)30ULL)) == (uint64_t)28ULL))) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)31ULL)) == (uint64_t)30ULL)))))
+	{
+		mode = 3ULL;
+	}
+	else if ((((uint64_t)cmode_helper == (uint64_t)31ULL)))
+	{
+		if ((((uint64_t)Q == (uint64_t)0ULL)))
+		{
+			undefined_interpreter(ctx);
+		}
+		mode = 3ULL;
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	uint64_t imm64 = expand_imm_interpreter(ctx,op,cmode,imm8);
+	uint128_t imm = imm64;
+	if ((Q))
+	{
+		uint128_t::insert(imm, 1ULL, 64ULL, imm64);
+	}
+	uint128_t operand = 0;
+	uint128_t result = 0;
+	if ((((uint64_t)mode == (uint64_t)3ULL)))
+	{
+		result = imm;
+	}
+	else if ((((uint64_t)mode == (uint64_t)2ULL)))
+	{
+		for (uint64_t e = 0; e < (((uint64_t)Q + (uint64_t)1ULL)); e++)
+		{
+			uint128_t::insert(result, e, 64ULL, ~(uint128_t::extract(imm, e, 64ULL)));
+		}
+	}
+	else if ((((uint64_t)mode == (uint64_t)0ULL)))
+	{
+		operand = V_interpreter(ctx,Rd);
+		for (uint64_t e = 0; e < (((uint64_t)Q + (uint64_t)1ULL)); e++)
+		{
+			uint128_t::insert(result, e, 64ULL, (((uint64_t)(uint128_t::extract(operand, e, 64ULL)) | (uint64_t)(uint128_t::extract(imm, e, 64ULL)))));
+		}
+	}
+	else if ((((uint64_t)mode == (uint64_t)1ULL)))
+	{
+		operand = V_interpreter(ctx,Rd);
+		for (uint64_t e = 0; e < (((uint64_t)Q + (uint64_t)1ULL)); e++)
+		{
+			uint128_t::insert(result, e, 64ULL, (((uint64_t)(uint128_t::extract(operand, e, 64ULL)) & (uint64_t)~(uint128_t::extract(imm, e, 64ULL)))));
+		}
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+uint64_t compare_and_swap_interpreter(interpreter_data* ctx, uint64_t address, uint64_t expecting, uint64_t to_swap, uint64_t size)
+{
+	address = translate_address_interpreter(ctx,address);
+	return _compare_and_swap_interpreter(ctx,address,expecting,to_swap,size);
 }
 
 template <typename O>
@@ -3407,6 +4097,71 @@ void X_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 	{
 		_x_interpreter(ctx,reg_id,value);
 	}
+}
+
+void msr_register_interpreter(interpreter_data* ctx, uint64_t imm15, uint64_t Rt)
+{
+	uint64_t operand = X_interpreter(ctx,Rt);
+	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	{
+		_sys_interpreter(ctx,fpcr,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	{
+		_sys_interpreter(ctx,fpsr,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
+	{
+		_sys_interpreter(ctx,thread_local_1,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
+	{
+		_sys_interpreter(ctx,thread_local_0,operand);
+	}
+	else
+	{
+		undefined_with_interpreter(ctx,imm15);
+	}
+}
+
+void mrs_register_interpreter(interpreter_data* ctx, uint64_t imm15, uint64_t Rt)
+{
+	uint64_t operand;
+	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	{
+		operand = _sys_interpreter(ctx,fpcr);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	{
+		operand = _sys_interpreter(ctx,fpsr);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
+	{
+		operand = _sys_interpreter(ctx,thread_local_1);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
+	{
+		operand = _sys_interpreter(ctx,thread_local_0);
+	}
+	else
+	{
+		undefined_with_interpreter(ctx,imm15);
+	}
+	X_interpreter(ctx,Rt,operand);
+}
+
+void hints_interpreter(interpreter_data* ctx, uint64_t imm7)
+{
+}
+
+void dmb_interpreter(interpreter_data* ctx, uint64_t CRm)
+{
+}
+
+void clrex_interpreter(interpreter_data* ctx, uint64_t CRm)
+{
+	_sys_interpreter(ctx,exclusive_address,(uint64_t)-1ULL);
+	_sys_interpreter(ctx,exclusive_value,(uint64_t)-1ULL);
 }
 
 void add_subtract_imm12_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -3465,7 +4220,7 @@ void add_subtract_carry_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 	{
 		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
-		ir_operand result = copy_new_raw_size(ctx, add_subtract_carry_impl_jit(ctx,O,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),copy_new_raw_size(ctx, _sys_jit(ctx,2ULL), O)), O);
+		ir_operand result = copy_new_raw_size(ctx, add_subtract_carry_impl_jit(ctx,O,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),copy_new_raw_size(ctx, _sys_jit(ctx,nzcv_c), O)), O);
 		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
@@ -3860,10 +4615,10 @@ void logical_immediate_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uin
 		{
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand1, operand2);
 			X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
-			_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
-			_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
-			_sys_jit(ctx,2ULL,ir_operand::create_con(0ULL, int64));
-			_sys_jit(ctx,3ULL,ir_operand::create_con(0ULL, int64));
+			_sys_jit(ctx,nzcv_n,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
+			_sys_jit(ctx,nzcv_z,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
+			_sys_jit(ctx,nzcv_c,ir_operand::create_con(0ULL, int64));
+			_sys_jit(ctx,nzcv_v,ir_operand::create_con(0ULL, int64));
 			return;
 		}
 		XSP_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
@@ -3888,10 +4643,10 @@ void logical_shifted_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uint6
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand1, operand2);
 			if ((((uint64_t)opc == (uint64_t)3ULL)))
 			{
-				_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
-				_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
-				_sys_jit(ctx,2ULL,ir_operand::create_con(0ULL, int64));
-				_sys_jit(ctx,3ULL,ir_operand::create_con(0ULL, int64));
+				_sys_jit(ctx,nzcv_n,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
+				_sys_jit(ctx,nzcv_z,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
+				_sys_jit(ctx,nzcv_c,ir_operand::create_con(0ULL, int64));
+				_sys_jit(ctx,nzcv_v,ir_operand::create_con(0ULL, int64));
 			}
 		}
 		else if ((((uint64_t)opc == (uint64_t)1ULL)))
@@ -3958,10 +4713,10 @@ void conditional_compare_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, ui
 		
 		    ir_operation_block::jump_if(ctx->ir,yes, condition);
 			{
-				_sys_jit(ctx,0ULL,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL), int64));
-				_sys_jit(ctx,1ULL,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL), int64));
-				_sys_jit(ctx,2ULL,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL), int64));
-				_sys_jit(ctx,3ULL,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL), int64));
+				_sys_jit(ctx,nzcv_n,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL), int64));
+				_sys_jit(ctx,nzcv_z,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL), int64));
+				_sys_jit(ctx,nzcv_c,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL), int64));
+				_sys_jit(ctx,nzcv_v,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL), int64));
 			}
 		    
 		    ir_operation_block::jump(ctx->ir,end);
@@ -4471,6 +5226,76 @@ void load_store_register_offset_jit(ssa_emit_context* ctx, uint64_t size, uint64
 	}
 }
 
+void load_store_exclusive_ordered_jit(ssa_emit_context* ctx, uint64_t size, uint64_t ordered, uint64_t L, uint64_t Rs, uint64_t o0, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t is_exclusive = ((uint64_t)ordered == (uint64_t)0ULL);
+	if ((L))
+	{
+		load_exclusive_jit(ctx,is_exclusive,size,Rn,Rt);
+	}
+	else
+	{
+		store_exclusive_jit(ctx,is_exclusive,size,Rn,Rt,Rs);
+	}
+}
+
+void load_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t datasize = ((uint64_t)8ULL << (uint64_t)size);
+	ir_operand address = XSP_jit(ctx,Rn);
+	uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : throw 0;
+	{
+		ir_operand value = copy_new_raw_size(ctx, mem_jit(ctx,S,address), S);
+		if ((is_exclusive))
+		{
+			_sys_jit(ctx,exclusive_address,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, address, ir_operand::create_con(~63ULL, int64)));
+			_sys_jit(ctx,exclusive_value,copy_new_raw_size(ctx, value, int64));
+		}
+		X_jit(ctx,Rt,copy_new_raw_size(ctx, value, int64));
+	}
+}
+
+void store_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t Rs)
+{
+	uint64_t datasize = ((uint64_t)8ULL << (uint64_t)size);
+	ir_operand address = XSP_jit(ctx,Rn);
+	uint64_t S = datasize == 8ULL ? int8 : datasize == 16ULL ? int16 : datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : throw 0;
+	{
+		if ((is_exclusive))
+		{
+			ir_operand mask = ir_operand::create_con(~63ULL, int64);
+			ir_operand _exclusive_address = _sys_jit(ctx,exclusive_address);
+			{
+			    ir_operand end = ir_operation_block::create_label(ctx->ir);
+			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+			
+			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, _exclusive_address, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, address, mask));
+			
+			    ir_operation_block::jump_if(ctx->ir,yes, condition);
+				{
+					X_jit(ctx,Rs,ir_operand::create_con(1ULL, int64));
+				}
+			    
+			    ir_operation_block::jump(ctx->ir,end);
+			    ir_operation_block::mark_label(ctx->ir, yes);
+			
+				{
+					ir_operand to_swap = copy_new_raw_size(ctx, X_jit(ctx,Rt), S);
+					ir_operand expecting = copy_new_raw_size(ctx, _sys_jit(ctx,exclusive_value), S);
+					ir_operand cas_success = copy_new_raw_size(ctx, compare_and_swap_jit(ctx,address,copy_new_raw_size(ctx, expecting, int64),copy_new_raw_size(ctx, to_swap, int64),datasize), S);
+					X_jit(ctx,Rs,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, cas_success, ir_operand::create_con(1ULL, S)), int64));
+				}
+			
+			    ir_operation_block::mark_label(ctx->ir, end);
+			}
+		}
+		else
+		{
+			mem_jit(ctx,S,address,copy_new_raw_size(ctx, X_jit(ctx,Rt), S));
+		}
+	}
+}
+
 void branch_register_jit(ssa_emit_context* ctx, uint64_t l, uint64_t Rn)
 {
 	branch_long_universal_jit(ctx,Rn,l);
@@ -4850,6 +5675,102 @@ uint64_t lowest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t source)
 	return size;
 }
 
+void dup_element_jit(ssa_emit_context* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d)
+{
+	ir_operand operand = V_jit(ctx,n);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand element = ssa_emit_context::vector_extract(ctx,operand, index, esize);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
+	}
+	V_jit(ctx,d,result);
+}
+
+uint64_t expand_imm_jit(ssa_emit_context* ctx, uint64_t op, uint64_t cmode, uint64_t imm8)
+{
+	uint64_t imm64 = 0ULL;
+	uint64_t cmode_test = bits_c_jit(ctx,cmode,3ULL,1ULL);
+	if ((((uint64_t)cmode_test == (uint64_t)0ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,imm8,32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)1ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)8ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)2ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)16ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)3ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)24ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)4ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,imm8,16ULL,4ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)5ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)8ULL),16ULL,4ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)6ULL)))
+	{
+		if ((((uint64_t)(((uint64_t)cmode & (uint64_t)1ULL)) == (uint64_t)0ULL)))
+		{
+			imm64 = replicate_c_jit(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)8ULL)) | (uint64_t)ones_jit(ctx,8ULL)),32ULL,2ULL);
+		}
+		else
+		{
+			imm64 = replicate_c_jit(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)16ULL)) | (uint64_t)ones_jit(ctx,16ULL)),32ULL,2ULL);
+		}
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)7ULL)))
+	{
+		if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
+		{
+			imm64 = replicate_c_jit(ctx,imm8,8ULL,8ULL);
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
+		{
+			for (uint64_t i = 0; i < (8ULL); i++)
+			{
+				uint64_t part = ((uint64_t)(((uint64_t)0ULL - (uint64_t)(((uint64_t)(((uint64_t)imm8 >> (uint64_t)i)) & (uint64_t)1ULL)))) & (uint64_t)255ULL);
+				imm64 = ((uint64_t)imm64 | (uint64_t)(((uint64_t)part << (uint64_t)(((uint64_t)i * (uint64_t)8ULL)))));
+			}
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
+		{
+			uint64_t p0 = bit_c_jit(ctx,imm8,7ULL);
+			uint64_t p1 = ((uint64_t)(~(bit_c_jit(ctx,imm8,6ULL))) & (uint64_t)1ULL);
+			uint64_t p2 = replicate_c_jit(ctx,bit_c_jit(ctx,imm8,6ULL),1ULL,5ULL);
+			uint64_t p3 = bits_c_jit(ctx,imm8,5ULL,0ULL);
+			uint64_t p4 = 0ULL;
+			uint64_t working = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)19ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)19ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL) + (uint64_t)1ULL)))));
+			imm64 = replicate_c_jit(ctx,working,32ULL,2ULL);
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
+		{
+			uint64_t p0 = bit_c_jit(ctx,imm8,7ULL);
+			uint64_t p1 = ((uint64_t)(~(bit_c_jit(ctx,imm8,6ULL))) & (uint64_t)1ULL);
+			uint64_t p2 = replicate_c_jit(ctx,bit_c_jit(ctx,imm8,6ULL),1ULL,8ULL);
+			uint64_t p3 = bits_c_jit(ctx,imm8,5ULL,0ULL);
+			uint64_t p4 = 0ULL;
+			imm64 = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)48ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)48ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL) + (uint64_t)1ULL)))));
+		}
+		else
+		{
+			undefined_jit(ctx);
+		}
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	return imm64;
+}
+
 void dup_general_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t imm5, uint64_t Rn, uint64_t Rd)
 {
 	uint64_t size = lowest_bit_set_c_jit(ctx,bits_c_jit(ctx,imm5,3ULL,0ULL));
@@ -4863,6 +5784,154 @@ void dup_general_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t imm5, uint64_t 
 		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
 	}
 	V_jit(ctx,Rd,result);
+}
+
+void dup_element_scalar_jit(ssa_emit_context* ctx, uint64_t imm5, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_jit(ctx,bits_c_jit(ctx,imm5,3ULL,0ULL));
+	uint64_t index = bits_c_jit(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)bit_c_jit(ctx,imm5,4ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = esize;
+	uint64_t elements = 1ULL;
+	dup_element_jit(ctx,index,esize,elements,Rn,Rd);
+}
+
+void dup_element_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t imm5, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_jit(ctx,bits_c_jit(ctx,imm5,3ULL,0ULL));
+	uint64_t index = bits_c_jit(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)bit_c_jit(ctx,imm5,4ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	dup_element_jit(ctx,index,esize,elements,Rn,Rd);
+}
+
+void move_to_gp_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t imm5, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_jit(ctx,bits_c_jit(ctx,imm5,3ULL,0ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)32ULL << (uint64_t)Q);
+	uint64_t index = bits_c_jit(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	ir_operand operand = V_jit(ctx,Rn);
+	uint64_t S = esize == 8ULL ? int8 : esize == 16ULL ? int16 : esize == 32ULL ? int32 : esize == 64ULL ? int64 : throw 0;
+	{
+		uint64_t R = datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : throw 0;
+		{
+			ir_operand working_operand = copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,operand, index, esize), R);
+			if ((!U))
+			{
+				working_operand = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, working_operand, S), R);
+			}
+			X_jit(ctx,Rd,copy_new_raw_size(ctx, working_operand, int64));
+		}
+	}
+}
+
+void ins_general_jit(ssa_emit_context* ctx, uint64_t imm5, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_jit(ctx,bits_c_jit(ctx,imm5,3ULL,0ULL));
+	uint64_t index = bits_c_jit(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	ir_operand element = X_jit(ctx,Rn);
+	ir_operand result = V_jit(ctx,Rd);
+	ssa_emit_context::vector_insert(ctx,result, index, esize, element);
+	V_jit(ctx,Rd,result);
+}
+
+void ins_element_jit(ssa_emit_context* ctx, uint64_t imm5, uint64_t imm4, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t size = lowest_bit_set_c_jit(ctx,bits_c_jit(ctx,imm5,3ULL,0ULL));
+	uint64_t dst_index = bits_c_jit(ctx,imm5,4ULL,((uint64_t)size + (uint64_t)1ULL));
+	uint64_t src_index = bits_c_jit(ctx,imm4,3ULL,size);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = V_jit(ctx,Rd);
+	ssa_emit_context::vector_insert(ctx,result, dst_index, esize, ssa_emit_context::vector_extract(ctx,operand, src_index, esize));
+	V_jit(ctx,Rd,result);
+}
+
+void movi_immediate_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t op, uint64_t immhi, uint64_t cmode, uint64_t immlo, uint64_t Rd)
+{
+	uint64_t d = Rd;
+	uint64_t imm8 = ((uint64_t)(((uint64_t)immhi << (uint64_t)5ULL)) | (uint64_t)immlo);
+	uint64_t cmode_helper = ((uint64_t)(((uint64_t)cmode << (uint64_t)1ULL)) | (uint64_t)op);
+	uint64_t mode = 0ULL;
+	if ((((uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)19ULL)) == (uint64_t)2ULL)) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)27ULL)) == (uint64_t)18ULL)))))
+	{
+		mode = 0ULL;
+	}
+	else if ((((uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)19ULL)) == (uint64_t)3ULL)) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)27ULL)) == (uint64_t)19ULL)))))
+	{
+		mode = 1ULL;
+	}
+	else if ((((uint64_t)((uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)19ULL)) == (uint64_t)1ULL)) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)27ULL)) == (uint64_t)17ULL))) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)29ULL)) == (uint64_t)25ULL)))))
+	{
+		mode = 2ULL;
+	}
+	else if ((((uint64_t)((uint64_t)((uint64_t)((uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)19ULL)) == (uint64_t)0ULL)) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)27ULL)) == (uint64_t)16ULL))) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)29ULL)) == (uint64_t)24ULL))) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)30ULL)) == (uint64_t)28ULL))) || (uint64_t)(((uint64_t)(((uint64_t)cmode_helper & (uint64_t)31ULL)) == (uint64_t)30ULL)))))
+	{
+		mode = 3ULL;
+	}
+	else if ((((uint64_t)cmode_helper == (uint64_t)31ULL)))
+	{
+		if ((((uint64_t)Q == (uint64_t)0ULL)))
+		{
+			undefined_jit(ctx);
+		}
+		mode = 3ULL;
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	ir_operand imm64 = ir_operand::create_con(expand_imm_jit(ctx,op,cmode,imm8), int64);
+	ir_operand imm = copy_new_raw_size(ctx, imm64, int128);
+	if ((Q))
+	{
+		ssa_emit_context::vector_insert(ctx,imm, 1ULL, 64ULL, imm64);
+	}
+	ir_operand operand = ssa_emit_context::vector_zero(ctx);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	if ((((uint64_t)mode == (uint64_t)3ULL)))
+	{
+		result = imm;
+	}
+	else if ((((uint64_t)mode == (uint64_t)2ULL)))
+	{
+		for (uint64_t e = 0; e < (((uint64_t)Q + (uint64_t)1ULL)); e++)
+		{
+			ssa_emit_context::vector_insert(ctx,result, e, 64ULL, ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::vector_extract(ctx,imm, e, 64ULL)));
+		}
+	}
+	else if ((((uint64_t)mode == (uint64_t)0ULL)))
+	{
+		operand = V_jit(ctx,Rd);
+		for (uint64_t e = 0; e < (((uint64_t)Q + (uint64_t)1ULL)); e++)
+		{
+			ssa_emit_context::vector_insert(ctx,result, e, 64ULL, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::vector_extract(ctx,operand, e, 64ULL), ssa_emit_context::vector_extract(ctx,imm, e, 64ULL)));
+		}
+	}
+	else if ((((uint64_t)mode == (uint64_t)1ULL)))
+	{
+		operand = V_jit(ctx,Rd);
+		for (uint64_t e = 0; e < (((uint64_t)Q + (uint64_t)1ULL)); e++)
+		{
+			ssa_emit_context::vector_insert(ctx,result, e, 64ULL, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::vector_extract(ctx,operand, e, 64ULL), ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::vector_extract(ctx,imm, e, 64ULL))));
+		}
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+ir_operand compare_and_swap_jit(ssa_emit_context* ctx, ir_operand address, ir_operand expecting, ir_operand to_swap, uint64_t size)
+{
+	address = translate_address_jit(ctx,address);
+	return _compare_and_swap_jit(ctx,address,expecting,to_swap,size);
 }
 
 void mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address, ir_operand value)
@@ -4909,5 +5978,70 @@ void X_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
 	{
 		_x_jit(ctx,reg_id,value);
 	}
+}
+
+void msr_register_jit(ssa_emit_context* ctx, uint64_t imm15, uint64_t Rt)
+{
+	ir_operand operand = X_jit(ctx,Rt);
+	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	{
+		_sys_jit(ctx,fpcr,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	{
+		_sys_jit(ctx,fpsr,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
+	{
+		_sys_jit(ctx,thread_local_1,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
+	{
+		_sys_jit(ctx,thread_local_0,operand);
+	}
+	else
+	{
+		undefined_with_jit(ctx,imm15);
+	}
+}
+
+void mrs_register_jit(ssa_emit_context* ctx, uint64_t imm15, uint64_t Rt)
+{
+	ir_operand operand;
+	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	{
+		operand = _sys_jit(ctx,fpcr);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	{
+		operand = _sys_jit(ctx,fpsr);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
+	{
+		operand = _sys_jit(ctx,thread_local_1);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
+	{
+		operand = _sys_jit(ctx,thread_local_0);
+	}
+	else
+	{
+		undefined_with_jit(ctx,imm15);
+	}
+	X_jit(ctx,Rt,operand);
+}
+
+void hints_jit(ssa_emit_context* ctx, uint64_t imm7)
+{
+}
+
+void dmb_jit(ssa_emit_context* ctx, uint64_t CRm)
+{
+}
+
+void clrex_jit(ssa_emit_context* ctx, uint64_t CRm)
+{
+	_sys_jit(ctx,exclusive_address,ir_operand::create_con(-1ULL, int64));
+	_sys_jit(ctx,exclusive_value,ir_operand::create_con(-1ULL, int64));
 }
 

@@ -19,17 +19,28 @@ void aarch64_emit_context::init_context(aarch64_emit_context* ctx)
     ctx->context_pointer = ssa_emit_context::create_global(ctx->ssa, int64);
 
     ir_operation_block::emitds(ir, ir_get_argument, ctx->context_pointer,ir_operand::create_con(0));
+    
+    aarch64_context_offsets offsets = process->guest_context_offset_data;
 
     for (int i = 0; i < 32; ++i)
     {
-        guest_register_store::create_register(&ctx->registers, process->guest_context_offset_data.x_offset + (i * 8), int64);
-        guest_register_store::create_register(&ctx->registers, process->guest_context_offset_data.q_offset + (i * 16), int128);
+        guest_register_store::create_register(&ctx->registers, offsets.x_offset + (i * 8), int64);
+        guest_register_store::create_register(&ctx->registers, offsets.q_offset + (i * 16), int128);
     }
 
-    guest_register_store::create_register(&ctx->registers, process->guest_context_offset_data.n_offset, int64);
-    guest_register_store::create_register(&ctx->registers, process->guest_context_offset_data.z_offset, int64);
-    guest_register_store::create_register(&ctx->registers, process->guest_context_offset_data.c_offset, int64);
-    guest_register_store::create_register(&ctx->registers, process->guest_context_offset_data.v_offset, int64);
+    guest_register_store::create_register(&ctx->registers, offsets.n_offset, int8);
+    guest_register_store::create_register(&ctx->registers, offsets.z_offset, int8);
+    guest_register_store::create_register(&ctx->registers, offsets.c_offset, int8);
+    guest_register_store::create_register(&ctx->registers, offsets.v_offset, int8);
+
+    guest_register_store::create_register(&ctx->registers, offsets.fpcr_offset, int64);
+    guest_register_store::create_register(&ctx->registers, offsets.fpsr_offset, int64);
+
+    guest_register_store::create_register(&ctx->registers, offsets.exclusive_address_offset, int64);
+    guest_register_store::create_register(&ctx->registers, offsets.exclusive_value_offset, int64);
+    
+    guest_register_store::create_register(&ctx->registers, offsets.thread_local_0, int64);
+    guest_register_store::create_register(&ctx->registers, offsets.thread_local_1, int64);
 
     emit_load_context(ctx);
 }

@@ -15,6 +15,24 @@ ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address)
     return result;
 }
 
+ir_operand _compare_and_swap_jit(ssa_emit_context* ctx, ir_operand physical_address, ir_operand expecting, ir_operand to_swap, uint64_t size)
+{
+    switch (size)
+    {
+        case 8:     size = int8;    break;
+        case 16:    size = int16;   break;
+        case 32:    size = int32;   break;
+        case 64:    size = int64;   break;
+        default:    throw 0;
+    }
+
+    ir_operand result = ssa_emit_context::create_local(ctx, size);
+
+    ir_operation_block::emitds(ctx->ir,ir_instructions::ir_compare_and_swap, result, physical_address, expecting, to_swap);
+
+    return result;
+}
+
 //Registers 
 
 ir_operand _x_jit(ssa_emit_context* ctx, uint64_t reg_id)
@@ -34,10 +52,16 @@ ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id)
 
     switch (reg_id)
     {
-        case 0: return aarch64_emit_context::get_context_reg_raw(actx,offsets.n_offset); break;
-        case 1: return aarch64_emit_context::get_context_reg_raw(actx,offsets.z_offset); break;
-        case 2: return aarch64_emit_context::get_context_reg_raw(actx,offsets.c_offset); break;
-        case 3: return aarch64_emit_context::get_context_reg_raw(actx,offsets.v_offset); break;
+        case nzcv_n:            return ir_operand::copy_new_raw_size(aarch64_emit_context::get_context_reg_raw(actx,offsets.n_offset),int64); 
+        case nzcv_z:            return ir_operand::copy_new_raw_size(aarch64_emit_context::get_context_reg_raw(actx,offsets.z_offset),int64); 
+        case nzcv_c:            return ir_operand::copy_new_raw_size(aarch64_emit_context::get_context_reg_raw(actx,offsets.c_offset),int64); 
+        case nzcv_v:            return ir_operand::copy_new_raw_size(aarch64_emit_context::get_context_reg_raw(actx,offsets.v_offset),int64); 
+        case fpcr:              return aarch64_emit_context::get_context_reg_raw(actx,offsets.fpcr_offset); 
+        case fpsr:              return aarch64_emit_context::get_context_reg_raw(actx,offsets.fpsr_offset); 
+        case exclusive_address: return aarch64_emit_context::get_context_reg_raw(actx,offsets.exclusive_address_offset); 
+        case exclusive_value:   return aarch64_emit_context::get_context_reg_raw(actx,offsets.exclusive_value_offset); 
+        case thread_local_0:    return aarch64_emit_context::get_context_reg_raw(actx,offsets.thread_local_0); 
+        case thread_local_1:    return aarch64_emit_context::get_context_reg_raw(actx,offsets.thread_local_1); 
         default: throw 0;
     }
 }
@@ -49,10 +73,17 @@ void _sys_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
     
     switch (reg_id)
     {
-        case 0: aarch64_emit_context::set_context_reg_raw(actx,offsets.n_offset, value); break;
-        case 1: aarch64_emit_context::set_context_reg_raw(actx,offsets.z_offset, value); break;
-        case 2: aarch64_emit_context::set_context_reg_raw(actx,offsets.c_offset, value); break;
-        case 3: aarch64_emit_context::set_context_reg_raw(actx,offsets.v_offset, value); break;
+        case nzcv_n:            aarch64_emit_context::set_context_reg_raw(actx,offsets.n_offset, value);                    break;
+        case nzcv_z:            aarch64_emit_context::set_context_reg_raw(actx,offsets.z_offset, value);                    break;
+        case nzcv_c:            aarch64_emit_context::set_context_reg_raw(actx,offsets.c_offset, value);                    break;
+        case nzcv_v:            aarch64_emit_context::set_context_reg_raw(actx,offsets.v_offset, value);                    break;
+        case fpcr:              aarch64_emit_context::set_context_reg_raw(actx,offsets.fpcr_offset, value);                 break;
+        case fpsr:              aarch64_emit_context::set_context_reg_raw(actx,offsets.fpsr_offset, value);                 break;
+        case exclusive_address: aarch64_emit_context::set_context_reg_raw(actx,offsets.exclusive_address_offset, value);    break;
+        case exclusive_value:   aarch64_emit_context::set_context_reg_raw(actx,offsets.exclusive_value_offset, value);      break;
+        case thread_local_0:    aarch64_emit_context::set_context_reg_raw(actx,offsets.thread_local_0, value);              break;
+        case thread_local_1:    aarch64_emit_context::set_context_reg_raw(actx,offsets.thread_local_1, value);              break;
+
         default: throw 0;
     }
 }
@@ -98,6 +129,31 @@ void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t condition_pass, uin
     }
 
     ir_operation_block::mark_label(ctx->ir, end);
+}
+
+void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    guest_process* process = actx->process;
+
+    aarch64_emit_context::emit_store_context(actx);
+
+    ir_operation_block::emitds(ctx->ir, 
+        ir_external_call,
+        ssa_emit_context::create_local(ctx, int64),
+        ir_operand::create_con((uint64_t)process->svc_function),
+        actx->context_pointer,
+        ir_operand::create_con(svc)
+    );
+
+    aarch64_emit_context::emit_load_context(actx);
+}
+
+void undefined_with_jit(ssa_emit_context* ctx, uint64_t value)
+{
+    std::cout << value << std::endl;
+
+    throw 0;
 }
 
 //Misc

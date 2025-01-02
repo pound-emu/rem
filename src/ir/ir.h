@@ -69,6 +69,7 @@ enum ir_instructions : uint64_t
 	ir_close_and_return,
 	ir_compare_and_swap,
 	ir_get_argument,
+	ir_external_call,
 
 	//Memory
 	ir_load,

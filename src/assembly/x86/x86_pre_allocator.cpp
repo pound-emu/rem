@@ -430,7 +430,61 @@ static void emit_vector_insert(x86_pre_allocator_context* result, ir_operation* 
 	ir_operation_block::emitds(result->ir, ir_vector_insert, destination, destination, value, index, size);
 }
 
-static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_allocator_context, ir_operation* operation)
+static void emit_external_call(x86_pre_allocator_context* result, ir_operation* operation, os_information os)
+{
+	if (os == _linux)
+	{
+		ir_operand locks[] = {
+			RDI(int64),
+			RSI(int64),
+			RDX(int64),
+			RCX(int64),
+			R8(int64),
+			R9(int64),
+		};
+
+		int abi_count = (sizeof(locks) / sizeof(ir_operand));
+
+		for (int i = 0; i < abi_count; ++i)
+		{
+			ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_lock, locks[i]);
+		}
+
+		ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_lock, RAX(int64));
+
+		ir_operand function = register_or_constant(result, operation->sources[0]);
+
+		for (int i = 1; i < operation->sources.count; ++i)
+		{
+			int abi_des = i - 1;
+
+			if (abi_des >= abi_count)
+				break;
+
+			emit_move(result, locks[abi_des], operation->sources[i]);
+		}
+
+		if (operation->sources.count - 1 >= abi_count)
+		{
+			throw 0;
+		}
+
+		ir_operation_block::emitds(result->ir, ir_instructions::ir_external_call,  RAX(int64), function);
+
+		ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_unlock, RAX(int64));
+
+		for (int i = 0; i < abi_count; ++i)
+		{
+			ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_unlock, locks[i]);
+		}
+	}
+	else
+	{
+		throw 0;
+	}
+}
+
+static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_allocator_context, ir_operation* operation, os_information os)
 {
 	ir_instructions working_instruction = (ir_instructions)operation->instruction;
 
@@ -609,7 +663,17 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 			emit_double_shift_right(pre_allocator_context, operation->destinations[0], operation->sources[0], operation->sources[1], operation->sources[2]);
 		}; break;
 
-		default: assert(false); throw 0;
+		case ir_external_call:
+		{
+			emit_external_call(pre_allocator_context, operation, os);
+		}; break;
+
+		default: 
+
+		std::cout << "PREALLOCATOR NOT READY" << std::endl;
+		
+		assert(false); 
+		throw 0;
 	}
 
 	for (int i = 0; i < operation->destinations.count; ++i)
@@ -646,7 +710,7 @@ void x86_pre_allocator_context::run_pass(x86_pre_allocator_context* pre_allocato
 
 	for (auto i = source->operations->first; i != source->operations->last; i = i->next)
 	{
-		emit_pre_allocation_instruction(pre_allocator_context, &i->data);
+		emit_pre_allocation_instruction(pre_allocator_context, &i->data, os);
 
 		pre_allocator_context->scrap_index = 0;
 	}

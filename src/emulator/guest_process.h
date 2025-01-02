@@ -18,6 +18,7 @@ struct guest_process
     aarch64_context_offsets         guest_context_offset_data;
 
     void*                           svc_function;
+    bool                            debug_mode;
 
     static void                     create(guest_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, aarch64_context_offsets arm_guest_data);
     static uint64_t                 jit_function(guest_process* process, uint64_t guest_function, void* arm_context);

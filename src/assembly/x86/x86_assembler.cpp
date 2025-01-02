@@ -127,6 +127,43 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			assert_valid_unary_operation(&working_operation); 	
 		break;
 
+		case ir_external_call:
+		{
+			auto function_to_call = create_operand(working_operation.sources[0]);
+
+			for (int i = 0; i < 16; ++i)
+			{
+				c.push(Xbyak::Reg64(i));
+
+				c.sub(c.rsp, 16);
+				c.movups(c.ptr[c.rsp], Xbyak::Xmm(i));
+			}
+
+			int caller_size = 120;
+
+			c.sub(c.rsp, caller_size);
+
+			c.call(function_to_call);
+
+			c.add(c.rsp, caller_size);
+
+			for (int i = 15; i != -1; --i)
+			{
+				c.movups(c.ptr[c.rsp], Xbyak::Xmm(i));
+				c.add(c.rsp, 16);
+
+				if (i == 0 || i == 4)
+				{
+					c.add(c.rsp, 8);
+				}
+				else
+				{
+					c.pop(Xbyak::Reg64(i));
+				}
+			}
+
+		}; break;
+
 		case ir_mark_label:
 		{
 			if (working_operation.sources.count == 0)

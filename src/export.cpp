@@ -22,7 +22,7 @@ static void base_plus_va_jit(void* memory, ssa_emit_context* ir, ir_operand dest
 {
     ir_operation_block* ctx = ir->ir;
 
-    ir_operation_block::emitds(ctx, ir_add, destination, ir_operand::create_con((uint64_t)memory), source);
+    ir_operation_block::emitds(ctx, ir_add, destination, source, ir_operand::create_con((uint64_t)memory));
 }
 
 extern "C"
@@ -49,5 +49,13 @@ extern "C"
     EXPORT uint64_t interperate_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context)
     {
         return guest_process::interperate_function(&context->process, virtual_address, guest_context);
+    }
+
+    EXPORT uint64_t jit_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context)
+    {
+        while (1)
+        {
+            virtual_address = guest_process::jit_function(&context->process, virtual_address, guest_context);
+        }
     }
 }
