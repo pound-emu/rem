@@ -1,6 +1,7 @@
 #include "guest_register_store.h"
 #include "assert.h"
 #include "ssa_emit_context.h"
+#include "debugging.h"
 
 void guest_register_store::create(guest_register_store* result, ssa_emit_context* ir, int guest_context_size)
 {
@@ -20,7 +21,7 @@ void guest_register_store::create_register(guest_register_store* guest_register_
 {
     if (offset == -1)
     {
-        throw 0;
+        throw_error();
     }
 
     assert(offset <= guest_register_store_context->guest_context_size);
@@ -38,7 +39,7 @@ void guest_register_store::create_register(guest_register_store* guest_register_
         {
             std::cout << "REGISTER " << i << " ALREADY DEFINED !!!" << std::endl;
 
-            throw 0;
+            throw_error();
         }
     }
 
@@ -56,9 +57,7 @@ ir_operand guest_register_store::request_guest_register(guest_register_store* gu
     {
         std::cout << "REGISTER " << index << " NOT DEFINED !!!" << std::endl;
 
-        assert(false);
-
-        throw 0;
+        throw_error();
     }
 
     guest_register->mode |= guest_usage::guest_usage_read;
@@ -75,11 +74,9 @@ void guest_register_store::write_to_guest_register(guest_register_store* guest_r
 
     if (guest_register->free_guest)
     {
-        std::cout << "REGISTER " << index << " NOT DEFINED !!!" << std::endl;
+        std::cout << "REGISTER " << index << " NOT DEFINED !!!" << std::endl;        
 
-        assert(false);
-
-        throw 0;
+        throw_error();
     }
 
     ir_operand raw_register = guest_register->raw_register;

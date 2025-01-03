@@ -2,8 +2,9 @@
 #include "aarch64/aarch64_emit_context.h"
 #include "jit/jit_context.h"
 #include "aarch64/aarch64_impl.h"
-#include <iostream>
+#include "debugging.h"
 
+#include <iostream>
 #include <iomanip>
 
 void guest_process::create(guest_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, aarch64_context_offsets arm_guest_data)
@@ -105,9 +106,9 @@ guest_function guest_process::translate_function(translate_request_data* data)
 
                 if (instruction_table == nullptr)
                 {
-                    std::cout << "Undefined instruction " << std::hex << reverse_bytes(raw_instruction);
+                    std::cout << "Undefined instruction " << std::hex << raw_instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(raw_instruction) << std::endl;
 
-                    throw 0;
+                    throw_error();
                 }
 
                 aarch64_emit.branch_state = branch_type::no_branch;
@@ -167,7 +168,7 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
         {
             std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
 
-            throw 0;
+            throw_error();
         }
 
         interpreter.branch_type = branch_type::no_branch;

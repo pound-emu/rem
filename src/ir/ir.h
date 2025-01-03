@@ -50,6 +50,8 @@ enum ir_instructions : uint64_t
 	ir_negate,
 	ir_sign_extend, 
 	ir_logical_not,
+	ir_convert_to_float_signed,
+	ir_convert_to_float_unsigned,
 
 	ir_unary_end,
 
@@ -95,6 +97,31 @@ enum ir_instructions : uint64_t
 	x86_cdq,
 	x86_cwd,
 	x86_lea,
+	x86_cvtsi2ss,
+	x86_cvtsi2sd,
+	x86_movq_to_gp,
+	x86_movq_to_vec,
+
+	x86_addpd,
+	x86_addps,
+	x86_addsd,
+	x86_addss,
+	x86_divpd,
+	x86_divps,
+	x86_divsd,
+	x86_divss,
+	x86_maxsd,
+	x86_maxss,
+	x86_minsd,
+	x86_minss,
+	x86_mulpd,
+	x86_mulps,
+	x86_mulsd,
+	x86_mulss,
+	x86_subpd,
+	x86_subps,
+	x86_subsd,
+	x86_subss,
 
 	//Emulator Helpers
 	ir_guest_store_context,
@@ -102,6 +129,7 @@ enum ir_instructions : uint64_t
 };
 
 static std::string instruction_names[] = {
+	//Binary Operations
 	"ir_binary_start",
 
 	"ir_add",
@@ -131,6 +159,7 @@ static std::string instruction_names[] = {
 
 	"ir_binary_end",
 
+	//Unary Operations
 	"ir_unary_start",
 
 	"ir_bitwise_not",
@@ -139,9 +168,12 @@ static std::string instruction_names[] = {
 	"ir_negate",
 	"ir_sign_extend", 
 	"ir_logical_not",
+	"ir_convert_to_float_signed",
+	"ir_convert_to_float_unsigned",
 
 	"ir_unary_end",
 
+	//Ternary Operations
 	"ir_ternary_begin",
 
 	"ir_conditional_select",
@@ -149,33 +181,67 @@ static std::string instruction_names[] = {
 
 	"ir_ternary_end",
 
+	//Jumping
 	"ir_jump_if",
 	"ir_mark_label",
 
+	//Abi
 	"ir_close_and_return",
 	"ir_compare_and_swap",
 	"ir_get_argument",
+	"ir_external_call",
 
+	//Memory
 	"ir_load",
 	"ir_store",
 
+	//Ir Helpers
 	"ir_no_operation",
 	"ir_open_context",
 	"ir_register_allocator_p_lock",
 	"ir_register_allocator_p_unlock",
 
+	//Vectors
 	"ir_vector_extract",
 	"ir_vector_insert",
 	"ir_vector_zero",
 
+	//Asserts
 	"ir_assert_false",
 	"ir_assert_true",
 
+	//X86
 	"x86_cqo",
 	"x86_cdq",
 	"x86_cwd",
 	"x86_lea",
+	"x86_cvtsi2ss",
+	"x86_cvtsi2sd",
+	"x86_movq_to_gp",
+	"x86_movq_to_vec",
 
+	"x86_addpd",
+	"x86_addps",
+	"x86_addsd",
+	"x86_addss",
+	"x86_divpd",
+	"x86_divps",	
+	"x86_divsd",
+	"x86_divss",	
+	"x86_maxsd",
+	"x86_maxss",
+	"x86_minsd",
+	"x86_minss",
+	"x86_mulpd",
+	"x86_mulps",
+	"x86_mulsd",
+	"x86_mulss",
+	"x86_subpd",
+	"x86_subps",
+	"x86_subsd",
+	"x86_subss",
+
+	//Emulator Helpers
 	"ir_guest_store_context",
 	"ir_guest_load_context",
 };

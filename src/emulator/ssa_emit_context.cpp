@@ -1,5 +1,6 @@
 #include "ssa_emit_context.h"
 #include "ir/checks.h"
+#include "debugging.h"
 
 void ssa_emit_context::create(ssa_emit_context* ctx, ir_operation_block* ir)
 {
@@ -78,7 +79,7 @@ void ssa_emit_context::move(ssa_emit_context* ctx, ir_operand result, ir_operand
 
     if (ir_operand::is_constant(&result))
     {
-        throw 0;
+        throw_error();
     }
 
     ir_operation_block::emitds(ctx->ir, ir_move, result, source);
@@ -106,4 +107,16 @@ ir_operand ssa_emit_context::vector_extract(ssa_emit_context* ctx, ir_operand so
 ir_operand ssa_emit_context::vector_zero(ssa_emit_context* ctx)
 {
     return ssa_emit_context::emit_ssa(ctx, ir_vector_zero, int128);
+}
+
+ir_operand ssa_emit_context::convert_to_float(ssa_emit_context* ctx, ir_operand source, uint64_t result_size, uint64_t source_size, bool is_signed)
+{
+    uint64_t instruction = is_signed ? ir_convert_to_float_signed : ir_convert_to_float_unsigned;
+
+    source = ir_operand::copy_new_raw_size(source, source_size);
+    ir_operand result = ssa_emit_context::create_local(ctx, result_size);
+
+    ir_operation_block::emitds(ctx->ir, instruction, result, source);
+
+    return result;
 }

@@ -4,6 +4,7 @@
 #include "ir/checks.h"
 #include "xbyak/xbyak.h"
 #include "tools/bit_tools.h"
+#include "debugging.h"
 
 #define ONE_MB 1ULL * 1024 * 1024
 
@@ -54,11 +55,7 @@ static Xbyak::Operand create_operand(ir_operand value)
 	case int128: return Xbyak::Xmm(value.value);
 	}
 
-	assert(false);
-
-	std::cout << "BAD SIZE" << std::endl;
-
-	throw 0;
+	throw_error();
 }
 
 static void assert_is_x86_register(ir_operand working_operand, int register_index)
@@ -91,6 +88,15 @@ static void assert_valid_unary_operation(ir_operation* operation)
 
 	assert_all_registers(operation);
 	assert_same_registers(operation->destinations[0], operation->sources[0]);
+}
+
+static void assert_valid_binary_float_operation(ir_operation* operation)
+{
+	assert_operand_count(operation, 1, 2);
+
+	assert_same_registers(operation->destinations[0], operation->sources[0]);
+	assert_same_size({operation->destinations[0], operation->sources[0], operation->sources[1]});
+	assert(ir_operand::is_vector(&operation->sources[0]));
 }
 
 void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_operation_block* source_ir)
@@ -189,7 +195,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 				default:
 					std::cout << "BAD SIZE" << std::endl;
 				
-				 	throw 0;
+				 	throw_error();
 			}
 
 			c.setz(create_operand<Xbyak::Reg8>(working_operation.destinations[0]));
@@ -271,7 +277,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 					case ir_shift_right_signed:		c.sar(dn, m); break;
 					case ir_shift_right_unsigned:	c.shr(dn, m); break;
 					case ir_rotate_right:			c.ror(dn, m); break;
-					default: throw 0;
+					default: throw_error();
 				}
 			}
 			else
@@ -284,7 +290,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 					case ir_shift_right_signed:		c.sar(dn, shift); break;
 					case ir_shift_right_unsigned:	c.shr(dn, shift); break;
 					case ir_rotate_right:			c.ror(dn, shift); break;
-					default: throw 0;
+					default: throw_error();
 				}
 			}
 		}; break;
@@ -356,7 +362,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 				case int16: c.cmovne(Xbyak::Reg16(destinations[0].value), Xbyak::Reg16(sources[1].value)); c.cmove(Xbyak::Reg16(destinations[0].value), Xbyak::Reg16(sources[2].value)); break;
 				case int32: c.cmovne(Xbyak::Reg32(destinations[0].value), Xbyak::Reg32(sources[1].value)); c.cmove(Xbyak::Reg32(destinations[0].value), Xbyak::Reg32(sources[2].value)); break;
 				case int64: c.cmovne(Xbyak::Reg64(destinations[0].value), Xbyak::Reg64(sources[1].value)); c.cmove(Xbyak::Reg64(destinations[0].value), Xbyak::Reg64(sources[2].value)); break;
-				default: throw 0;
+				default: throw_error();
 			}
 		}; break;
 
@@ -456,7 +462,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 					case ir_bitwise_and: c.and_(dn, imm); break;
 					case ir_bitwise_or: c.or_(dn, imm); break;
 					case ir_bitwise_exclusive_or: c.xor_(dn, imm); break;
-					default: assert(false); throw 0;
+					default: throw_error();
 				}
 			}
 			else
@@ -475,7 +481,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 					case ir_bitwise_or: c.or_(dn, m); break;
 					case ir_bitwise_exclusive_or: c.xor_(dn, m); break;
 					case ir_multiply: c.imul(Xbyak::Reg(dn.getIdx(), dn.getKind()), m); break;
-					default: assert(false); throw 0;
+					default: throw_error();
 				}
 			}
 		}; break;
@@ -581,11 +587,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			}
 			else
 			{
-				std::cout << "BAD SIZE" << std::endl;
-
-				assert(false);
-
-				throw 0;
+				throw_error();
 			}
 
 			if (ir_operand::is_vector(&to_store))
@@ -672,7 +674,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 				case 16: 	c.pextrw(create_operand<Xbyak::Reg32>(destination), src, index.value); break;
 				case 32: 	c.pextrd(create_operand<Xbyak::Reg32>(destination), src, index.value); break;
 				case 64: 	c.pextrq(create_operand<Xbyak::Reg64>(destination), src, index.value); break;	
-				default: throw 0;
+				default: throw_error();
 			}
 
 		}; break;
@@ -700,16 +702,85 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 				case 16: 	c.pinsrw(d, create_operand<Xbyak::Reg32>(value), index.value); break;
 				case 32: 	c.pinsrd(d, create_operand<Xbyak::Reg32>(value), index.value); break;
 				case 64: 	c.pinsrq(d, create_operand<Xbyak::Reg64>(value), index.value); break;
-				default: throw 0;
+				default: throw_error();
 			}
 
 		}; break;
+
+		case x86_cvtsi2ss:
+		case x86_cvtsi2sd:
+		{
+			assert_operand_count(&working_operation, 1, 1);
+			
+			ir_operand d = working_operation.destinations[0];
+			ir_operand s = working_operation.sources[0];
+
+			assert_is_size(d, int128);
+			assert_is_register(s);
+
+			auto des = create_operand<Xbyak::Xmm>(d);
+			auto src = Xbyak::Reg(s.value,Xbyak::Operand::REG, 8 << s.meta_data);
+
+			switch (instruction)
+			{
+				case x86_cvtsi2ss: c.cvtsi2ss(des, src); break;
+				case x86_cvtsi2sd: c.cvtsi2sd(des, src); break;
+			}
+
+		}; break;
+
+		case x86_movq_to_gp:
+		{
+			assert_operand_count(&working_operation, 1, 1);
+			
+			ir_operand d = working_operation.destinations[0];
+			ir_operand s = working_operation.sources[0];
+
+			assert(!ir_operand::is_vector(&d));
+			assert_is_size(s, int128);
+
+			c.movq(create_operand<Xbyak::Reg64>(d), create_operand<Xbyak::Xmm>(s));
+		}; break;
+
+		case x86_movq_to_vec:
+		{
+			assert_operand_count(&working_operation, 1, 1);
+			
+			ir_operand d = working_operation.destinations[0];
+			ir_operand s = working_operation.sources[0];
+
+			assert_is_size(d, int128);
+			assert(!ir_operand::is_vector(&s));
+
+			c.movq(create_operand<Xbyak::Xmm>(d), create_operand<Xbyak::Reg64>(s));
+		}; break;
+
+		case x86_addpd: assert_valid_binary_float_operation(&working_operation); c.addpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_addps: assert_valid_binary_float_operation(&working_operation); c.addps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_addsd: assert_valid_binary_float_operation(&working_operation); c.addsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_addss: assert_valid_binary_float_operation(&working_operation); c.addss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_divpd: assert_valid_binary_float_operation(&working_operation); c.divpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_divps: assert_valid_binary_float_operation(&working_operation); c.divps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_divsd: assert_valid_binary_float_operation(&working_operation); c.divsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_divss: assert_valid_binary_float_operation(&working_operation); c.divss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_maxsd: assert_valid_binary_float_operation(&working_operation); c.maxsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_maxss: assert_valid_binary_float_operation(&working_operation); c.maxss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_minsd: assert_valid_binary_float_operation(&working_operation); c.minsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_minss: assert_valid_binary_float_operation(&working_operation); c.minss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_mulpd: assert_valid_binary_float_operation(&working_operation); c.mulpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_mulps: assert_valid_binary_float_operation(&working_operation); c.mulps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_mulsd: assert_valid_binary_float_operation(&working_operation); c.mulsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_mulss: assert_valid_binary_float_operation(&working_operation); c.mulss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_subpd: assert_valid_binary_float_operation(&working_operation); c.subpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_subps: assert_valid_binary_float_operation(&working_operation); c.subps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_subsd: assert_valid_binary_float_operation(&working_operation); c.subsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_subss: assert_valid_binary_float_operation(&working_operation); c.subss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 
 		default:
 		{
 			std::cout << "UNDEFINED X86 INSTRUCTION " << std::endl;
 
-			throw 0;
+			throw_error();
 		}; break;
 		}
 	}

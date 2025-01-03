@@ -3,6 +3,7 @@
 
 #include "growing_jit_cache.h"
 #include "jit_memory.h"
+#include "debugging.h"
 
 void growing_jit_cache::create(growing_jit_cache* result, jit_memory* memory)
 {
@@ -18,9 +19,7 @@ void* growing_jit_cache::allocate(growing_jit_cache* jit_cache, uint64_t size)
 
     if (jit_cache->top >= jit_cache->memory->memory_block_size)
     {
-        assert(false);
-
-        throw 0;
+        throw_error();
     }
 
     return result;

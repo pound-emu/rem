@@ -2,6 +2,7 @@
 
 #include "jit_context.h"
 #include "jit_memory.h"
+#include "debugging.h"
 
 #include "assembly/x86/x86_pipeline.h"
 #include "assembly/x86/x86_assembler.h"
@@ -19,8 +20,7 @@ static void create_x86_caller(jit_context* result)
 
     if (code_size > max_space)
     {
-        assert(false);
-        throw 0;
+        throw_error();
     }
 }
 
@@ -40,8 +40,7 @@ void jit_context::create(jit_context* result,uint64_t allocation_size, abi abi_i
 
         default:
         {
-            assert(false);
-            throw 0;
+            throw_error();
         }; break;
     }
 }
@@ -82,7 +81,7 @@ void* jit_context::compile_code(jit_context* context, ir_operation_block* ir_ope
             assemble_x86_64_pipeline(&code_buffer, &code_size, ir_operation_block_context, false, working_abi, flags);
         }; break;
 
-        default: throw 0;
+        default: throw_error();
     }
 
     return jit_context::append_to_jit_cache(context, code_buffer, code_size);

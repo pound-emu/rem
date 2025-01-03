@@ -1,6 +1,7 @@
 #include "ir.h"
 
 #include "tools/bit_tools.h"
+#include "debugging.h"
 
 bool ir_operand::is_register(ir_operand* test)
 {
@@ -92,8 +93,7 @@ ir_operand ir_operand::copy_new_raw_size(ir_operand source, uint64_t new_size)
 
 	if (ir_operand::is_vector(&source) != ((new_size & UINT32_MAX) >= int128))
 	{
-		assert(false);
-		throw 0;
+		throw_error();
 	}
 
 	source.meta_data = (new_size & UINT32_MAX) | (source.meta_data & ~(uint64_t)UINT32_MAX);

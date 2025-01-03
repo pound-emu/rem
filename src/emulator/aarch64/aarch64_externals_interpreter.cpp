@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iomanip>
 #include <mutex>
+#include "debugging.h"
 
 std::mutex global_lock;
 
@@ -44,7 +45,7 @@ uint64_t _compare_and_swap_interpreter(interpreter_data* ctx, uint64_t physical_
         case 32:    result = compare_and_swap_impl<uint32_t>(physical_address, expecting, to_swap); break;
         case 64:    result = compare_and_swap_impl<uint64_t>(physical_address, expecting, to_swap); break;
         case 128:   result = compare_and_swap_impl<uint128_t>(physical_address, expecting, to_swap); break;
-        default:    assert(false); throw 0;
+        default:    throw_error();
     }
 
     global_lock.unlock();
@@ -88,7 +89,7 @@ uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id)
         case exclusive_address: return *(uint64_t*)((uint64_t)ctx->register_data + offsets->exclusive_address_offset);
         case thread_local_0:    return *(uint64_t*)((uint64_t)ctx->register_data + offsets->thread_local_0);
         case thread_local_1:    return *(uint64_t*)((uint64_t)ctx->register_data + offsets->thread_local_1);
-        default: throw 0;
+        default: throw_error();
     }
 }
 
@@ -108,7 +109,7 @@ void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
         case exclusive_address: *(uint64_t*)((uint64_t)ctx->register_data + offsets->exclusive_address_offset) = value;         break;
         case thread_local_0:    *(uint64_t*)((uint64_t)ctx->register_data + offsets->thread_local_0) = value;                   break;
         case thread_local_1:    *(uint64_t*)((uint64_t)ctx->register_data + offsets->thread_local_1) = value;                   break;
-        default: throw 0;
+        default: throw_error();
     }
 }
 
@@ -165,7 +166,7 @@ uint64_t _get_pc_interpreter(interpreter_data* ctx)
     return ctx->current_pc;
 }
 
-void undefined_interpreter(interpreter_data* ctx){throw 0;};
+void undefined_interpreter(interpreter_data* ctx){throw_error();};
 
 static uint32_t reverse_bytes(uint32_t source)
 {
@@ -188,7 +189,7 @@ void undefined_with_interpreter(interpreter_data* ctx, uint64_t value)
     std::cout << "ERROR " << value << std::endl;
     std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
 
-    throw 0;
+    throw_error();
 }
 
 void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc)

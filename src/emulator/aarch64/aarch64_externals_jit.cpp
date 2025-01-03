@@ -1,5 +1,6 @@
 #include "aarch64_impl.h"
 #include "aarch64_emit_context.h"
+#include "debugging.h"
 
 //Memory 
 
@@ -23,7 +24,7 @@ ir_operand _compare_and_swap_jit(ssa_emit_context* ctx, ir_operand physical_addr
         case 16:    size = int16;   break;
         case 32:    size = int32;   break;
         case 64:    size = int64;   break;
-        default:    throw 0;
+        default:    throw_error();
     }
 
     ir_operand result = ssa_emit_context::create_local(ctx, size);
@@ -62,7 +63,7 @@ ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id)
         case exclusive_value:   return aarch64_emit_context::get_context_reg_raw(actx,offsets.exclusive_value_offset); 
         case thread_local_0:    return aarch64_emit_context::get_context_reg_raw(actx,offsets.thread_local_0); 
         case thread_local_1:    return aarch64_emit_context::get_context_reg_raw(actx,offsets.thread_local_1); 
-        default: throw 0;
+        default: throw_error();
     }
 }
 
@@ -84,7 +85,7 @@ void _sys_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
         case thread_local_0:    aarch64_emit_context::set_context_reg_raw(actx,offsets.thread_local_0, value);              break;
         case thread_local_1:    aarch64_emit_context::set_context_reg_raw(actx,offsets.thread_local_1, value);              break;
 
-        default: throw 0;
+        default: throw_error();
     }
 }
 
@@ -153,7 +154,7 @@ void undefined_with_jit(ssa_emit_context* ctx, uint64_t value)
 {
     std::cout << value << std::endl;
 
-    throw 0;
+    throw_error();
 }
 
 //Misc
@@ -165,4 +166,4 @@ uint64_t _get_pc_jit(ssa_emit_context* ctx)
     return actx->current_instruction_address;
 }
 
-void undefined_jit(ssa_emit_context* ctx){throw 0;};
+void undefined_jit(ssa_emit_context* ctx){throw_error();};

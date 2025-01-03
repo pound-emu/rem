@@ -1,6 +1,7 @@
 #include "x86_pipeline.h"
 #include "x86_pre_allocator.h"
 #include "x86_assembler.h"
+#include "debugging.h"
 
 #include "ir/basic_register_allocator.h"
 #include "ir/undefined_behavior_check.h"

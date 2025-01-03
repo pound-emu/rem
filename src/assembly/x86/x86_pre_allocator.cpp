@@ -2,6 +2,7 @@
 #include "ir/bit_register_allocations.h"
 #include "ir/checks.h"
 #include "tools/bit_tools.h"
+#include "debugging.h"
 
 static uint64_t get_context_size(uint64_t value)
 {
@@ -12,7 +13,7 @@ static void emit_move(x86_pre_allocator_context* context, ir_operand destination
 {
 	assert_same_size({ destination, source });
 
-	if (ir_operand::are_equal(destination, source) && ir_operand::get_raw_size(&destination) < int64)
+	if (ir_operand::are_equal(destination, source) && ir_operand::get_raw_size(&destination) >= int64)
 	{
 		return;
 	}
@@ -21,7 +22,7 @@ static void emit_move(x86_pre_allocator_context* context, ir_operand destination
 	{
 		ir_operation_block::log(context->source_ir);
 
-		throw 0;
+		throw_error();
 	}
 
 	assert(ir_operand::get_raw_size(&destination) == ir_operand::get_raw_size(&source));
@@ -37,6 +38,17 @@ static ir_operand create_scrap_operand(x86_pre_allocator_context* context, uint6
 	context->scrap_index++;
 
 	return ir_operand::create_reg(result, size & UINT32_MAX);
+}
+
+static ir_operand copy_register(x86_pre_allocator_context* result, ir_operand source)
+{
+	assert_is_register(source);
+
+	ir_operand destination = create_scrap_operand(result, source.meta_data);
+
+	emit_move(result, destination, source);
+	
+	return destination;
 }
 
 static ir_operand register_or_constant(x86_pre_allocator_context* context, ir_operand* source, bool force_copy = false)
@@ -303,7 +315,7 @@ static void emit_big_multiply_divide(x86_pre_allocator_context* result, uint64_t
 			case int16: ir_operation_block::emitds(ir, ir_instructions::x86_cwd, dx, ax); break;
 			case int32: ir_operation_block::emitds(ir, ir_instructions::x86_cdq, dx, ax); break;
 			case int64: ir_operation_block::emitds(ir, ir_instructions::x86_cqo, dx, ax); break;
-			default: assert(false); throw 0;
+			default: throw_error();
 		}
 	}
 	else
@@ -466,7 +478,7 @@ static void emit_external_call(x86_pre_allocator_context* result, ir_operation* 
 
 		if (operation->sources.count - 1 >= abi_count)
 		{
-			throw 0;
+			throw_error();
 		}
 
 		ir_operation_block::emitds(result->ir, ir_instructions::ir_external_call,  RAX(int64), function);
@@ -482,7 +494,7 @@ static void emit_external_call(x86_pre_allocator_context* result, ir_operation* 
 	}
 	else
 	{
-		throw 0;
+		throw_error();
 	}
 }
 
@@ -505,6 +517,100 @@ static void emit_compare_and_swap(x86_pre_allocator_context* result, ir_operatio
 	ir_operation_block::emitds(result->ir, ir_compare_and_swap, destination, address, rax, to_swap);
 
 	ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_unlock, RAX(int64));
+}
+
+static uint64_t create_float(double source, uint64_t size)
+{
+	switch (size)
+	{
+		case int32:
+		{
+			float tmp = source;
+
+			return *(uint32_t*)&tmp;
+		}
+
+		case int64:
+		{
+			return *(uint64_t*)&source;
+		}
+		default: throw_error();
+	}
+}
+
+static void emit_convert_to_float(x86_pre_allocator_context* result, ir_operation* operation)
+{
+	assert_operand_count(operation, 1, 1);
+
+	ir_operand destination = operation->destinations[0];
+	ir_operand source = register_or_constant(result,operation->sources[0]);
+
+	bool is_signed = operation->instruction == ir_convert_to_float_signed;
+
+	uint64_t d_size = ir_operand::get_raw_size(&destination);
+	uint64_t s_size = ir_operand::get_raw_size(&source);
+
+	if (is_signed || s_size <= int32)
+	{
+		ir_operand working_vector = create_scrap_operand(result, int128);
+
+		if (!is_signed && s_size <= int32)
+		{
+			ir_operand temp = create_scrap_operand(result,source.meta_data);
+
+			emit_move(result, temp, ir_operand::copy_new_raw_size(source, source.meta_data));
+
+			temp = ir_operand::copy_new_raw_size(source, int64);
+
+			source = temp;
+		}
+
+		if (d_size == int64)
+		{
+			ir_operation_block::emitds(result->ir, x86_cvtsi2sd, working_vector, source);
+		}
+		else if (d_size == int32)
+		{
+			ir_operation_block::emitds(result->ir, x86_cvtsi2ss, working_vector, source);
+		}
+		else
+		{
+			throw_error();
+		}
+
+		ir_operation_block::emitds(result->ir, x86_movq_to_gp, destination, working_vector);
+	}
+	else if (!is_signed && s_size == int64)
+	{
+		uint64_t convert_instruction = d_size == int64 ? x86_cvtsi2sd : x86_cvtsi2ss;
+		uint64_t add_instruction = d_size == int64 ? x86_addsd : x86_addss;
+		uint64_t mul_instruction = d_size == int64 ? x86_mulsd : x86_mulss;
+
+		ir_operand lsb 			= copy_register(result, source);
+		ir_operand high_part	= copy_register(result, source);
+
+		ir_operand lsb_float 		= create_scrap_operand(result, int128);
+		ir_operand high_part_float 	= create_scrap_operand(result, int128);
+		ir_operand two 				= create_scrap_operand(result, int128);
+
+		ir_operation_block::emitds(result->ir, x86_movq_to_vec, two, register_or_constant(result,ir_operand::create_con(create_float(2.0, d_size))));
+
+		ir_operation_block::emitds(result->ir,ir_bitwise_and, lsb, lsb, ir_operand::create_con(1));
+		ir_operation_block::emitds(result->ir,ir_shift_right_unsigned, high_part, high_part, ir_operand::create_con(1));
+	
+		ir_operation_block::emitds(result->ir, convert_instruction, lsb_float, lsb);	
+		ir_operation_block::emitds(result->ir, convert_instruction, high_part_float, high_part);	
+
+		ir_operation_block::emitds(result->ir, mul_instruction, high_part_float, high_part_float, two);	
+		ir_operation_block::emitds(result->ir, add_instruction, high_part_float, high_part_float, lsb_float);
+
+		ir_operation_block::emitds(result->ir, x86_movq_to_gp, destination, high_part_float);
+	}
+
+	if (d_size <= int32)
+	{
+		emit_move(result, destination, destination);
+	}
 }
 
 static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_allocator_context, ir_operation* operation, os_information os)
@@ -696,12 +802,15 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 			emit_compare_and_swap(pre_allocator_context, operation);
 		}; break;
 
-		default: 
+		case ir_convert_to_float_signed:
+		case ir_convert_to_float_unsigned:
+		{
+			emit_convert_to_float(pre_allocator_context, operation);
+		}; break;
 
-		std::cout << "PREALLOCATOR NOT READY" << std::endl;
+		default: 
 		
-		assert(false); 
-		throw 0;
+		throw_error();
 	}
 
 	for (int i = 0; i < operation->destinations.count; ++i)
@@ -770,7 +879,7 @@ void x86_pre_allocator_context::run_pass(x86_pre_allocator_context* pre_allocato
 		{
 			working_element->data.sources[1].value = context_size; 
 		} break;
-		default: throw 0;
+		default: throw_error();
 		}
 	}
 

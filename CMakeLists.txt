@@ -5,6 +5,10 @@ set(PROJECT_SHARED rem)
 set(SOURCE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/)
 set(LIBRARY_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/libraries/)
 
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 project(${PROJECT_SHARED})
 
 add_definitions(-std=c++17)

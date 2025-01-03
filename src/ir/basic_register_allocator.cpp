@@ -1,4 +1,5 @@
 #include "basic_register_allocator.h"
+#include "debugging.h"
 
 static register_allocator_module* create_allocator_module(basic_register_allocator_context* main_unit, arena_allocator* allocator, int host_count, int guest_count, uint64_t guest_type)
 {
@@ -47,9 +48,7 @@ static void init_p_lock(basic_register_allocator_context* context, ir_operand re
 
 	if (host_register::is_locked(host))
 	{
-		assert(false);
-
-		throw 0;
+		throw_error();
 	}
 	else
 	{
@@ -75,9 +74,7 @@ static void init_p_unlock(basic_register_allocator_context* context, ir_operand 
 	}
 	else
 	{
-		assert(false);
-
-		throw 0;
+		throw_error();
 	}
 }
 
@@ -145,9 +142,7 @@ static int request_guest_register(register_allocator_module* module, int guest_r
 
 	if (lowest_hit_index == -1)
 	{
-		assert(false);
-
-		throw 0;
+		throw_error();
 	}
 
 	register_allocator_module::emit_host_load(module, lowest_hit_index, guest_register, mode);
@@ -271,9 +266,7 @@ void register_allocator_module::emit_host_unload(register_allocator_module* modu
 
 	if (host_register::is_locked(working_host) && host_register::is_loaded(working_host))
 	{
-		assert(false);
-
-		throw 0;
+		throw_error();
 	}
 
 	if (!host_register::is_loaded(working_host))

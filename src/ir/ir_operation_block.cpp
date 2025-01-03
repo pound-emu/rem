@@ -1,5 +1,6 @@
 #include "ir.h"
 #include "bit_register_allocations.h"
+#include "debugging.h"
 
 #define OPERATION_ELEMENT intrusive_linked_list_element<ir_operation>
 #define OPERATION_LIST intrusive_linked_list<ir_operation>
@@ -368,7 +369,7 @@ std::string get_string(ir_operand value)
 	case ir_operand_meta::int32: result += "INT32"; break;
 	case ir_operand_meta::int64: result += "INT64"; break;
 	case ir_operand_meta::int128: result += "INT128"; break;
-	default: throw 0;
+	default: throw_error();
 	}
 
 	result += " " + std::to_string(value.value);
