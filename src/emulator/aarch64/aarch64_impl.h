@@ -16,6 +16,11 @@ struct uint128_t
 {
     uint64_t data[2];
 
+    uint128_t()
+    {
+
+    }
+
     operator uint64_t ()
     {
         return data[0];
@@ -173,8 +178,6 @@ uint8_t condition_holds_interpreter(interpreter_data* ctx, uint64_t cond);
 void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint64_t link);
 uint64_t lowest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t source);
 void dup_element_interpreter(interpreter_data* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d);
-uint64_t FPNeg_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N);
-uint64_t FPAbs_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t fpcr, uint64_t N);
 uint64_t get_flt_size_interpreter(interpreter_data* ctx, uint64_t ftype);
 uint64_t expand_imm_interpreter(interpreter_data* ctx, uint64_t op, uint64_t cmode, uint64_t imm8);
 void VPart_interpreter(interpreter_data* ctx, uint64_t n, uint64_t part, uint64_t width, uint64_t value);
@@ -187,6 +190,11 @@ void ins_element_interpreter(interpreter_data* ctx, uint64_t imm5, uint64_t imm4
 void movi_immediate_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t op, uint64_t immhi, uint64_t cmode, uint64_t immlo, uint64_t Rd);
 void fmov_general_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t rmode, uint64_t opcode, uint64_t Rn, uint64_t Rd);
 void convert_to_float_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd);
+void floating_point_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd);
+template <typename O>
+O vector_shift_interpreter(interpreter_data* ctx, O element, O shift, uint64_t bit_count, uint64_t is_unsigned);
+void advanced_simd_three_same_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd);
+void floating_point_conditional_select_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd);
 uint64_t compare_and_swap_interpreter(interpreter_data* ctx, uint64_t address, uint64_t expecting, uint64_t to_swap, uint64_t size);
 template <typename O>
 void mem_interpreter(interpreter_data* ctx, uint64_t address, O value);
@@ -223,7 +231,9 @@ uint64_t FPMax_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t op
 uint64_t FPMin_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
 uint64_t FPMaxNum_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
 uint64_t FPMinNum_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
-uint64_t FPSqrt_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPSqrt_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPNeg_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPAbs_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
 uint64_t _compare_and_swap_interpreter(interpreter_data* ctx, uint64_t physical_address, uint64_t expecting, uint64_t to_swap, uint64_t size);//THIS FUNCTION IS USER DEFINED
 
 //JIT
@@ -287,8 +297,6 @@ ir_operand condition_holds_jit(ssa_emit_context* ctx, uint64_t cond);
 void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link);
 uint64_t lowest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t source);
 void dup_element_jit(ssa_emit_context* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d);
-ir_operand FPNeg_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N);
-ir_operand FPAbs_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand fpcr, uint64_t N);
 uint64_t get_flt_size_jit(ssa_emit_context* ctx, uint64_t ftype);
 uint64_t expand_imm_jit(ssa_emit_context* ctx, uint64_t op, uint64_t cmode, uint64_t imm8);
 void VPart_jit(ssa_emit_context* ctx, uint64_t n, uint64_t part, uint64_t width, ir_operand value);
@@ -301,6 +309,10 @@ void ins_element_jit(ssa_emit_context* ctx, uint64_t imm5, uint64_t imm4, uint64
 void movi_immediate_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t op, uint64_t immhi, uint64_t cmode, uint64_t immlo, uint64_t Rd);
 void fmov_general_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t rmode, uint64_t opcode, uint64_t Rn, uint64_t Rd);
 void convert_to_float_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd);
+void floating_point_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd);
+ir_operand vector_shift_jit(ssa_emit_context* ctx,uint64_t O, ir_operand element, ir_operand shift, uint64_t bit_count, uint64_t is_unsigned);
+void advanced_simd_three_same_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd);
+void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd);
 ir_operand compare_and_swap_jit(ssa_emit_context* ctx, ir_operand address, ir_operand expecting, ir_operand to_swap, uint64_t size);
 void mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address, ir_operand value);
 ir_operand mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address);
@@ -335,5 +347,7 @@ ir_operand FPMax_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand oper
 ir_operand FPMin_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
 ir_operand FPMaxNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
 ir_operand FPMinNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
-ir_operand FPSqrt_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPSqrt_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPNeg_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPAbs_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
 ir_operand _compare_and_swap_jit(ssa_emit_context* ctx, ir_operand physical_address, ir_operand expecting, ir_operand to_swap, uint64_t size);//THIS FUNCTION IS USER DEFINED

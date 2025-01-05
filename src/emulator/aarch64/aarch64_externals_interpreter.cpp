@@ -202,3 +202,167 @@ uint64_t call_counter_interpreter(interpreter_data* ctx)
 
     return ((uint64_t(*)())process->counter_function)();
 }
+
+uint64_t FPAdd_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return FPAdd(
+	{
+		operand1,
+		N
+	},
+	{
+		operand2,
+		N
+	},
+	{
+		FPCR
+	}, 0);
+}
+
+uint64_t FPSub_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return FPSub(
+	{
+		operand1,
+		N
+	},
+	{
+		operand2,
+		N
+	},
+	{
+		FPCR
+	}, 0);
+}
+
+uint64_t FPMul_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return FPMul(
+	{
+		operand1,
+		N
+	},
+	{
+		operand2,
+		N
+	},
+	{
+		FPCR
+	});
+}
+
+uint64_t FPDiv_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return FPDiv(
+	{
+		operand1,
+		N
+	},
+	{
+		operand2,
+		N
+	},
+	{
+		FPCR
+	});
+}
+
+uint64_t FPMax_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return FPMax(
+	{
+		operand1,
+		N
+	},
+	{
+		operand2,
+		N
+	},
+	{
+		FPCR
+	}, 0, 0);
+}
+
+uint64_t FPMin_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return FPMin(
+	{
+		operand1,
+		N
+	},
+	{
+		operand2,
+		N
+	},
+	{
+		FPCR
+	}, 0, 0);
+}
+
+uint64_t FPMaxNum_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return FPMaxNum(
+	{
+		operand1,
+		N
+	},
+	{
+		operand2,
+		N
+	},
+	{
+		FPCR
+	}, 0);
+}
+
+uint64_t FPMinNum_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return FPMinNum(
+	{
+		operand1,
+		N
+	},
+	{
+		operand2,
+		N
+	},
+	{
+		FPCR
+	}, 0);
+}
+
+uint64_t FPSqrt_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t FPCR, uint64_t N)
+{
+	return FPSqrt(
+	{
+		operand1,
+		N
+	},
+	{
+		FPCR
+	});
+}
+
+uint64_t FPNeg_interpreter(interpreter_data * ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
+{
+	return FPNeg(
+	{
+		operand,
+		N
+	},
+	{
+		FPCR
+	});
+}
+
+uint64_t FPAbs_interpreter(interpreter_data * ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
+{
+	return FPAbs(
+	{
+		operand,
+		N
+	},
+	{
+		FPCR
+	});
+}

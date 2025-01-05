@@ -157,7 +157,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 
 			for (int i = 15; i != -1; --i)
 			{
-				c.movups(c.ptr[c.rsp], Xbyak::Xmm(i));
+				c.movups(Xbyak::Xmm(i), c.ptr[c.rsp]);
 				c.add(c.rsp, 16);
 
 				if (i == 0 || i == 4)
@@ -824,7 +824,7 @@ void assemble_x86_abi_caller_code(void* result_code, uint64_t* result_code_size,
 
 	for (int i = 15; i != -1; --i)
 	{
-		c.movups(c.ptr[c.rsp], Xbyak::Xmm(i));
+		c.movups(Xbyak::Xmm(i), c.ptr[c.rsp]);
 		c.add(c.rsp, 16);
 
 		if (i == 0 || i == 4)

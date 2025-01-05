@@ -1022,6 +1022,70 @@ static void emit_convert_to_float_jit(ssa_emit_context* ctx, uint32_t instructio
 	convert_to_float_jit(ctx, sf, ftype, U, Rn, Rd);
 }
 
+static void call_floating_point_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int opcode = (instruction >> 12) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	floating_point_scalar_interpreter(ctx, ftype, Rm, opcode, Rn, Rd);
+}
+
+static void emit_floating_point_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int opcode = (instruction >> 12) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	floating_point_scalar_jit(ctx, ftype, Rm, opcode, Rn, Rd);
+}
+
+static void call_advanced_simd_three_same_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int opcode = (instruction >> 11) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	advanced_simd_three_same_interpreter(ctx, Q, U, size, Rm, opcode, Rn, Rd);
+}
+
+static void emit_advanced_simd_three_same_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int opcode = (instruction >> 11) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	advanced_simd_three_same_jit(ctx, Q, U, size, Rm, opcode, Rn, Rd);
+}
+
+static void call_floating_point_conditional_select_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int cond = (instruction >> 12) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	floating_point_conditional_select_interpreter(ctx, ftype, Rm, cond, Rn, Rd);
+}
+
+static void emit_floating_point_conditional_select_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int cond = (instruction >> 12) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	floating_point_conditional_select_jit(ctx, ftype, Rm, cond, Rn, Rd);
+}
+
 static void call_msr_register_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int imm15 = (instruction >> 5) & 32767;
@@ -1126,6 +1190,9 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "0--0111100000-------01----------", (void*)emit_movi_immediate_jit, (void*)call_movi_immediate_interpreter, "movi_immediate");
 	append_table(process, "-0011110--10-11-000000----------", (void*)emit_fmov_general_jit, (void*)call_fmov_general_interpreter, "fmov_general");
 	append_table(process, "-0011110--10001-000000----------", (void*)emit_convert_to_float_jit, (void*)call_convert_to_float_interpreter, "convert_to_float");
+	append_table(process, "00011110--1---------10----------", (void*)emit_floating_point_scalar_jit, (void*)call_floating_point_scalar_interpreter, "floating_point_scalar");
+	append_table(process, "0--01110--1----------1----------", (void*)emit_advanced_simd_three_same_jit, (void*)call_advanced_simd_three_same_interpreter, "advanced_simd_three_same");
+	append_table(process, "00011110--1---------11----------", (void*)emit_floating_point_conditional_select_jit, (void*)call_floating_point_conditional_select_interpreter, "floating_point_conditional_select");
 	append_table(process, "110101010001--------------------", (void*)emit_msr_register_jit, (void*)call_msr_register_interpreter, "msr_register");
 	append_table(process, "110101010011--------------------", (void*)emit_mrs_register_jit, (void*)call_mrs_register_interpreter, "mrs_register");
 	append_table(process, "11010101000000110010-------11111", (void*)emit_hints_jit, (void*)call_hints_interpreter, "hints");
@@ -3762,22 +3829,6 @@ void dup_element_interpreter(interpreter_data* ctx, uint64_t index, uint64_t esi
 	V_interpreter(ctx,d,result);
 }
 
-uint64_t FPNeg_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
-{
-	if ((((uint64_t)N != (uint64_t)64ULL)))
-	{
-		operand = ((uint64_t)operand & (uint64_t)(((uint64_t)(((uint64_t)1ULL << (uint64_t)N)) - (uint64_t)1ULL)));
-	}
-	operand = ((uint64_t)operand ^ (uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)N - (uint64_t)1ULL)))));
-	return operand;
-}
-
-uint64_t FPAbs_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t fpcr, uint64_t N)
-{
-	uint64_t mask = ((uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)N - (uint64_t)1ULL)))) - (uint64_t)1ULL);
-	return ((uint64_t)operand & (uint64_t)mask);
-}
-
 uint64_t get_flt_size_interpreter(interpreter_data* ctx, uint64_t ftype)
 {
 	if ((((uint64_t)ftype == (uint64_t)2ULL)))
@@ -4249,6 +4300,740 @@ void convert_to_float_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t f
 			V_interpreter(ctx,Rd,(uint128_t)result);
 		}
 		
+	}
+	
+}
+
+void floating_point_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t operand1 = V_interpreter(ctx,Rn);
+	uint64_t operand2 = V_interpreter(ctx,Rm);
+	uint64_t result;
+	uint64_t fpcr_state = _sys_interpreter(ctx,fpcr);
+	if ((((uint64_t)opcode == (uint64_t)0ULL)))
+	{
+		result = FPMul_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)1ULL)))
+	{
+		result = FPDiv_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)2ULL)))
+	{
+		result = FPAdd_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)3ULL)))
+	{
+		result = FPSub_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)4ULL)))
+	{
+		result = FPMax_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)5ULL)))
+	{
+		result = FPMin_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)6ULL)))
+	{
+		result = FPMaxNum_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)7ULL)))
+	{
+		result = FPMinNum_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)8ULL)))
+	{
+		result = FPMul_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
+		result = FPNeg_interpreter(ctx,result,fpcr_state,fltsize);
+	}
+	else
+	{
+		undefined_with_interpreter(ctx,opcode);
+	}
+	uint128_t vector = 0;
+	uint128_t::insert(vector, 0ULL, fltsize, result);
+	V_interpreter(ctx,Rd,vector);
+}
+
+template <typename O>
+O vector_shift_interpreter(interpreter_data* ctx, O element, O shift, uint64_t bit_count, uint64_t is_unsigned)
+{
+	O result = 0ULL;
+	if ((!is_unsigned))
+	{
+		element = (uint64_t)sign_extend(element);
+	}
+	if ((((O)(sign_extend((O)shift) >= sign_extend((O)0ULL)))))
+	{
+		if ((((O)(sign_extend((O)shift) >= sign_extend((O)bit_count)))))
+		{
+			result = 0ULL;
+		}
+		else
+		{
+			result = ((O)element << (O)shift);
+		}
+	}
+	else
+	{
+		shift = -shift;
+		if ((((O)(sign_extend((O)shift) >= sign_extend((O)bit_count)))))
+		{
+			if ((((O)((O)(((O)(((O)element >> (O)(((uint64_t)bit_count - (uint64_t)1ULL)))) & (O)1ULL)) == (O)1ULL) && (O)!is_unsigned)))
+			{
+				result = -1ULL;
+			}
+			else
+			{
+				result = 0ULL;
+			}
+		}
+		else
+		{
+			if ((!is_unsigned))
+			{
+				result = ((O)(sign_extend((O)element) >> sign_extend((O)shift)));
+			}
+			else
+			{
+				result = ((O)element >> (O)shift);
+			}
+		}
+	}
+	return result;
+}
+
+void advanced_simd_three_same_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
+{
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	if (esize == 8ULL)
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element2 = uint128_t::extract(operand2, e, esize);
+			if ((((uint64_t)opcode == (uint64_t)0ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint8_t)element1);
+					element2 = (uint64_t)sign_extend((uint8_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)element1 + (uint64_t)element2)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint8_t)element1);
+					element2 = (uint64_t)sign_extend((uint8_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)((uint64_t)element1 + (uint64_t)element2) + (uint64_t)1ULL)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint8_t)element1);
+					element2 = (uint64_t)sign_extend((uint8_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)element1 - (uint64_t)element2)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
+			{
+				uint8_t valid;
+				if ((U))
+				{
+					valid = ((uint8_t)((uint8_t)element1) > (uint8_t)((uint8_t)element2));
+				}
+				else
+				{
+					valid = ((uint8_t)(sign_extend((uint8_t)((uint8_t)element1)) > sign_extend((uint8_t)((uint8_t)element2))));
+				}
+				uint128_t::insert(result, e, esize, (((uint8_t)0ULL - (uint8_t)valid)));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
+			{
+				uint8_t valid;
+				if ((U))
+				{
+					valid = ((uint8_t)((uint8_t)element1) >= (uint8_t)((uint8_t)element2));
+				}
+				else
+				{
+					valid = ((uint8_t)(sign_extend((uint8_t)((uint8_t)element1)) >= sign_extend((uint8_t)((uint8_t)element2))));
+				}
+				uint128_t::insert(result, e, esize, (((uint8_t)0ULL - (uint8_t)valid)));
+			}
+			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
+			{
+				uint8_t element = element1;
+				uint8_t shift = (uint8_t)sign_extend((uint8_t)element2);
+				element = vector_shift_interpreter<uint8_t>(ctx,element,shift,esize,U);
+				uint128_t::insert(result, e, esize, element);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
+			{
+				uint8_t working = 0ULL;
+				if ((U))
+				{
+					if ((((uint64_t)element1 > (uint64_t)element2)))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				else
+				{
+					if ((((uint8_t)(sign_extend((uint8_t)((uint8_t)element1)) > sign_extend((uint8_t)((uint8_t)element2))))))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				uint128_t::insert(result, e, esize, working);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
+			{
+				uint8_t working = 0ULL;
+				if ((U))
+				{
+					if ((((uint64_t)element1 < (uint64_t)element2)))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				else
+				{
+					if ((((uint8_t)(sign_extend((uint8_t)((uint8_t)element1)) < sign_extend((uint8_t)((uint8_t)element2))))))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				uint128_t::insert(result, e, esize, working);
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ~element2;
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ~element2;
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
+			{
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
+			}
+			else
+			{
+				undefined_with_interpreter(ctx,0ULL);
+			}
+		}
+		V_interpreter(ctx,Rd,result);
+	}
+	if (esize == 16ULL)
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element2 = uint128_t::extract(operand2, e, esize);
+			if ((((uint64_t)opcode == (uint64_t)0ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint16_t)element1);
+					element2 = (uint64_t)sign_extend((uint16_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)element1 + (uint64_t)element2)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint16_t)element1);
+					element2 = (uint64_t)sign_extend((uint16_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)((uint64_t)element1 + (uint64_t)element2) + (uint64_t)1ULL)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint16_t)element1);
+					element2 = (uint64_t)sign_extend((uint16_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)element1 - (uint64_t)element2)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
+			{
+				uint16_t valid;
+				if ((U))
+				{
+					valid = ((uint16_t)((uint16_t)element1) > (uint16_t)((uint16_t)element2));
+				}
+				else
+				{
+					valid = ((uint16_t)(sign_extend((uint16_t)((uint16_t)element1)) > sign_extend((uint16_t)((uint16_t)element2))));
+				}
+				uint128_t::insert(result, e, esize, (((uint16_t)0ULL - (uint16_t)valid)));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
+			{
+				uint16_t valid;
+				if ((U))
+				{
+					valid = ((uint16_t)((uint16_t)element1) >= (uint16_t)((uint16_t)element2));
+				}
+				else
+				{
+					valid = ((uint16_t)(sign_extend((uint16_t)((uint16_t)element1)) >= sign_extend((uint16_t)((uint16_t)element2))));
+				}
+				uint128_t::insert(result, e, esize, (((uint16_t)0ULL - (uint16_t)valid)));
+			}
+			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
+			{
+				uint16_t element = element1;
+				uint16_t shift = (uint16_t)sign_extend((uint8_t)element2);
+				element = vector_shift_interpreter<uint16_t>(ctx,element,shift,esize,U);
+				uint128_t::insert(result, e, esize, element);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
+			{
+				uint16_t working = 0ULL;
+				if ((U))
+				{
+					if ((((uint64_t)element1 > (uint64_t)element2)))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				else
+				{
+					if ((((uint16_t)(sign_extend((uint16_t)((uint16_t)element1)) > sign_extend((uint16_t)((uint16_t)element2))))))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				uint128_t::insert(result, e, esize, working);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
+			{
+				uint16_t working = 0ULL;
+				if ((U))
+				{
+					if ((((uint64_t)element1 < (uint64_t)element2)))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				else
+				{
+					if ((((uint16_t)(sign_extend((uint16_t)((uint16_t)element1)) < sign_extend((uint16_t)((uint16_t)element2))))))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				uint128_t::insert(result, e, esize, working);
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ~element2;
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ~element2;
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
+			{
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
+			}
+			else
+			{
+				undefined_with_interpreter(ctx,0ULL);
+			}
+		}
+		V_interpreter(ctx,Rd,result);
+	}
+	if (esize == 32ULL)
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element2 = uint128_t::extract(operand2, e, esize);
+			if ((((uint64_t)opcode == (uint64_t)0ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint32_t)element1);
+					element2 = (uint64_t)sign_extend((uint32_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)element1 + (uint64_t)element2)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint32_t)element1);
+					element2 = (uint64_t)sign_extend((uint32_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)((uint64_t)element1 + (uint64_t)element2) + (uint64_t)1ULL)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint32_t)element1);
+					element2 = (uint64_t)sign_extend((uint32_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)element1 - (uint64_t)element2)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
+			{
+				uint32_t valid;
+				if ((U))
+				{
+					valid = ((uint32_t)((uint32_t)element1) > (uint32_t)((uint32_t)element2));
+				}
+				else
+				{
+					valid = ((uint32_t)(sign_extend((uint32_t)((uint32_t)element1)) > sign_extend((uint32_t)((uint32_t)element2))));
+				}
+				uint128_t::insert(result, e, esize, (((uint32_t)0ULL - (uint32_t)valid)));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
+			{
+				uint32_t valid;
+				if ((U))
+				{
+					valid = ((uint32_t)((uint32_t)element1) >= (uint32_t)((uint32_t)element2));
+				}
+				else
+				{
+					valid = ((uint32_t)(sign_extend((uint32_t)((uint32_t)element1)) >= sign_extend((uint32_t)((uint32_t)element2))));
+				}
+				uint128_t::insert(result, e, esize, (((uint32_t)0ULL - (uint32_t)valid)));
+			}
+			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
+			{
+				uint32_t element = element1;
+				uint32_t shift = (uint32_t)sign_extend((uint8_t)element2);
+				element = vector_shift_interpreter<uint32_t>(ctx,element,shift,esize,U);
+				uint128_t::insert(result, e, esize, element);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
+			{
+				uint32_t working = 0ULL;
+				if ((U))
+				{
+					if ((((uint64_t)element1 > (uint64_t)element2)))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				else
+				{
+					if ((((uint32_t)(sign_extend((uint32_t)((uint32_t)element1)) > sign_extend((uint32_t)((uint32_t)element2))))))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				uint128_t::insert(result, e, esize, working);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
+			{
+				uint32_t working = 0ULL;
+				if ((U))
+				{
+					if ((((uint64_t)element1 < (uint64_t)element2)))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				else
+				{
+					if ((((uint32_t)(sign_extend((uint32_t)((uint32_t)element1)) < sign_extend((uint32_t)((uint32_t)element2))))))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				uint128_t::insert(result, e, esize, working);
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ~element2;
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ~element2;
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
+			{
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
+			}
+			else
+			{
+				undefined_with_interpreter(ctx,0ULL);
+			}
+		}
+		V_interpreter(ctx,Rd,result);
+	}
+	if (esize == 64ULL)
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element2 = uint128_t::extract(operand2, e, esize);
+			if ((((uint64_t)opcode == (uint64_t)0ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint64_t)element1);
+					element2 = (uint64_t)sign_extend((uint64_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)element1 + (uint64_t)element2)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint64_t)element1);
+					element2 = (uint64_t)sign_extend((uint64_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)((uint64_t)element1 + (uint64_t)element2) + (uint64_t)1ULL)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
+			{
+				if ((!U))
+				{
+					element1 = (uint64_t)sign_extend((uint64_t)element1);
+					element2 = (uint64_t)sign_extend((uint64_t)element2);
+				}
+				uint128_t::insert(result, e, esize, ((uint64_t)(((uint64_t)element1 - (uint64_t)element2)) >> (uint64_t)1ULL));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
+			{
+				uint64_t valid;
+				if ((U))
+				{
+					valid = ((uint64_t)((uint64_t)element1) > (uint64_t)((uint64_t)element2));
+				}
+				else
+				{
+					valid = ((uint64_t)(sign_extend((uint64_t)((uint64_t)element1)) > sign_extend((uint64_t)((uint64_t)element2))));
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)0ULL - (uint64_t)valid)));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
+			{
+				uint64_t valid;
+				if ((U))
+				{
+					valid = ((uint64_t)((uint64_t)element1) >= (uint64_t)((uint64_t)element2));
+				}
+				else
+				{
+					valid = ((uint64_t)(sign_extend((uint64_t)((uint64_t)element1)) >= sign_extend((uint64_t)((uint64_t)element2))));
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)0ULL - (uint64_t)valid)));
+			}
+			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
+			{
+				uint64_t element = element1;
+				uint64_t shift = (uint64_t)sign_extend((uint8_t)element2);
+				element = vector_shift_interpreter<uint64_t>(ctx,element,shift,esize,U);
+				uint128_t::insert(result, e, esize, element);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
+			{
+				uint64_t working = 0ULL;
+				if ((U))
+				{
+					if ((((uint64_t)element1 > (uint64_t)element2)))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				else
+				{
+					if ((((uint64_t)(sign_extend((uint64_t)((uint64_t)element1)) > sign_extend((uint64_t)((uint64_t)element2))))))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				uint128_t::insert(result, e, esize, working);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
+			{
+				uint64_t working = 0ULL;
+				if ((U))
+				{
+					if ((((uint64_t)element1 < (uint64_t)element2)))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				else
+				{
+					if ((((uint64_t)(sign_extend((uint64_t)((uint64_t)element1)) < sign_extend((uint64_t)((uint64_t)element2))))))
+					{
+						working = element1;
+					}
+					else
+					{
+						working = element2;
+					}
+				}
+				uint128_t::insert(result, e, esize, working);
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ~element2;
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ~element2;
+				}
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
+			{
+				uint128_t::insert(result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
+			}
+			else
+			{
+				undefined_with_interpreter(ctx,0ULL);
+			}
+		}
+		V_interpreter(ctx,Rd,result);
+	}
+	
+}
+
+void floating_point_conditional_select_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	if (fltsize == 32ULL)
+	{
+		uint32_t result = 0ULL;
+		if ((condition_holds_interpreter(ctx,cond)))
+		{
+			result = operand1;
+		}
+		else
+		{
+			result = operand2;
+		}
+		V_interpreter(ctx,Rd,(uint128_t)result);
+	}
+	if (fltsize == 64ULL)
+	{
+		uint64_t result = 0ULL;
+		if ((condition_holds_interpreter(ctx,cond)))
+		{
+			result = operand1;
+		}
+		else
+		{
+			result = operand2;
+		}
+		V_interpreter(ctx,Rd,(uint128_t)result);
 	}
 	
 }
@@ -5898,22 +6683,6 @@ void dup_element_jit(ssa_emit_context* ctx, uint64_t index, uint64_t esize, uint
 	V_jit(ctx,d,result);
 }
 
-ir_operand FPNeg_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N)
-{
-	if ((((uint64_t)N != (uint64_t)64ULL)))
-	{
-		operand = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand, ir_operand::create_con((((uint64_t)(((uint64_t)1ULL << (uint64_t)N)) - (uint64_t)1ULL)), int64));
-	}
-	operand = ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, operand, ir_operand::create_con((((uint64_t)1ULL << (uint64_t)(((uint64_t)N - (uint64_t)1ULL)))), int64));
-	return operand;
-}
-
-ir_operand FPAbs_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand fpcr, uint64_t N)
-{
-	ir_operand mask = ir_operand::create_con(((uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)N - (uint64_t)1ULL)))) - (uint64_t)1ULL), int64);
-	return ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand, mask);
-}
-
 uint64_t get_flt_size_jit(ssa_emit_context* ctx, uint64_t ftype)
 {
 	if ((((uint64_t)ftype == (uint64_t)2ULL)))
@@ -6228,6 +6997,391 @@ void convert_to_float_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, ui
 			}
 			V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
 		}
+	}
+}
+
+void floating_point_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	ir_operand operand1 = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	ir_operand operand2 = copy_new_raw_size(ctx, V_jit(ctx,Rm), int64);
+	ir_operand result;
+	ir_operand fpcr_state = _sys_jit(ctx,fpcr);
+	if ((((uint64_t)opcode == (uint64_t)0ULL)))
+	{
+		result = FPMul_jit(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)1ULL)))
+	{
+		result = FPDiv_jit(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)2ULL)))
+	{
+		result = FPAdd_jit(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)3ULL)))
+	{
+		result = FPSub_jit(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)4ULL)))
+	{
+		result = FPMax_jit(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)5ULL)))
+	{
+		result = FPMin_jit(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)6ULL)))
+	{
+		result = FPMaxNum_jit(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)7ULL)))
+	{
+		result = FPMinNum_jit(ctx,operand1,operand2,fpcr_state,fltsize);
+	}
+	else if ((((uint64_t)opcode == (uint64_t)8ULL)))
+	{
+		result = FPMul_jit(ctx,operand1,operand2,fpcr_state,fltsize);
+		result = FPNeg_jit(ctx,result,fpcr_state,fltsize);
+	}
+	else
+	{
+		undefined_with_jit(ctx,opcode);
+	}
+	ir_operand vector = ssa_emit_context::vector_zero(ctx);
+	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
+	V_jit(ctx,Rd,vector);
+}
+
+ir_operand vector_shift_jit(ssa_emit_context* ctx,uint64_t O, ir_operand element, ir_operand shift, uint64_t bit_count, uint64_t is_unsigned)
+{
+	ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
+	if ((!is_unsigned))
+	{
+		element = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx,ir_sign_extend,element, int64), O);
+	}
+	{
+	    ir_operand end = ir_operation_block::create_label(ctx->ir);
+	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+	
+	    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(0ULL, O));
+	
+	    ir_operation_block::jump_if(ctx->ir,yes, condition);
+		{
+			ssa_emit_context::move(ctx,shift,ssa_emit_context::emit_ssa(ctx, ir_negate, shift));
+			{
+			    ir_operand end = ir_operation_block::create_label(ctx->ir);
+			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+			
+			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(bit_count, O));
+			
+			    ir_operation_block::jump_if(ctx->ir,yes, condition);
+				{
+					if ((!is_unsigned))
+					{
+						ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_right_signed, element, shift));
+					}
+					else
+					{
+						ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, element, shift));
+					}
+				}
+			    
+			    ir_operation_block::jump(ctx->ir,end);
+			    ir_operation_block::mark_label(ctx->ir, yes);
+			
+				{
+					{
+					    ir_operand end = ir_operation_block::create_label(ctx->ir);
+					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					
+					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, element, ir_operand::create_con((((uint64_t)bit_count - (uint64_t)1ULL)), O)), ir_operand::create_con(1ULL, O)), ir_operand::create_con(1ULL, O)), ir_operand::create_con(!is_unsigned, O));
+					
+					    ir_operation_block::jump_if(ctx->ir,yes, condition);
+						{
+							ssa_emit_context::move(ctx,result,ir_operand::create_con(0ULL, O));
+						}
+					    
+					    ir_operation_block::jump(ctx->ir,end);
+					    ir_operation_block::mark_label(ctx->ir, yes);
+					
+						{
+							ssa_emit_context::move(ctx,result,ir_operand::create_con(-1ULL, O));
+						}
+					
+					    ir_operation_block::mark_label(ctx->ir, end);
+					}
+				}
+			
+			    ir_operation_block::mark_label(ctx->ir, end);
+			}
+		}
+	    
+	    ir_operation_block::jump(ctx->ir,end);
+	    ir_operation_block::mark_label(ctx->ir, yes);
+	
+		{
+			{
+			    ir_operand end = ir_operation_block::create_label(ctx->ir);
+			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+			
+			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(bit_count, O));
+			
+			    ir_operation_block::jump_if(ctx->ir,yes, condition);
+				{
+					ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_left, element, shift));
+				}
+			    
+			    ir_operation_block::jump(ctx->ir,end);
+			    ir_operation_block::mark_label(ctx->ir, yes);
+			
+				{
+					ssa_emit_context::move(ctx,result,ir_operand::create_con(0ULL, O));
+				}
+			
+			    ir_operation_block::mark_label(ctx->ir, end);
+			}
+		}
+	
+	    ir_operation_block::mark_label(ctx->ir, end);
+	}
+	return result;
+}
+
+void advanced_simd_three_same_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
+{
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t O = esize == 8ULL ? int8 : esize == 16ULL ? int16 : esize == 32ULL ? int32 : esize == 64ULL ? int64 : 0;
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+			ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+			if ((((uint64_t)opcode == (uint64_t)0ULL)))
+			{
+				if ((!U))
+				{
+					element1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element1, O), int64);
+					element2 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element2, O), int64);
+				}
+				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, ssa_emit_context::emit_ssa(ctx, ir_add, element1, element2), ir_operand::create_con(1ULL, int64)));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
+			{
+				if ((!U))
+				{
+					element1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element1, O), int64);
+					element2 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element2, O), int64);
+				}
+				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, ssa_emit_context::emit_ssa(ctx, ir_add, ssa_emit_context::emit_ssa(ctx, ir_add, element1, element2), ir_operand::create_con(1ULL, int64)), ir_operand::create_con(1ULL, int64)));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
+			{
+				if ((!U))
+				{
+					element1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element1, O), int64);
+					element2 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element2, O), int64);
+				}
+				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, ssa_emit_context::emit_ssa(ctx, ir_subtract, element1, element2), ir_operand::create_con(1ULL, int64)));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
+			{
+				ir_operand valid;
+				if ((U))
+				{
+					valid = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_unsigned, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
+				}
+				else
+				{
+					valid = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_signed, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
+				}
+				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, O), valid));
+			}
+			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
+			{
+				ir_operand valid;
+				if ((U))
+				{
+					valid = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_unsigned, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
+				}
+				else
+				{
+					valid = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
+				}
+				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, O), valid));
+			}
+			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
+			{
+				ir_operand element = copy_new_raw_size(ctx, element1, O);
+				ir_operand shift = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element2, int8), O);
+				element = copy_new_raw_size(ctx, vector_shift_jit(ctx,O,element,shift,esize,U), O);
+				ssa_emit_context::vector_insert(ctx,result, e, esize, element);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
+			{
+				ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
+				if ((U))
+				{
+					{
+					    ir_operand end = ir_operation_block::create_label(ctx->ir);
+					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					
+					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_unsigned, element1, element2);
+					
+					    ir_operation_block::jump_if(ctx->ir,yes, condition);
+						{
+							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element2, O));
+						}
+					    
+					    ir_operation_block::jump(ctx->ir,end);
+					    ir_operation_block::mark_label(ctx->ir, yes);
+					
+						{
+							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element1, O));
+						}
+					
+					    ir_operation_block::mark_label(ctx->ir, end);
+					}
+				}
+				else
+				{
+					{
+					    ir_operand end = ir_operation_block::create_label(ctx->ir);
+					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					
+					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_signed, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
+					
+					    ir_operation_block::jump_if(ctx->ir,yes, condition);
+						{
+							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element2, O));
+						}
+					    
+					    ir_operation_block::jump(ctx->ir,end);
+					    ir_operation_block::mark_label(ctx->ir, yes);
+					
+						{
+							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element1, O));
+						}
+					
+					    ir_operation_block::mark_label(ctx->ir, end);
+					}
+				}
+				ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+			}
+			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
+			{
+				ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
+				if ((U))
+				{
+					{
+					    ir_operand end = ir_operation_block::create_label(ctx->ir);
+					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					
+					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, element1, element2);
+					
+					    ir_operation_block::jump_if(ctx->ir,yes, condition);
+						{
+							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element2, O));
+						}
+					    
+					    ir_operation_block::jump(ctx->ir,end);
+					    ir_operation_block::mark_label(ctx->ir, yes);
+					
+						{
+							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element1, O));
+						}
+					
+					    ir_operation_block::mark_label(ctx->ir, end);
+					}
+				}
+				else
+				{
+					{
+					    ir_operand end = ir_operation_block::create_label(ctx->ir);
+					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					
+					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
+					
+					    ir_operation_block::jump_if(ctx->ir,yes, condition);
+						{
+							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element2, O));
+						}
+					    
+					    ir_operation_block::jump(ctx->ir,end);
+					    ir_operation_block::mark_label(ctx->ir, yes);
+					
+						{
+							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element1, O));
+						}
+					
+					    ir_operation_block::mark_label(ctx->ir, end);
+					}
+				}
+				ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
+				}
+				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, element1, element2));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
+			{
+				if ((((uint64_t)size & (uint64_t)1ULL)))
+				{
+					element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
+				}
+				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, element1, element2));
+			}
+			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
+			{
+				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, element1, element2));
+			}
+			else
+			{
+				undefined_with_jit(ctx,0ULL);
+			}
+		}
+		V_jit(ctx,Rd,result);
+	}
+}
+
+void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	uint64_t O = fltsize == 32ULL ? int32 : fltsize == 64ULL ? int64 : 0;
+	{
+		ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
+		{
+		    ir_operand end = ir_operation_block::create_label(ctx->ir);
+		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		
+		    ir_operand condition = condition_holds_jit(ctx,cond);
+		
+		    ir_operation_block::jump_if(ctx->ir,yes, condition);
+			{
+				ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, operand2, O));
+			}
+		    
+		    ir_operation_block::jump(ctx->ir,end);
+		    ir_operation_block::mark_label(ctx->ir, yes);
+		
+			{
+				ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, operand1, O));
+			}
+		
+		    ir_operation_block::mark_label(ctx->ir, end);
+		}
+		V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
 	}
 }
 
