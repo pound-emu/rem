@@ -27,7 +27,7 @@ static void base_plus_va_jit(void* memory, ssa_emit_context* ir, ir_operand dest
 
 extern "C"
 {
-    EXPORT void* create_rem_context(void* memory, aarch64_context_offsets* context_offsets, void* svc)
+    EXPORT void* create_rem_context(void* memory, aarch64_context_offsets* context_offsets, void* svc, void* counter)
     {
         external_context* result = new external_context;
 
@@ -35,6 +35,7 @@ extern "C"
         guest_process::create(&result->process, {memory, base_plus_va, base_plus_va_jit}, &result->memory, *context_offsets);
 
         result->process.svc_function = svc;
+        result->process.counter_function = counter;
 
         return result;
     }

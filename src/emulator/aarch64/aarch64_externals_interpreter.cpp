@@ -4,11 +4,12 @@
 #include <iomanip>
 #include <mutex>
 #include "debugging.h"
+#include "tools/numbers.h"
+#include "aarch64_soft_float.h"
 
 std::mutex global_lock;
 
 //Memory
-
 
 uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address)
 {
@@ -168,25 +169,21 @@ uint64_t _get_pc_interpreter(interpreter_data* ctx)
 
 void undefined_interpreter(interpreter_data* ctx){throw_error();};
 
-static uint32_t reverse_bytes(uint32_t source)
+uint64_t x86_enable_sse_interpreter(interpreter_data* ctx)
 {
-    uint32_t result = 0;
+    return false;
+}
 
-    for (int i = 0; i < 4; ++i)
-    {
-        int s_bit = (3 - i) * 8;
-
-        result |= ((source >> s_bit) & 255) << (i * 8);
-    }
-
-    return result;
+uint64_t x86_enable_avx_interpreter(interpreter_data* ctx)
+{
+    return false;
 }
 
 void undefined_with_interpreter(interpreter_data* ctx, uint64_t value)
 {
     uint32_t instruction = ctx->current_instruction;
 
-    std::cout << "ERROR " << value << std::endl;
+    std::cout << "ERROR "<< std::hex << std::setfill('0') << std::setw(16) << value << std::endl;
     std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
 
     throw_error();
@@ -197,4 +194,11 @@ void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc)
     guest_process* process = (guest_process*)ctx->process_context;
 
     ((void(*)(void*, int))process->svc_function)(ctx->process_context, svc);
+}
+
+uint64_t call_counter_interpreter(interpreter_data* ctx)
+{
+    guest_process* process = (guest_process*)ctx->process_context;
+
+    return ((uint64_t(*)())process->counter_function)();
 }

@@ -1,6 +1,10 @@
 #include "aarch64_impl.h"
 #include "aarch64_emit_context.h"
 #include "debugging.h"
+#include "tools/numbers.h"
+#include "iomanip"
+#include <tuple>
+#include "aarch64_soft_float.h"
 
 //Memory 
 
@@ -150,9 +154,22 @@ void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc)
     aarch64_emit_context::emit_load_context(actx);
 }
 
+ir_operand call_counter_jit(ssa_emit_context* ctx)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    guest_process* process = actx->process;
+
+    return ssa_emit_context::emit_ssa(ctx, ir_external_call, ir_operand::create_con((uint64_t)process->counter_function));
+}
+
 void undefined_with_jit(ssa_emit_context* ctx, uint64_t value)
 {
-    std::cout << value << std::endl;
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+
+    uint32_t instruction = actx->current_raw_instruction;
+
+    std::cout << "ERROR "<< std::hex << std::setfill('0') << std::setw(16) << value << std::endl;
+    std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
 
     throw_error();
 }
@@ -167,3 +184,13 @@ uint64_t _get_pc_jit(ssa_emit_context* ctx)
 }
 
 void undefined_jit(ssa_emit_context* ctx){throw_error();};
+
+uint64_t x86_enable_sse_jit(ssa_emit_context* ctx)
+{
+    return true;
+}
+
+uint64_t x86_enable_avx_jit(ssa_emit_context* ctx)
+{
+    return true;
+}

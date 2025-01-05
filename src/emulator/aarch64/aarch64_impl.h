@@ -173,6 +173,8 @@ uint8_t condition_holds_interpreter(interpreter_data* ctx, uint64_t cond);
 void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint64_t link);
 uint64_t lowest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t source);
 void dup_element_interpreter(interpreter_data* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d);
+uint64_t FPNeg_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N);
+uint64_t FPAbs_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t fpcr, uint64_t N);
 uint64_t get_flt_size_interpreter(interpreter_data* ctx, uint64_t ftype);
 uint64_t expand_imm_interpreter(interpreter_data* ctx, uint64_t op, uint64_t cmode, uint64_t imm8);
 void VPart_interpreter(interpreter_data* ctx, uint64_t n, uint64_t part, uint64_t width, uint64_t value);
@@ -197,8 +199,7 @@ void X_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value);
 void msr_register_interpreter(interpreter_data* ctx, uint64_t imm15, uint64_t Rt);
 void mrs_register_interpreter(interpreter_data* ctx, uint64_t imm15, uint64_t Rt);
 void hints_interpreter(interpreter_data* ctx, uint64_t imm7);
-void dmb_interpreter(interpreter_data* ctx, uint64_t CRm);
-void clrex_interpreter(interpreter_data* ctx, uint64_t CRm);
+void barriers_interpreter(interpreter_data* ctx, uint64_t CRm, uint64_t op2, uint64_t Rt);
 uint64_t _x_interpreter(interpreter_data* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
 void _x_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value);//THIS FUNCTION IS USER DEFINED
 uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
@@ -211,8 +212,18 @@ void _branch_conditional_interpreter(interpreter_data* ctx, uint64_t yes, uint64
 uint64_t _get_pc_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address);//THIS FUNCTION IS USER DEFINED
 void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED
+uint64_t call_counter_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 void undefined_with_interpreter(interpreter_data* ctx, uint64_t value);//THIS FUNCTION IS USER DEFINED
 void undefined_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
+uint64_t FPAdd_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPSub_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPMul_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPDiv_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPMax_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPMin_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPMaxNum_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPMinNum_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+uint64_t FPSqrt_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
 uint64_t _compare_and_swap_interpreter(interpreter_data* ctx, uint64_t physical_address, uint64_t expecting, uint64_t to_swap, uint64_t size);//THIS FUNCTION IS USER DEFINED
 
 //JIT
@@ -276,6 +287,8 @@ ir_operand condition_holds_jit(ssa_emit_context* ctx, uint64_t cond);
 void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link);
 uint64_t lowest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t source);
 void dup_element_jit(ssa_emit_context* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d);
+ir_operand FPNeg_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N);
+ir_operand FPAbs_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand fpcr, uint64_t N);
 uint64_t get_flt_size_jit(ssa_emit_context* ctx, uint64_t ftype);
 uint64_t expand_imm_jit(ssa_emit_context* ctx, uint64_t op, uint64_t cmode, uint64_t imm8);
 void VPart_jit(ssa_emit_context* ctx, uint64_t n, uint64_t part, uint64_t width, ir_operand value);
@@ -298,8 +311,7 @@ void X_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);
 void msr_register_jit(ssa_emit_context* ctx, uint64_t imm15, uint64_t Rt);
 void mrs_register_jit(ssa_emit_context* ctx, uint64_t imm15, uint64_t Rt);
 void hints_jit(ssa_emit_context* ctx, uint64_t imm7);
-void dmb_jit(ssa_emit_context* ctx, uint64_t CRm);
-void clrex_jit(ssa_emit_context* ctx, uint64_t CRm);
+void barriers_jit(ssa_emit_context* ctx, uint64_t CRm, uint64_t op2, uint64_t Rt);
 ir_operand _x_jit(ssa_emit_context* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
 void _x_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);//THIS FUNCTION IS USER DEFINED
 ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
@@ -312,6 +324,16 @@ void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t yes, uint64_t no, i
 uint64_t _get_pc_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address);//THIS FUNCTION IS USER DEFINED
 void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED
+ir_operand call_counter_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 void undefined_with_jit(ssa_emit_context* ctx, uint64_t value);//THIS FUNCTION IS USER DEFINED
 void undefined_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
+ir_operand FPAdd_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPSub_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPMul_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPDiv_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPMax_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPMin_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPMaxNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPMinNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
+ir_operand FPSqrt_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand FPCR, uint64_t N);//THIS FUNCTION IS USER DEFINED
 ir_operand _compare_and_swap_jit(ssa_emit_context* ctx, ir_operand physical_address, ir_operand expecting, ir_operand to_swap, uint64_t size);//THIS FUNCTION IS USER DEFINED

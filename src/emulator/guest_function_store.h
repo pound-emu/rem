@@ -4,20 +4,10 @@
 #include <unordered_map>
 #include <inttypes.h>
 #include <mutex>
-
-#include "guest_function.h"
+#include "translate_request_data.h"
 
 struct guest_function_store;
 struct translate_request_data;
-
-typedef guest_function (*translate_guest_function)(translate_request_data*);
-
-struct translate_request_data
-{
-    void*                       process;
-    uint64_t                    address;
-    translate_guest_function    translate_function;
-};
 
 struct guest_function_store
 {

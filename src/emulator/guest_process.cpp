@@ -1,8 +1,11 @@
 #include "guest_process.h"
 #include "aarch64/aarch64_emit_context.h"
 #include "jit/jit_context.h"
-#include "aarch64/aarch64_impl.h"
+#include "tools/numbers.h"
 #include "debugging.h"
+
+#include "aarch64/aarch64_process.h"
+#include "aarch64/aarch64_impl.h"
 
 #include <iostream>
 #include <iomanip>
@@ -33,20 +36,6 @@ uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_func
     void* arguments[] = { arm_context };
     
     return jit_context::call_jitted_function(process->host_jit_context, (void*)function_to_execute.raw_function, (uint64_t*)arguments);
-}
-
-static uint32_t reverse_bytes(uint32_t source)
-{
-    uint32_t result = 0;
-
-    for (int i = 0; i < 4; ++i)
-    {
-        int s_bit = (3 - i) * 8;
-
-        result |= ((source >> s_bit) & 255) << (i * 8);
-    }
-
-    return result;
 }
 
 guest_function guest_process::translate_function(translate_request_data* data)
@@ -186,4 +175,34 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
     }
 
     return interpreter.current_pc;
+}
+
+
+//TODO
+void guest_process::create(guest_process* result, guest_memory memory, jit_context* jit, cpu_type process_type, cpu_size process_size, memory_order process_memory_order)
+{
+    switch (process_type)
+    {
+        case arm:
+        {   
+            aarch64_process* process = new aarch64_process;
+
+            process->_32_bit = process_size == _32_bit;
+
+        }; break;
+        default: throw_error();
+    }
+}
+
+void guest_process::destroy(guest_process* process)
+{
+    switch (process->process_type)
+    {
+        case arm:
+        {
+            delete (aarch64_process*)process->process_data;
+        }; break;
+
+        default: throw_error();
+    }
 }

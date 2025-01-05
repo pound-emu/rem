@@ -1062,28 +1062,20 @@ static void emit_hints_jit(ssa_emit_context* ctx, uint32_t instruction)
 	hints_jit(ctx, imm7);
 }
 
-static void call_dmb_interpreter(interpreter_data* ctx, uint32_t instruction)
+static void call_barriers_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int CRm = (instruction >> 8) & 15;
-	dmb_interpreter(ctx, CRm);
+	int op2 = (instruction >> 5) & 7;
+	int Rt = (instruction >> 0) & 31;
+	barriers_interpreter(ctx, CRm, op2, Rt);
 }
 
-static void emit_dmb_jit(ssa_emit_context* ctx, uint32_t instruction)
+static void emit_barriers_jit(ssa_emit_context* ctx, uint32_t instruction)
 {
 	int CRm = (instruction >> 8) & 15;
-	dmb_jit(ctx, CRm);
-}
-
-static void call_clrex_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int CRm = (instruction >> 8) & 15;
-	clrex_interpreter(ctx, CRm);
-}
-
-static void emit_clrex_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int CRm = (instruction >> 8) & 15;
-	clrex_jit(ctx, CRm);
+	int op2 = (instruction >> 5) & 7;
+	int Rt = (instruction >> 0) & 31;
+	barriers_jit(ctx, CRm, op2, Rt);
 }
 
 void init_aarch64_decoder(guest_process* process)
@@ -1137,8 +1129,7 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "110101010001--------------------", (void*)emit_msr_register_jit, (void*)call_msr_register_interpreter, "msr_register");
 	append_table(process, "110101010011--------------------", (void*)emit_mrs_register_jit, (void*)call_mrs_register_interpreter, "mrs_register");
 	append_table(process, "11010101000000110010-------11111", (void*)emit_hints_jit, (void*)call_hints_interpreter, "hints");
-	append_table(process, "11010101000000110011----10111111", (void*)emit_dmb_jit, (void*)call_dmb_interpreter, "dmb");
-	append_table(process, "11010101000000110011----01011111", (void*)emit_clrex_jit, (void*)call_clrex_interpreter, "clrex");
+	append_table(process, "11010101000000110011------------", (void*)emit_barriers_jit, (void*)call_barriers_interpreter, "barriers");
 }
 
 void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -3771,6 +3762,22 @@ void dup_element_interpreter(interpreter_data* ctx, uint64_t index, uint64_t esi
 	V_interpreter(ctx,d,result);
 }
 
+uint64_t FPNeg_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
+{
+	if ((((uint64_t)N != (uint64_t)64ULL)))
+	{
+		operand = ((uint64_t)operand & (uint64_t)(((uint64_t)(((uint64_t)1ULL << (uint64_t)N)) - (uint64_t)1ULL)));
+	}
+	operand = ((uint64_t)operand ^ (uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)N - (uint64_t)1ULL)))));
+	return operand;
+}
+
+uint64_t FPAbs_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t fpcr, uint64_t N)
+{
+	uint64_t mask = ((uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)N - (uint64_t)1ULL)))) - (uint64_t)1ULL);
+	return ((uint64_t)operand & (uint64_t)mask);
+}
+
 uint64_t get_flt_size_interpreter(interpreter_data* ctx, uint64_t ftype)
 {
 	if ((((uint64_t)ftype == (uint64_t)2ULL)))
@@ -4344,6 +4351,10 @@ void mrs_register_interpreter(interpreter_data* ctx, uint64_t imm15, uint64_t Rt
 	{
 		operand = _sys_interpreter(ctx,thread_local_0);
 	}
+	else if ((((uint64_t)imm15 == (uint64_t)24321ULL)))
+	{
+		operand = call_counter_interpreter(ctx);
+	}
 	else
 	{
 		undefined_with_interpreter(ctx,imm15);
@@ -4355,14 +4366,13 @@ void hints_interpreter(interpreter_data* ctx, uint64_t imm7)
 {
 }
 
-void dmb_interpreter(interpreter_data* ctx, uint64_t CRm)
+void barriers_interpreter(interpreter_data* ctx, uint64_t CRm, uint64_t op2, uint64_t Rt)
 {
-}
-
-void clrex_interpreter(interpreter_data* ctx, uint64_t CRm)
-{
-	_sys_interpreter(ctx,exclusive_address,(uint64_t)-1ULL);
-	_sys_interpreter(ctx,exclusive_value,(uint64_t)-1ULL);
+	if ((((uint64_t)((uint64_t)op2 == (uint64_t)2ULL) && (uint64_t)((uint64_t)Rt == (uint64_t)31ULL))))
+	{
+		_sys_interpreter(ctx,exclusive_address,(uint64_t)-1ULL);
+		_sys_interpreter(ctx,exclusive_value,(uint64_t)-1ULL);
+	}
 }
 
 void add_subtract_imm12_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -5888,6 +5898,22 @@ void dup_element_jit(ssa_emit_context* ctx, uint64_t index, uint64_t esize, uint
 	V_jit(ctx,d,result);
 }
 
+ir_operand FPNeg_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N)
+{
+	if ((((uint64_t)N != (uint64_t)64ULL)))
+	{
+		operand = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand, ir_operand::create_con((((uint64_t)(((uint64_t)1ULL << (uint64_t)N)) - (uint64_t)1ULL)), int64));
+	}
+	operand = ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, operand, ir_operand::create_con((((uint64_t)1ULL << (uint64_t)(((uint64_t)N - (uint64_t)1ULL)))), int64));
+	return operand;
+}
+
+ir_operand FPAbs_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand fpcr, uint64_t N)
+{
+	ir_operand mask = ir_operand::create_con(((uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)N - (uint64_t)1ULL)))) - (uint64_t)1ULL), int64);
+	return ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand, mask);
+}
+
 uint64_t get_flt_size_jit(ssa_emit_context* ctx, uint64_t ftype)
 {
 	if ((((uint64_t)ftype == (uint64_t)2ULL)))
@@ -6301,6 +6327,10 @@ void mrs_register_jit(ssa_emit_context* ctx, uint64_t imm15, uint64_t Rt)
 	{
 		operand = _sys_jit(ctx,thread_local_0);
 	}
+	else if ((((uint64_t)imm15 == (uint64_t)24321ULL)))
+	{
+		operand = call_counter_jit(ctx);
+	}
 	else
 	{
 		undefined_with_jit(ctx,imm15);
@@ -6312,13 +6342,12 @@ void hints_jit(ssa_emit_context* ctx, uint64_t imm7)
 {
 }
 
-void dmb_jit(ssa_emit_context* ctx, uint64_t CRm)
+void barriers_jit(ssa_emit_context* ctx, uint64_t CRm, uint64_t op2, uint64_t Rt)
 {
-}
-
-void clrex_jit(ssa_emit_context* ctx, uint64_t CRm)
-{
-	_sys_jit(ctx,exclusive_address,ir_operand::create_con(-1ULL, int64));
-	_sys_jit(ctx,exclusive_value,ir_operand::create_con(-1ULL, int64));
+	if ((((uint64_t)((uint64_t)op2 == (uint64_t)2ULL) && (uint64_t)((uint64_t)Rt == (uint64_t)31ULL))))
+	{
+		_sys_jit(ctx,exclusive_address,ir_operand::create_con(-1ULL, int64));
+		_sys_jit(ctx,exclusive_value,ir_operand::create_con(-1ULL, int64));
+	}
 }
 
