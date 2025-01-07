@@ -21,6 +21,7 @@ struct guest_process
 
     void*                           svc_function;
     void*                           counter_function;
+    void*                           undefined_instruction;
     bool                            debug_mode;
 
     cpu_type                        process_type;

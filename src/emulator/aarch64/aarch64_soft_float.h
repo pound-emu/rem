@@ -20,6 +20,12 @@ typedef int64_t         integer;
 #define FPFracBits  integer
 #define FPBitsType  std::tuple<FPFracBits,integer>
 
+template <typename T, typename S>
+static T convert(S src)
+{
+    return *(T*)&src;
+}
+
 //Stolen from https://stackoverflow.com/questions/76799117/how-to-convert-a-float-to-a-half-type-and-the-other-way-around-in-c
 static uint32_t float_as_uint32 (float a)
 {
@@ -814,7 +820,7 @@ static bits(N) FPRoundBase(real op, FPCR_Type fpcr, FPRounding rounding, boolean
     switch (N)
     {
         case 16: { result = float2half_rn(op); } break;
-        case 32: { float w = op; result = *(uint64_t*)&w; } break;
+        case 32: { float w = op; result = *(uint32_t*)&w; } break;
         case 64: { double w = op; result = *(uint64_t*)&w;} break;
     }
 

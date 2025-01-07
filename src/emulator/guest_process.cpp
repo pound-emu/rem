@@ -17,6 +17,7 @@ void guest_process::create(guest_process* result, guest_memory guest_memory_cont
     result->guest_context_offset_data = arm_guest_data;
 
     result->svc_function = nullptr;
+    result->undefined_instruction = nullptr;
     result->debug_mode = false;
 
     init_aarch64_decoder(result);
@@ -97,21 +98,39 @@ guest_function guest_process::translate_function(translate_request_data* data)
 
                 auto instruction_table = fixed_length_decoder<uint32_t>::decode_slow(&process->decoder, raw_instruction);
 
-                if (instruction_table == nullptr)
-                {
-                    std::cout << "Undefined instruction " << std::hex << raw_instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(raw_instruction) << std::endl;
-
-                    throw_error();
-                }
-
-                aarch64_emit.branch_state = branch_type::no_branch;
-
                 ssa_emit_context::reset_local(&ssa_emit);
 
-                aarch64_emit.current_instruction_address = working_address;
-                aarch64_emit.current_raw_instruction = raw_instruction;
+                if (instruction_table == nullptr)
+                {
+                    if (process->undefined_instruction != nullptr)
+                    {
+                        ir_operand function_pointer = ir_operand::create_con((uint64_t)process->undefined_instruction, int64);
+                        ir_operand new_address = ssa_emit_context::create_local(&ssa_emit, int64);
 
-                ((void(*)(ssa_emit_context*, uint32_t))instruction_table->emit)(&ssa_emit, raw_instruction);
+                        aarch64_emit_context::emit_store_context(&aarch64_emit);
+
+                        ir_operation_block::emitds(raw_ir, ir_external_call, new_address, function_pointer, aarch64_emit.context_pointer, ir_operand::create_con(working_address));
+                        
+                        aarch64_emit_context::emit_load_context(&aarch64_emit);
+
+                        aarch64_emit_context::branch_long(&aarch64_emit, new_address);
+                    }   
+                    else
+                    {
+                        std::cout << "Undefined instruction " << std::hex << raw_instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(raw_instruction) << std::endl;
+
+                        throw_error();
+                    }
+                }
+                else
+                {
+                    aarch64_emit.branch_state = branch_type::no_branch;
+
+                    aarch64_emit.current_instruction_address = working_address;
+                    aarch64_emit.current_raw_instruction = raw_instruction;
+
+                    ((void(*)(ssa_emit_context*, uint32_t))instruction_table->emit)(&ssa_emit, raw_instruction);   
+                }
 
                 if (aarch64_emit.branch_state == no_branch)
                 {
