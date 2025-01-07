@@ -47,16 +47,18 @@ extern "C"
         delete context;
     }
 
-    EXPORT uint64_t interperate_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context)
+    EXPORT uint64_t interperate_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context, bool* is_running)
     {
-        return guest_process::interperate_function(&context->process, virtual_address, guest_context);
+        return guest_process::interperate_function(&context->process, virtual_address, guest_context, is_running);
     }
 
-    EXPORT uint64_t jit_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context)
+    EXPORT uint64_t jit_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context, bool* is_running)
     {
-        while (1)
+        while (*is_running)
         {
             virtual_address = guest_process::jit_function(&context->process, virtual_address, guest_context);
         }
+
+        return virtual_address;
     }
 }

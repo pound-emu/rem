@@ -112,7 +112,12 @@ void _branch_long_jit(ssa_emit_context* ctx, ir_operand location)
 
 void _branch_short_jit(ssa_emit_context* ctx, uint64_t location)
 {
-    aarch64_emit_context::branch_long((aarch64_emit_context*)ctx->context_data, ir_operand::create_con(location));
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+
+    actx->branch_state = branch_type::short_branch;
+    actx->basic_block_translate_que.insert(location);
+
+    ir_operation_block::jump(ctx->ir, aarch64_emit_context::get_or_create_basic_block_label(actx, location));
 }
 
 void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t condition_pass, uint64_t condition_fail, ir_operand condition)
@@ -123,14 +128,14 @@ void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t condition_pass, uin
     ir_operation_block::jump_if(ctx->ir,yes, condition);
 
     {
-        aarch64_emit_context::branch_long((aarch64_emit_context*)ctx->context_data, ir_operand::create_con(condition_fail));
+        _branch_short_jit(ctx, condition_fail);
     }
     
     ir_operation_block::jump(ctx->ir,end);
     ir_operation_block::mark_label(ctx->ir, yes);
 
     {
-        aarch64_emit_context::branch_long((aarch64_emit_context*)ctx->context_data, ir_operand::create_con(condition_pass));
+        _branch_short_jit(ctx, condition_pass);
     }
 
     ir_operation_block::mark_label(ctx->ir, end);
@@ -151,7 +156,8 @@ void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc)
         ir_operand::create_con(svc)
     );
 
-    aarch64_emit_context::emit_load_context(actx);
+    ir_operation_block::emits(ctx->ir,ir_close_and_return ,ir_operand::create_con(actx->current_instruction_address + 4));
+    actx->branch_state = branch_type::long_branch;
 }
 
 ir_operand call_counter_jit(ssa_emit_context* ctx)
@@ -301,6 +307,46 @@ ir_operand FPAbs_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR,
     ir_operand result = ssa_emit_context::create_local(ctx, int64);
     
     ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand, FPCR, ir_operand::create_con(N));
+
+    return result;
+}
+
+ir_operand FPConvert_jit(ssa_emit_context* ctx, ir_operand source, uint64_t to, uint64_t from)
+{
+    ir_operand function = ir_operand::create_con((uint64_t)&FPConvert_I);
+    ir_operand result = ssa_emit_context::create_local(ctx, int64);
+    
+    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, source, ir_operand::create_con(0), ir_operand::create_con(0),ir_operand::create_con(to), ir_operand::create_con(from));
+
+    return result;
+}
+
+ir_operand FixedToFP_jit(ssa_emit_context* ctx, ir_operand source, uint64_t fracbits, uint64_t is_unsigned, uint64_t to, uint64_t from)
+{
+    ir_operand function = ir_operand::create_con((uint64_t)&FixedToFP_I);
+    ir_operand result = ssa_emit_context::create_local(ctx, int64);
+
+    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, source, ir_operand::create_con(fracbits), ir_operand::create_con(is_unsigned), ir_operand::create_con(to),ir_operand::create_con(from));
+
+    return result;
+}
+
+ir_operand FPToFixed_jit(ssa_emit_context* ctx, ir_operand source, uint64_t fracbits, uint64_t is_unsigned, uint64_t round, uint64_t to, uint64_t from)
+{
+    ir_operand function = ir_operand::create_con((uint64_t)&FPToFixed_I);
+    ir_operand result = ssa_emit_context::create_local(ctx, int64);
+
+    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, source, ir_operand::create_con(fracbits), ir_operand::create_con(is_unsigned), ir_operand::create_con(round), ir_operand::create_con(to),ir_operand::create_con(from));
+
+    return result;
+}
+
+ir_operand FPCompare_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+    ir_operand function = ir_operand::create_con((uint64_t)&FPCompare_I);
+    ir_operand result = ssa_emit_context::create_local(ctx, int64);
+    
+    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function,  operand1, operand2, ir_operand::create_con(0), FPCR, ir_operand::create_con(N));
 
     return result;
 }

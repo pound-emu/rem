@@ -5,7 +5,6 @@
 #include <mutex>
 #include "debugging.h"
 #include "tools/numbers.h"
-#include "aarch64_soft_float.h"
 
 std::mutex global_lock;
 
@@ -120,7 +119,9 @@ uint128_t V_interpreter(interpreter_data* ctx, uint64_t reg_id)
 
     assert(reg_id >= 0 && reg_id <= 32);
 
-    return ((uint128_t*)((char*)ctx->register_data + offsets->q_offset))[reg_id];
+	void* data_pointer = (char*)ctx->register_data + offsets->q_offset + (reg_id * 16);
+
+	return *(uint128_t*)data_pointer;
 }
 
 void V_interpreter(interpreter_data* ctx, uint64_t reg_id, uint128_t value)
@@ -129,7 +130,9 @@ void V_interpreter(interpreter_data* ctx, uint64_t reg_id, uint128_t value)
 
     assert(reg_id >= 0 && reg_id <= 32);
 
-    ((uint128_t*)((char*)ctx->register_data + offsets->q_offset))[reg_id] = value;
+    void* data_pointer = (char*)ctx->register_data + offsets->q_offset + (reg_id * 16);
+
+	*(uint128_t*)data_pointer = value;
 }
 
 //Branching
@@ -201,6 +204,20 @@ uint64_t call_counter_interpreter(interpreter_data* ctx)
     guest_process* process = (guest_process*)ctx->process_context;
 
     return ((uint64_t(*)())process->counter_function)();
+}
+
+uint64_t FPCompare_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return FPCompare(
+	{
+		operand1,
+		N
+	},
+	{
+		operand2,
+		N
+	},
+	0, {FPCR});
 }
 
 uint64_t FPAdd_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
@@ -343,6 +360,11 @@ uint64_t FPSqrt_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t 
 	});
 }
 
+uint64_t FPConvert_interpreter(interpreter_data* ctx, uint64_t source, uint64_t to, uint64_t from)
+{
+	return FPConvert({source, from}, {0},(FPRounding)0, to);
+}
+
 uint64_t FPNeg_interpreter(interpreter_data * ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
 {
 	return FPNeg(
@@ -365,4 +387,14 @@ uint64_t FPAbs_interpreter(interpreter_data * ctx, uint64_t operand, uint64_t FP
 	{
 		FPCR
 	});
+}
+
+uint64_t FixedToFP_interpreter(interpreter_data* ctx, uint64_t source, uint64_t fracbits, uint64_t is_unsigned, uint64_t to, uint64_t from)
+{
+	return FixedToFP({source, from}, fracbits, is_unsigned, {0}, to);
+}
+
+uint64_t FPToFixed_interpreter(interpreter_data* ctx, uint64_t source, uint64_t fracbits, uint64_t is_unsigned, uint64_t round, uint64_t to, uint64_t from)
+{
+	return FPToFixed({source, from}, fracbits, is_unsigned, {0},(FPRounding)round,to);
 }

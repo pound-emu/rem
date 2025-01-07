@@ -32,10 +32,10 @@ struct aarch64_emit_context
     static void                                                 init_context(aarch64_emit_context* ctx);
     static void                                                 emit_load_context(aarch64_emit_context* ctx);
     static void                                                 emit_store_context(aarch64_emit_context* ctx);
-    static bool                                                 basic_block_translated(aarch64_emit_context* ctx, uint64_t block);
     static void                                                 branch_long(aarch64_emit_context* ctx, ir_operand new_location);
     static void                                                 branch_short(aarch64_emit_context* ctx, ir_operand new_location);
     static void                                                 emit_context_movement(aarch64_emit_context* ctx);
+    static ir_operand                                           get_or_create_basic_block_label(aarch64_emit_context* ctx, uint64_t value);
 
     static ir_operand                                           get_x_raw(aarch64_emit_context* ctx, int index);
     static void                                                 set_x_raw(aarch64_emit_context* ctx, int index, ir_operand value);

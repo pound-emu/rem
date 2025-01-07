@@ -60,6 +60,8 @@ guest_function guest_process::translate_function(translate_request_data* data)
 
     aarch64_emit.basic_block_translate_que.insert(entry_address);
 
+    std::unordered_set<uint64_t> already_translated;
+
     while (true)
     {
         std::unordered_set<uint64_t> to_compile_que = aarch64_emit.basic_block_translate_que;
@@ -74,12 +76,14 @@ guest_function guest_process::translate_function(translate_request_data* data)
         {
             uint64_t working_address = i;
 
-            if (aarch64_emit_context::basic_block_translated(&aarch64_emit, i))
+            if (already_translated.find(i) != already_translated.end())
             {
                 continue;
             }
 
-            ir_operand label = ir_operation_block::create_label(raw_ir);
+            already_translated.insert(i);
+
+            ir_operand label = aarch64_emit_context::get_or_create_basic_block_label(&aarch64_emit, working_address);
 
             aarch64_emit.basic_block_labels[i] = label;
 
@@ -120,7 +124,7 @@ guest_function guest_process::translate_function(translate_request_data* data)
             }
         }
     }
-
+    
     aarch64_emit_context::emit_context_movement(&aarch64_emit);
 
     void* code = jit_context::compile_code(process->host_jit_context, raw_ir,(compiler_flags)0);
@@ -135,7 +139,7 @@ guest_function guest_process::translate_function(translate_request_data* data)
     return result;
 }
 
-uint64_t guest_process::interperate_function(guest_process* process, uint64_t guest_function, void* arm_context)
+uint64_t guest_process::interperate_function(guest_process* process, uint64_t guest_function, void* arm_context, bool* is_running)
 {
     interpreter_data interpreter;
 
@@ -143,7 +147,14 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
     interpreter.register_data = arm_context;
     interpreter.current_pc = guest_function;
 
-    while (true)
+    bool done = 1;
+
+    if (is_running == nullptr)
+    {
+        is_running = &done;
+    }
+
+    while (*is_running)
     {
         void* physical_memory = process->guest_memory_context.translate_address(process->guest_memory_context.base,interpreter.current_pc);
 
@@ -164,13 +175,14 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         ((void(*)(interpreter_data*, uint32_t))table->interpret)(&interpreter, instruction);
 
+        if (interpreter.process_context->debug_mode)
+        {
+            break;
+        }
+
         if (interpreter.branch_type == no_branch)
         {
             interpreter.current_pc += 4;
-        }
-        else if (interpreter.branch_type == long_branch && interpreter.process_context->debug_mode)
-        {
-            break;
         }
     }
 

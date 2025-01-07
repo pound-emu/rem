@@ -471,14 +471,11 @@ static void emit_external_call(x86_pre_allocator_context* result, ir_operation* 
 			int abi_des = i - 1;
 
 			if (abi_des >= abi_count)
-				break;
+			{
+				throw_error();
+			}
 
 			emit_move(result, locks[abi_des], operation->sources[i]);
-		}
-
-		if (operation->sources.count - 1 >= abi_count)
-		{
-			throw_error();
 		}
 
 		ir_operation_block::emitds(result->ir, ir_instructions::ir_external_call,  RAX(int64), function);

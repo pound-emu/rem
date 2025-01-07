@@ -215,6 +215,36 @@ intrusive_linked_list_element<ir_operation>* ir_operation_block::emitds(ir_opera
 	return emit(ir, result, point);
 }
 
+intrusive_linked_list_element<ir_operation>* ir_operation_block::emitds(ir_operation_block* ir, uint64_t instruction, ir_operand destination_0, ir_operand source_0, ir_operand source_1, ir_operand source_2, ir_operand source_3, ir_operand source_4, ir_operand source_5, intrusive_linked_list_element<ir_operation>* point)
+{
+	ir_operation result;
+	ir_operation_block::create_raw_operation(ir->allocator, &result, instruction, 1, 6);
+	result.destinations[0] = destination_0;
+	result.sources[0] = source_0;
+	result.sources[1] = source_1;
+	result.sources[2] = source_2;
+	result.sources[3] = source_3;
+	result.sources[4] = source_4;
+	result.sources[5] = source_5;
+	return emit(ir, result, point);
+}
+
+intrusive_linked_list_element<ir_operation>* ir_operation_block::emitds(ir_operation_block* ir, uint64_t instruction, ir_operand destination_0, ir_operand source_0, ir_operand source_1, ir_operand source_2, ir_operand source_3, ir_operand source_4, ir_operand source_5,ir_operand source_6, intrusive_linked_list_element<ir_operation>* point)
+{
+	ir_operation result;
+	ir_operation_block::create_raw_operation(ir->allocator, &result, instruction, 1, 7);
+	result.destinations[0] = destination_0;
+	result.sources[0] = source_0;
+	result.sources[1] = source_1;
+	result.sources[2] = source_2;
+	result.sources[3] = source_3;
+	result.sources[4] = source_4;
+	result.sources[5] = source_5;
+	result.sources[6] = source_6;
+	return emit(ir, result, point);
+}
+
+
 intrusive_linked_list_element<ir_operation>* ir_operation_block::emits(ir_operation_block* ir, uint64_t instruction, intrusive_linked_list_element<ir_operation>* point)
 {
 	ir_operation result;

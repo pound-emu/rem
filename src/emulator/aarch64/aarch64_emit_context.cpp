@@ -59,11 +59,6 @@ void aarch64_emit_context::emit_store_context(aarch64_emit_context* ctx)
     ctx->context_movement.push_back(ir_operation_block::emits(ir, ir_guest_store_context, ctx->context_pointer));
 }
 
-bool aarch64_emit_context::basic_block_translated(aarch64_emit_context* ctx, uint64_t block)
-{
-    return ctx->basic_block_labels.find(block) != ctx->basic_block_labels.end();
-}
-
 void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new_location)
 {   
     ctx->branch_state = branch_type::long_branch;
@@ -71,6 +66,20 @@ void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new
     emit_store_context(ctx);
 
     ir_operation_block::emits(ctx->raw_ir, ir_close_and_return, new_location);
+}
+
+ir_operand aarch64_emit_context::get_or_create_basic_block_label(aarch64_emit_context* ctx, uint64_t value)
+{
+    if (ctx->basic_block_labels.find(value) != ctx->basic_block_labels.end())
+    {
+        return ctx->basic_block_labels[value];
+    }
+    else
+    {
+        ctx->basic_block_labels[value] = ir_operation_block::create_label(ctx->raw_ir);
+
+        return ctx->basic_block_labels[value];
+    }
 }
 
 void aarch64_emit_context::emit_context_movement(aarch64_emit_context* ctx)
