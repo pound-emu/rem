@@ -538,6 +538,180 @@ static void emit_pc_rel_addressing_jit(ssa_emit_context* ctx, uint32_t instructi
 	pc_rel_addressing_jit(ctx, op, immlo, immhi, Rd);
 }
 
+static void call_branch_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int l = (instruction >> 21) & 1;
+	int Rn = (instruction >> 5) & 31;
+	branch_register_interpreter(ctx, l, Rn);
+}
+
+static void emit_branch_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int l = (instruction >> 21) & 1;
+	int Rn = (instruction >> 5) & 31;
+	branch_register_jit(ctx, l, Rn);
+}
+
+static void call_return_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Rn = (instruction >> 5) & 31;
+	return_register_interpreter(ctx, Rn);
+}
+
+static void emit_return_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Rn = (instruction >> 5) & 31;
+	return_register_jit(ctx, Rn);
+}
+
+static void call_test_bit_branch_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int b5 = (instruction >> 31) & 1;
+	int op = (instruction >> 24) & 1;
+	int b40 = (instruction >> 19) & 31;
+	int imm14 = (instruction >> 5) & 16383;
+	int Rt = (instruction >> 0) & 31;
+	test_bit_branch_interpreter(ctx, b5, op, b40, imm14, Rt);
+}
+
+static void emit_test_bit_branch_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int b5 = (instruction >> 31) & 1;
+	int op = (instruction >> 24) & 1;
+	int b40 = (instruction >> 19) & 31;
+	int imm14 = (instruction >> 5) & 16383;
+	int Rt = (instruction >> 0) & 31;
+	test_bit_branch_jit(ctx, b5, op, b40, imm14, Rt);
+}
+
+static void call_compare_and_branch_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int op = (instruction >> 24) & 1;
+	int imm19 = (instruction >> 5) & 524287;
+	int Rt = (instruction >> 0) & 31;
+	compare_and_branch_interpreter(ctx, sf, op, imm19, Rt);
+}
+
+static void emit_compare_and_branch_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int op = (instruction >> 24) & 1;
+	int imm19 = (instruction >> 5) & 524287;
+	int Rt = (instruction >> 0) & 31;
+	compare_and_branch_jit(ctx, sf, op, imm19, Rt);
+}
+
+static void call_b_unconditional_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int op = (instruction >> 31) & 1;
+	int imm26 = (instruction >> 0) & 67108863;
+	b_unconditional_interpreter(ctx, op, imm26);
+}
+
+static void emit_b_unconditional_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int op = (instruction >> 31) & 1;
+	int imm26 = (instruction >> 0) & 67108863;
+	b_unconditional_jit(ctx, op, imm26);
+}
+
+static void call_b_conditional_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm19 = (instruction >> 5) & 524287;
+	int cond = (instruction >> 0) & 15;
+	b_conditional_interpreter(ctx, imm19, cond);
+}
+
+static void emit_b_conditional_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm19 = (instruction >> 5) & 524287;
+	int cond = (instruction >> 0) & 15;
+	b_conditional_jit(ctx, imm19, cond);
+}
+
+static void call_svc_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm16 = (instruction >> 5) & 65535;
+	svc_interpreter(ctx, imm16);
+}
+
+static void emit_svc_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm16 = (instruction >> 5) & 65535;
+	svc_jit(ctx, imm16);
+}
+
+static void call_msr_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm15 = (instruction >> 5) & 32767;
+	int Rt = (instruction >> 0) & 31;
+	msr_register_interpreter(ctx, imm15, Rt);
+}
+
+static void emit_msr_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm15 = (instruction >> 5) & 32767;
+	int Rt = (instruction >> 0) & 31;
+	msr_register_jit(ctx, imm15, Rt);
+}
+
+static void call_mrs_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm15 = (instruction >> 5) & 32767;
+	int Rt = (instruction >> 0) & 31;
+	mrs_register_interpreter(ctx, imm15, Rt);
+}
+
+static void emit_mrs_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm15 = (instruction >> 5) & 32767;
+	int Rt = (instruction >> 0) & 31;
+	mrs_register_jit(ctx, imm15, Rt);
+}
+
+static void call_hints_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int imm7 = (instruction >> 5) & 127;
+	hints_interpreter(ctx, imm7);
+}
+
+static void emit_hints_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int imm7 = (instruction >> 5) & 127;
+	hints_jit(ctx, imm7);
+}
+
+static void call_sys_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int L = (instruction >> 21) & 1;
+	int imm19 = (instruction >> 0) & 524287;
+	sys_interpreter(ctx, L, imm19);
+}
+
+static void emit_sys_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int L = (instruction >> 21) & 1;
+	int imm19 = (instruction >> 0) & 524287;
+	sys_jit(ctx, L, imm19);
+}
+
+static void call_barriers_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int CRm = (instruction >> 8) & 15;
+	int op2 = (instruction >> 5) & 7;
+	int Rt = (instruction >> 0) & 31;
+	barriers_interpreter(ctx, CRm, op2, Rt);
+}
+
+static void emit_barriers_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int CRm = (instruction >> 8) & 15;
+	int op2 = (instruction >> 5) & 7;
+	int Rt = (instruction >> 0) & 31;
+	barriers_jit(ctx, CRm, op2, Rt);
+}
+
 static void call_load_store_register_post_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int size = (instruction >> 30) & 3;
@@ -748,110 +922,6 @@ static void emit_load_store_exclusive_ordered_jit(ssa_emit_context* ctx, uint32_
 	load_store_exclusive_ordered_jit(ctx, size, ordered, L, Rs, o0, Rn, Rt);
 }
 
-static void call_branch_register_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int l = (instruction >> 21) & 1;
-	int Rn = (instruction >> 5) & 31;
-	branch_register_interpreter(ctx, l, Rn);
-}
-
-static void emit_branch_register_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int l = (instruction >> 21) & 1;
-	int Rn = (instruction >> 5) & 31;
-	branch_register_jit(ctx, l, Rn);
-}
-
-static void call_return_register_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Rn = (instruction >> 5) & 31;
-	return_register_interpreter(ctx, Rn);
-}
-
-static void emit_return_register_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Rn = (instruction >> 5) & 31;
-	return_register_jit(ctx, Rn);
-}
-
-static void call_test_bit_branch_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int b5 = (instruction >> 31) & 1;
-	int op = (instruction >> 24) & 1;
-	int b40 = (instruction >> 19) & 31;
-	int imm14 = (instruction >> 5) & 16383;
-	int Rt = (instruction >> 0) & 31;
-	test_bit_branch_interpreter(ctx, b5, op, b40, imm14, Rt);
-}
-
-static void emit_test_bit_branch_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int b5 = (instruction >> 31) & 1;
-	int op = (instruction >> 24) & 1;
-	int b40 = (instruction >> 19) & 31;
-	int imm14 = (instruction >> 5) & 16383;
-	int Rt = (instruction >> 0) & 31;
-	test_bit_branch_jit(ctx, b5, op, b40, imm14, Rt);
-}
-
-static void call_compare_and_branch_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int op = (instruction >> 24) & 1;
-	int imm19 = (instruction >> 5) & 524287;
-	int Rt = (instruction >> 0) & 31;
-	compare_and_branch_interpreter(ctx, sf, op, imm19, Rt);
-}
-
-static void emit_compare_and_branch_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int op = (instruction >> 24) & 1;
-	int imm19 = (instruction >> 5) & 524287;
-	int Rt = (instruction >> 0) & 31;
-	compare_and_branch_jit(ctx, sf, op, imm19, Rt);
-}
-
-static void call_b_unconditional_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int op = (instruction >> 31) & 1;
-	int imm26 = (instruction >> 0) & 67108863;
-	b_unconditional_interpreter(ctx, op, imm26);
-}
-
-static void emit_b_unconditional_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int op = (instruction >> 31) & 1;
-	int imm26 = (instruction >> 0) & 67108863;
-	b_unconditional_jit(ctx, op, imm26);
-}
-
-static void call_b_conditional_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int imm19 = (instruction >> 5) & 524287;
-	int cond = (instruction >> 0) & 15;
-	b_conditional_interpreter(ctx, imm19, cond);
-}
-
-static void emit_b_conditional_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int imm19 = (instruction >> 5) & 524287;
-	int cond = (instruction >> 0) & 15;
-	b_conditional_jit(ctx, imm19, cond);
-}
-
-static void call_svc_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int imm16 = (instruction >> 5) & 65535;
-	svc_interpreter(ctx, imm16);
-}
-
-static void emit_svc_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int imm16 = (instruction >> 5) & 65535;
-	svc_jit(ctx, imm16);
-}
-
 static void call_dup_general_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
@@ -1022,22 +1092,42 @@ static void emit_convert_to_float_gp_jit(ssa_emit_context* ctx, uint32_t instruc
 	convert_to_float_gp_jit(ctx, sf, ftype, U, Rn, Rd);
 }
 
-static void call_convert_to_float_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+static void call_convert_to_float_vector_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int U = (instruction >> 29) & 1;
 	int sz = (instruction >> 22) & 1;
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
-	convert_to_float_vector_interpreter(ctx, U, sz, Rn, Rd);
+	convert_to_float_vector_scalar_interpreter(ctx, U, sz, Rn, Rd);
+}
+
+static void emit_convert_to_float_vector_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int U = (instruction >> 29) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	convert_to_float_vector_scalar_jit(ctx, U, sz, Rn, Rd);
+}
+
+static void call_convert_to_float_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	convert_to_float_vector_interpreter(ctx, Q, U, sz, Rn, Rd);
 }
 
 static void emit_convert_to_float_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
 {
+	int Q = (instruction >> 30) & 1;
 	int U = (instruction >> 29) & 1;
 	int sz = (instruction >> 22) & 1;
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
-	convert_to_float_vector_jit(ctx, U, sz, Rn, Rd);
+	convert_to_float_vector_jit(ctx, Q, U, sz, Rn, Rd);
 }
 
 static void call_floating_point_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
@@ -1086,28 +1176,524 @@ static void emit_conversion_between_floating_point_and_fixed_point_jit(ssa_emit_
 	conversion_between_floating_point_and_fixed_point_jit(ctx, sf, S, ftype, rmode, opcode, scale, Rn, Rd);
 }
 
-static void call_advanced_simd_three_same_interpreter(interpreter_data* ctx, uint32_t instruction)
+static void call_shl_immedaite_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
-	int U = (instruction >> 29) & 1;
-	int size = (instruction >> 22) & 3;
-	int Rm = (instruction >> 16) & 31;
-	int opcode = (instruction >> 11) & 31;
+	int immh = (instruction >> 19) & 15;
+	int immb = (instruction >> 16) & 7;
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
-	advanced_simd_three_same_interpreter(ctx, Q, U, size, Rm, opcode, Rn, Rd);
+	shl_immedaite_interpreter(ctx, Q, immh, immb, Rn, Rd);
 }
 
-static void emit_advanced_simd_three_same_jit(ssa_emit_context* ctx, uint32_t instruction)
+static void emit_shl_immedaite_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int immh = (instruction >> 19) & 15;
+	int immb = (instruction >> 16) & 7;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	shl_immedaite_jit(ctx, Q, immh, immb, Rn, Rd);
+}
+
+static void call_sshr_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int immh = (instruction >> 19) & 15;
+	int immb = (instruction >> 16) & 7;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	sshr_vector_interpreter(ctx, Q, immh, immb, Rn, Rd);
+}
+
+static void emit_sshr_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int immh = (instruction >> 19) & 15;
+	int immb = (instruction >> 16) & 7;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	sshr_vector_jit(ctx, Q, immh, immb, Rn, Rd);
+}
+
+static void call_shll_shll2_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int immh = (instruction >> 19) & 15;
+	int immb = (instruction >> 16) & 7;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	shll_shll2_interpreter(ctx, Q, U, immh, immb, Rn, Rd);
+}
+
+static void emit_shll_shll2_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int immh = (instruction >> 19) & 15;
+	int immb = (instruction >> 16) & 7;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	shll_shll2_jit(ctx, Q, U, immh, immb, Rn, Rd);
+}
+
+static void call_rev64_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	rev64_vector_interpreter(ctx, Q, size, Rn, Rd);
+}
+
+static void emit_rev64_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	rev64_vector_jit(ctx, Q, size, Rn, Rd);
+}
+
+static void call_neg_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	neg_vector_interpreter(ctx, Q, size, Rn, Rd);
+}
+
+static void emit_neg_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	neg_vector_jit(ctx, Q, size, Rn, Rd);
+}
+
+static void call_not_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	not_vector_interpreter(ctx, Q, Rn, Rd);
+}
+
+static void emit_not_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	not_vector_jit(ctx, Q, Rn, Rd);
+}
+
+static void call_abs_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	abs_vector_interpreter(ctx, Q, size, Rn, Rd);
+}
+
+static void emit_abs_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	abs_vector_jit(ctx, Q, size, Rn, Rd);
+}
+
+static void call_mul_vector_index_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	mul_vector_index_interpreter(ctx, Q, size, L, M, Rm, H, Rn, Rd);
+}
+
+static void emit_mul_vector_index_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	mul_vector_index_jit(ctx, Q, size, L, M, Rm, H, Rn, Rd);
+}
+
+static void call_mul_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	mul_vector_interpreter(ctx, Q, size, Rm, Rn, Rd);
+}
+
+static void emit_mul_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	mul_vector_jit(ctx, Q, size, Rm, Rn, Rd);
+}
+
+static void call_ext_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int imm4 = (instruction >> 11) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	ext_interpreter(ctx, Q, Rm, imm4, Rn, Rd);
+}
+
+static void emit_ext_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int imm4 = (instruction >> 11) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	ext_jit(ctx, Q, Rm, imm4, Rn, Rd);
+}
+
+static void call_compare_above_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
 	int U = (instruction >> 29) & 1;
 	int size = (instruction >> 22) & 3;
 	int Rm = (instruction >> 16) & 31;
-	int opcode = (instruction >> 11) & 31;
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
-	advanced_simd_three_same_jit(ctx, Q, U, size, Rm, opcode, Rn, Rd);
+	compare_above_interpreter(ctx, Q, U, size, Rm, Rn, Rd);
+}
+
+static void emit_compare_above_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	compare_above_jit(ctx, Q, U, size, Rm, Rn, Rd);
+}
+
+static void call_shl_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	shl_vector_interpreter(ctx, Q, U, size, Rm, Rn, Rd);
+}
+
+static void emit_shl_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	shl_vector_jit(ctx, Q, U, size, Rm, Rn, Rd);
+}
+
+static void call_add_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	add_vector_interpreter(ctx, Q, size, Rm, Rn, Rd);
+}
+
+static void emit_add_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	add_vector_jit(ctx, Q, size, Rm, Rn, Rd);
+}
+
+static void call_addlv_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	addlv_interpreter(ctx, Q, U, size, Rn, Rd);
+}
+
+static void emit_addlv_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	addlv_jit(ctx, Q, U, size, Rn, Rd);
+}
+
+static void call_cnt_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	cnt_interpreter(ctx, Q, size, Rn, Rd);
+}
+
+static void emit_cnt_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	cnt_jit(ctx, Q, size, Rn, Rd);
+}
+
+static void call_orr_orn_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int invert = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	orr_orn_vector_interpreter(ctx, Q, invert, Rm, Rn, Rd);
+}
+
+static void emit_orr_orn_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int invert = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	orr_orn_vector_jit(ctx, Q, invert, Rm, Rn, Rd);
+}
+
+static void call_bsl_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	bsl_vector_interpreter(ctx, Q, Rm, Rn, Rd);
+}
+
+static void emit_bsl_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	bsl_vector_jit(ctx, Q, Rm, Rn, Rd);
+}
+
+static void call_and_bic_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int invert = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	and_bic_vector_interpreter(ctx, Q, invert, Rm, Rn, Rd);
+}
+
+static void emit_and_bic_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int invert = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	and_bic_vector_jit(ctx, Q, invert, Rm, Rn, Rd);
+}
+
+static void call_eor_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	eor_vector_interpreter(ctx, Q, Rm, Rn, Rd);
+}
+
+static void emit_eor_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	eor_vector_jit(ctx, Q, Rm, Rn, Rd);
+}
+
+static void call_xnt_xnt2_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	xnt_xnt2_interpreter(ctx, Q, size, Rn, Rd);
+}
+
+static void emit_xnt_xnt2_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	xnt_xnt2_jit(ctx, Q, size, Rn, Rd);
+}
+
+static void call_zip_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int op = (instruction >> 14) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	zip_interpreter(ctx, Q, size, Rm, op, Rn, Rd);
+}
+
+static void emit_zip_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int op = (instruction >> 14) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	zip_jit(ctx, Q, size, Rm, op, Rn, Rd);
+}
+
+static void call_tbl_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int len = (instruction >> 13) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	tbl_interpreter(ctx, Q, Rm, len, Rn, Rd);
+}
+
+static void emit_tbl_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int len = (instruction >> 13) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	tbl_jit(ctx, Q, Rm, len, Rn, Rd);
+}
+
+static void call_ld1r_no_offset_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	ld1r_no_offset_interpreter(ctx, Q, size, Rn, Rt);
+}
+
+static void emit_ld1r_no_offset_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	ld1r_no_offset_jit(ctx, Q, size, Rn, Rt);
+}
+
+static void call_ld1r_post_index_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	ld1r_post_index_interpreter(ctx, Q, Rm, size, Rn, Rt);
+}
+
+static void emit_ld1r_post_index_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	ld1r_post_index_jit(ctx, Q, Rm, size, Rn, Rt);
+}
+
+static void call_ld1_single_structure_no_offset_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int opcode = (instruction >> 14) & 3;
+	int S = (instruction >> 12) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	ld1_single_structure_no_offset_interpreter(ctx, Q, opcode, S, size, Rn, Rt);
+}
+
+static void emit_ld1_single_structure_no_offset_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int opcode = (instruction >> 14) & 3;
+	int S = (instruction >> 12) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	ld1_single_structure_no_offset_jit(ctx, Q, opcode, S, size, Rn, Rt);
+}
+
+static void call_ld1_single_structure_post_index_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int opcode = (instruction >> 14) & 3;
+	int S = (instruction >> 12) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	ld1_single_structure_post_index_interpreter(ctx, Q, Rm, opcode, S, size, Rn, Rt);
+}
+
+static void emit_ld1_single_structure_post_index_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int opcode = (instruction >> 14) & 3;
+	int S = (instruction >> 12) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	ld1_single_structure_post_index_jit(ctx, Q, Rm, opcode, S, size, Rn, Rt);
 }
 
 static void call_floating_point_conditional_select_interpreter(interpreter_data* ctx, uint32_t instruction)
@@ -1128,6 +1714,86 @@ static void emit_floating_point_conditional_select_jit(ssa_emit_context* ctx, ui
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
 	floating_point_conditional_select_jit(ctx, ftype, Rm, cond, Rn, Rd);
+}
+
+static void call_fcmeq_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmeq_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fcmeq_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmeq_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fcmg_vector_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmg_vector_register_interpreter(ctx, Q, U, sz, Rm, Rn, Rd);
+}
+
+static void emit_fcmg_vector_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmg_vector_register_jit(ctx, Q, U, sz, Rm, Rn, Rd);
+}
+
+static void call_fcmeq_vector_zero_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmeq_vector_zero_interpreter(ctx, Q, sz, Rn, Rd);
+}
+
+static void emit_fcmeq_vector_zero_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmeq_vector_zero_jit(ctx, Q, sz, Rn, Rd);
+}
+
+static void call_fcmg_vector_zero_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmg_vector_zero_interpreter(ctx, Q, U, sz, Rn, Rd);
+}
+
+static void emit_fcmg_vector_zero_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int U = (instruction >> 29) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmg_vector_zero_jit(ctx, Q, U, sz, Rn, Rd);
 }
 
 static void call_fmov_scalar_immediate_interpreter(interpreter_data* ctx, uint32_t instruction)
@@ -1164,26 +1830,52 @@ static void emit_fcvt_jit(ssa_emit_context* ctx, uint32_t instruction)
 	fcvt_jit(ctx, ftype, opc, Rn, Rd);
 }
 
-static void call_floating_point_data_processing_one_source_interpreter(interpreter_data* ctx, uint32_t instruction)
+static void call_fabs_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
-	int M = (instruction >> 31) & 1;
-	int S = (instruction >> 29) & 1;
 	int ftype = (instruction >> 22) & 3;
-	int opcode = (instruction >> 15) & 63;
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
-	floating_point_data_processing_one_source_interpreter(ctx, M, S, ftype, opcode, Rn, Rd);
+	fabs_scalar_interpreter(ctx, ftype, Rn, Rd);
 }
 
-static void emit_floating_point_data_processing_one_source_jit(ssa_emit_context* ctx, uint32_t instruction)
+static void emit_fabs_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
 {
-	int M = (instruction >> 31) & 1;
-	int S = (instruction >> 29) & 1;
 	int ftype = (instruction >> 22) & 3;
-	int opcode = (instruction >> 15) & 63;
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
-	floating_point_data_processing_one_source_jit(ctx, M, S, ftype, opcode, Rn, Rd);
+	fabs_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
+static void call_fneg_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fneg_scalar_interpreter(ctx, ftype, Rn, Rd);
+}
+
+static void emit_fneg_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fneg_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
+static void call_fsqrt_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsqrt_scalar_interpreter(ctx, ftype, Rn, Rd);
+}
+
+static void emit_fsqrt_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsqrt_scalar_jit(ctx, ftype, Rn, Rd);
 }
 
 static void call_fcmp_interpreter(interpreter_data* ctx, uint32_t instruction)
@@ -1304,6 +1996,318 @@ static void emit_fcvtm_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instru
 	fcvtm_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
 }
 
+static void call_fadd_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fadd_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fadd_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fadd_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fmul_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fmul_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fsub_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsub_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fsub_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsub_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fdiv_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fdiv_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fdiv_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fdiv_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fmul_accumulate_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int neg = (instruction >> 23) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_vector_interpreter(ctx, Q, neg, sz, Rm, Rn, Rd);
+}
+
+static void emit_fmul_accumulate_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int neg = (instruction >> 23) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_vector_jit(ctx, Q, neg, sz, Rm, Rn, Rd);
+}
+
+static void call_faddp_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	faddp_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_faddp_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	faddp_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_frsqrte_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrte_scalar_interpreter(ctx, sz, Rn, Rd);
+}
+
+static void emit_frsqrte_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrte_scalar_jit(ctx, sz, Rn, Rd);
+}
+
+static void call_frsqrte_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrte_vector_interpreter(ctx, Q, sz, Rn, Rd);
+}
+
+static void emit_frsqrte_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrte_vector_jit(ctx, Q, sz, Rn, Rd);
+}
+
+static void call_frsqrts_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrts_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_frsqrts_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrts_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fmul_scalar_by_element_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_scalar_by_element_interpreter(ctx, sz, L, M, Rm, H, Rn, Rd);
+}
+
+static void emit_fmul_scalar_by_element_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_scalar_by_element_jit(ctx, sz, L, M, Rm, H, Rn, Rd);
+}
+
+static void call_fmul_vector_by_element_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_vector_by_element_interpreter(ctx, Q, sz, L, M, Rm, H, Rn, Rd);
+}
+
+static void emit_fmul_vector_by_element_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_vector_by_element_jit(ctx, Q, sz, L, M, Rm, H, Rn, Rd);
+}
+
+static void call_fmul_accumulate_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int neg = (instruction >> 14) & 1;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_scalar_interpreter(ctx, sz, L, M, Rm, neg, H, Rn, Rd);
+}
+
+static void emit_fmul_accumulate_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int neg = (instruction >> 14) & 1;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_scalar_jit(ctx, sz, L, M, Rm, neg, H, Rn, Rd);
+}
+
+static void call_fmul_accumulate_element_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int neg = (instruction >> 14) & 1;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_element_interpreter(ctx, Q, sz, L, M, Rm, neg, H, Rn, Rd);
+}
+
+static void emit_fmul_accumulate_element_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int neg = (instruction >> 14) & 1;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_element_jit(ctx, Q, sz, L, M, Rm, neg, H, Rn, Rd);
+}
+
+static void call_frintp_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frintp_scalar_interpreter(ctx, ftype, Rn, Rd);
+}
+
+static void emit_frintp_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frintp_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
+static void call_frintm_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frintm_scalar_interpreter(ctx, ftype, Rn, Rd);
+}
+
+static void emit_frintm_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frintm_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
 static void call_fcvtp_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int sf = (instruction >> 31) & 1;
@@ -1322,114 +2326,6 @@ static void emit_fcvtp_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instru
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
 	fcvtp_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void call_addlv_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int U = (instruction >> 29) & 1;
-	int size = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	addlv_interpreter(ctx, Q, U, size, Rn, Rd);
-}
-
-static void emit_addlv_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int U = (instruction >> 29) & 1;
-	int size = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	addlv_jit(ctx, Q, U, size, Rn, Rd);
-}
-
-static void call_cnt_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int size = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	cnt_interpreter(ctx, Q, size, Rn, Rd);
-}
-
-static void emit_cnt_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int size = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	cnt_jit(ctx, Q, size, Rn, Rd);
-}
-
-static void call_msr_register_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int imm15 = (instruction >> 5) & 32767;
-	int Rt = (instruction >> 0) & 31;
-	msr_register_interpreter(ctx, imm15, Rt);
-}
-
-static void emit_msr_register_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int imm15 = (instruction >> 5) & 32767;
-	int Rt = (instruction >> 0) & 31;
-	msr_register_jit(ctx, imm15, Rt);
-}
-
-static void call_mrs_register_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int imm15 = (instruction >> 5) & 32767;
-	int Rt = (instruction >> 0) & 31;
-	mrs_register_interpreter(ctx, imm15, Rt);
-}
-
-static void emit_mrs_register_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int imm15 = (instruction >> 5) & 32767;
-	int Rt = (instruction >> 0) & 31;
-	mrs_register_jit(ctx, imm15, Rt);
-}
-
-static void call_hints_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int imm7 = (instruction >> 5) & 127;
-	hints_interpreter(ctx, imm7);
-}
-
-static void emit_hints_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int imm7 = (instruction >> 5) & 127;
-	hints_jit(ctx, imm7);
-}
-
-static void call_sys_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int L = (instruction >> 21) & 1;
-	int imm19 = (instruction >> 0) & 524287;
-	sys_interpreter(ctx, L, imm19);
-}
-
-static void emit_sys_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int L = (instruction >> 21) & 1;
-	int imm19 = (instruction >> 0) & 524287;
-	sys_jit(ctx, L, imm19);
-}
-
-static void call_barriers_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int CRm = (instruction >> 8) & 15;
-	int op2 = (instruction >> 5) & 7;
-	int Rt = (instruction >> 0) & 31;
-	barriers_interpreter(ctx, CRm, op2, Rt);
-}
-
-static void emit_barriers_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int CRm = (instruction >> 8) & 15;
-	int op2 = (instruction >> 5) & 7;
-	int Rt = (instruction >> 0) & 31;
-	barriers_jit(ctx, CRm, op2, Rt);
 }
 
 void init_aarch64_decoder(guest_process* process)
@@ -1455,6 +2351,18 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "--111010010----------0-----0----", (void*)emit_conditional_compare_jit, (void*)call_conditional_compare_interpreter, "conditional_compare");
 	append_table(process, "---100101-----------------------", (void*)emit_move_wide_immediate_jit, (void*)call_move_wide_immediate_interpreter, "move_wide_immediate");
 	append_table(process, "---10000------------------------", (void*)emit_pc_rel_addressing_jit, (void*)call_pc_rel_addressing_interpreter, "pc_rel_addressing");
+	append_table(process, "1101011000-11111000000-----00000", (void*)emit_branch_register_jit, (void*)call_branch_register_interpreter, "branch_register");
+	append_table(process, "1101011001011111000000-----00000", (void*)emit_return_register_jit, (void*)call_return_register_interpreter, "return_register");
+	append_table(process, "-011011-------------------------", (void*)emit_test_bit_branch_jit, (void*)call_test_bit_branch_interpreter, "test_bit_branch");
+	append_table(process, "-011010-------------------------", (void*)emit_compare_and_branch_jit, (void*)call_compare_and_branch_interpreter, "compare_and_branch");
+	append_table(process, "-00101--------------------------", (void*)emit_b_unconditional_jit, (void*)call_b_unconditional_interpreter, "b_unconditional");
+	append_table(process, "01010100-------------------0----", (void*)emit_b_conditional_jit, (void*)call_b_conditional_interpreter, "b_conditional");
+	append_table(process, "11010100000----------------00001", (void*)emit_svc_jit, (void*)call_svc_interpreter, "svc");
+	append_table(process, "110101010001--------------------", (void*)emit_msr_register_jit, (void*)call_msr_register_interpreter, "msr_register");
+	append_table(process, "110101010011--------------------", (void*)emit_mrs_register_jit, (void*)call_mrs_register_interpreter, "mrs_register");
+	append_table(process, "11010101000000110010-------11111", (void*)emit_hints_jit, (void*)call_hints_interpreter, "hints");
+	append_table(process, "1101010100-01-------------------", (void*)emit_sys_jit, (void*)call_sys_interpreter, "sys");
+	append_table(process, "11010101000000110011------------", (void*)emit_barriers_jit, (void*)call_barriers_interpreter, "barriers");
 	append_table(process, "--111-00--0---------01----------", (void*)emit_load_store_register_post_jit, (void*)call_load_store_register_post_interpreter, "load_store_register_post");
 	append_table(process, "--111-00--0---------11----------", (void*)emit_load_store_register_pre_jit, (void*)call_load_store_register_pre_interpreter, "load_store_register_pre");
 	append_table(process, "--111-00--0---------00----------", (void*)emit_load_store_register_unscaled_jit, (void*)call_load_store_register_unscaled_interpreter, "load_store_register_unscaled");
@@ -1464,13 +2372,6 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "--111-01------------------------", (void*)emit_load_store_register_imm_unsigned_jit, (void*)call_load_store_register_imm_unsigned_interpreter, "load_store_register_imm_unsigned");
 	append_table(process, "--111-00--1---------10----------", (void*)emit_load_store_register_offset_jit, (void*)call_load_store_register_offset_interpreter, "load_store_register_offset");
 	append_table(process, "--001000--0------11111----------", (void*)emit_load_store_exclusive_ordered_jit, (void*)call_load_store_exclusive_ordered_interpreter, "load_store_exclusive_ordered");
-	append_table(process, "1101011000-11111000000-----00000", (void*)emit_branch_register_jit, (void*)call_branch_register_interpreter, "branch_register");
-	append_table(process, "1101011001011111000000-----00000", (void*)emit_return_register_jit, (void*)call_return_register_interpreter, "return_register");
-	append_table(process, "-011011-------------------------", (void*)emit_test_bit_branch_jit, (void*)call_test_bit_branch_interpreter, "test_bit_branch");
-	append_table(process, "-011010-------------------------", (void*)emit_compare_and_branch_jit, (void*)call_compare_and_branch_interpreter, "compare_and_branch");
-	append_table(process, "-00101--------------------------", (void*)emit_b_unconditional_jit, (void*)call_b_unconditional_interpreter, "b_unconditional");
-	append_table(process, "01010100-------------------0----", (void*)emit_b_conditional_jit, (void*)call_b_conditional_interpreter, "b_conditional");
-	append_table(process, "11010100000----------------00001", (void*)emit_svc_jit, (void*)call_svc_interpreter, "svc");
 	append_table(process, "0-001110000-----000011----------", (void*)emit_dup_general_jit, (void*)call_dup_general_interpreter, "dup_general");
 	append_table(process, "01011110000-----000001----------", (void*)emit_dup_element_scalar_jit, (void*)call_dup_element_scalar_interpreter, "dup_element_scalar");
 	append_table(process, "0-001110000-----000001----------", (void*)emit_dup_element_vector_jit, (void*)call_dup_element_vector_interpreter, "dup_element_vector");
@@ -1480,28 +2381,1129 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "0--0111100000-------01----------", (void*)emit_movi_immediate_jit, (void*)call_movi_immediate_interpreter, "movi_immediate");
 	append_table(process, "-0011110--10-11-000000----------", (void*)emit_fmov_general_jit, (void*)call_fmov_general_interpreter, "fmov_general");
 	append_table(process, "-0011110--10001-000000----------", (void*)emit_convert_to_float_gp_jit, (void*)call_convert_to_float_gp_interpreter, "convert_to_float_gp");
-	append_table(process, "01-111100-100001110110----------", (void*)emit_convert_to_float_vector_jit, (void*)call_convert_to_float_vector_interpreter, "convert_to_float_vector");
+	append_table(process, "01-111100-100001110110----------", (void*)emit_convert_to_float_vector_scalar_jit, (void*)call_convert_to_float_vector_scalar_interpreter, "convert_to_float_vector_scalar");
+	append_table(process, "0--011100-100001110110----------", (void*)emit_convert_to_float_vector_jit, (void*)call_convert_to_float_vector_interpreter, "convert_to_float_vector");
 	append_table(process, "00011110--1---------10----------", (void*)emit_floating_point_scalar_jit, (void*)call_floating_point_scalar_interpreter, "floating_point_scalar");
 	append_table(process, "-0-11110--0---------------------", (void*)emit_conversion_between_floating_point_and_fixed_point_jit, (void*)call_conversion_between_floating_point_and_fixed_point_interpreter, "conversion_between_floating_point_and_fixed_point");
-	append_table(process, "0--01110--1----------1----------", (void*)emit_advanced_simd_three_same_jit, (void*)call_advanced_simd_three_same_interpreter, "advanced_simd_three_same");
+	append_table(process, "0-0011110-------010101----------", (void*)emit_shl_immedaite_jit, (void*)call_shl_immedaite_interpreter, "shl_immedaite");
+	append_table(process, "0-0011110-------000001----------", (void*)emit_sshr_vector_jit, (void*)call_sshr_vector_interpreter, "sshr_vector");
+	append_table(process, "0--011110-------101001----------", (void*)emit_shll_shll2_jit, (void*)call_shll_shll2_interpreter, "shll_shll2");
+	append_table(process, "0-001110--100000000010----------", (void*)emit_rev64_vector_jit, (void*)call_rev64_vector_interpreter, "rev64_vector");
+	append_table(process, "0-101110--100000101110----------", (void*)emit_neg_vector_jit, (void*)call_neg_vector_interpreter, "neg_vector");
+	append_table(process, "0-10111000100000010110----------", (void*)emit_not_vector_jit, (void*)call_not_vector_interpreter, "not_vector");
+	append_table(process, "0-001110--100000101110----------", (void*)emit_abs_vector_jit, (void*)call_abs_vector_interpreter, "abs_vector");
+	append_table(process, "0-001111--------1000-0----------", (void*)emit_mul_vector_index_jit, (void*)call_mul_vector_index_interpreter, "mul_vector_index");
+	append_table(process, "0-001110--1-----100111----------", (void*)emit_mul_vector_jit, (void*)call_mul_vector_interpreter, "mul_vector");
+	append_table(process, "0-101110000-----0----0----------", (void*)emit_ext_jit, (void*)call_ext_interpreter, "ext");
+	append_table(process, "0--01110--1-----001101----------", (void*)emit_compare_above_jit, (void*)call_compare_above_interpreter, "compare_above");
+	append_table(process, "0--01110--1-----010001----------", (void*)emit_shl_vector_jit, (void*)call_shl_vector_interpreter, "shl_vector");
+	append_table(process, "0-001110--1-----100001----------", (void*)emit_add_vector_jit, (void*)call_add_vector_interpreter, "add_vector");
+	append_table(process, "0--01110--110000001110----------", (void*)emit_addlv_jit, (void*)call_addlv_interpreter, "addlv");
+	append_table(process, "0-001110--100000010110----------", (void*)emit_cnt_jit, (void*)call_cnt_interpreter, "cnt");
+	append_table(process, "0-0011101-1-----000111----------", (void*)emit_orr_orn_vector_jit, (void*)call_orr_orn_vector_interpreter, "orr_orn_vector");
+	append_table(process, "0-101110011-----000111----------", (void*)emit_bsl_vector_jit, (void*)call_bsl_vector_interpreter, "bsl_vector");
+	append_table(process, "0-0011100-1-----000111----------", (void*)emit_and_bic_vector_jit, (void*)call_and_bic_vector_interpreter, "and_bic_vector");
+	append_table(process, "0-101110001-----000111----------", (void*)emit_eor_vector_jit, (void*)call_eor_vector_interpreter, "eor_vector");
+	append_table(process, "0-001110--100001001010----------", (void*)emit_xnt_xnt2_jit, (void*)call_xnt_xnt2_interpreter, "xnt_xnt2");
+	append_table(process, "0-001110--0-----0-1110----------", (void*)emit_zip_jit, (void*)call_zip_interpreter, "zip");
+	append_table(process, "0-001110000-----0--000----------", (void*)emit_tbl_jit, (void*)call_tbl_interpreter, "tbl");
+	append_table(process, "0-001101010000001100------------", (void*)emit_ld1r_no_offset_jit, (void*)call_ld1r_no_offset_interpreter, "ld1r_no_offset");
+	append_table(process, "0-001101110-----1100------------", (void*)emit_ld1r_post_index_jit, (void*)call_ld1r_post_index_interpreter, "ld1r_post_index");
+	append_table(process, "0-00110101000000--0-------------", (void*)emit_ld1_single_structure_no_offset_jit, (void*)call_ld1_single_structure_no_offset_interpreter, "ld1_single_structure_no_offset");
+	append_table(process, "0-001101110-------0-------------", (void*)emit_ld1_single_structure_post_index_jit, (void*)call_ld1_single_structure_post_index_interpreter, "ld1_single_structure_post_index");
 	append_table(process, "00011110--1---------11----------", (void*)emit_floating_point_conditional_select_jit, (void*)call_floating_point_conditional_select_interpreter, "floating_point_conditional_select");
+	append_table(process, "0-0011100-1-----111001----------", (void*)emit_fcmeq_vector_jit, (void*)call_fcmeq_vector_interpreter, "fcmeq_vector");
+	append_table(process, "0--011100-1-----111001----------", (void*)emit_fcmg_vector_register_jit, (void*)call_fcmg_vector_register_interpreter, "fcmg_vector_register");
+	append_table(process, "0-0011101-100000110110----------", (void*)emit_fcmeq_vector_zero_jit, (void*)call_fcmeq_vector_zero_interpreter, "fcmeq_vector_zero");
+	append_table(process, "0--011101-100000110010----------", (void*)emit_fcmg_vector_zero_jit, (void*)call_fcmg_vector_zero_interpreter, "fcmg_vector_zero");
 	append_table(process, "00011110--1--------10000000-----", (void*)emit_fmov_scalar_immediate_jit, (void*)call_fmov_scalar_immediate_interpreter, "fmov_scalar_immediate");
 	append_table(process, "00011110--10001--10000----------", (void*)emit_fcvt_jit, (void*)call_fcvt_interpreter, "fcvt");
-	append_table(process, "-0-11110--1------10000----------", (void*)emit_floating_point_data_processing_one_source_jit, (void*)call_floating_point_data_processing_one_source_interpreter, "floating_point_data_processing_one_source");
+	append_table(process, "00011110--100000110000----------", (void*)emit_fabs_scalar_jit, (void*)call_fabs_scalar_interpreter, "fabs_scalar");
+	append_table(process, "00011110--100001010000----------", (void*)emit_fneg_scalar_jit, (void*)call_fneg_scalar_interpreter, "fneg_scalar");
+	append_table(process, "00011110--100001110000----------", (void*)emit_fsqrt_scalar_jit, (void*)call_fsqrt_scalar_interpreter, "fsqrt_scalar");
 	append_table(process, "00011110--1-----001000-----0-000", (void*)emit_fcmp_jit, (void*)call_fcmp_interpreter, "fcmp");
 	append_table(process, "00011110--1---------01-----0----", (void*)emit_fccmp_jit, (void*)call_fccmp_interpreter, "fccmp");
 	append_table(process, "-0011110--11100-000000----------", (void*)emit_fcvtz_scalar_integer_jit, (void*)call_fcvtz_scalar_integer_interpreter, "fcvtz_scalar_integer");
 	append_table(process, "-0011110--10000-000000----------", (void*)emit_fcvtn_scalar_integer_jit, (void*)call_fcvtn_scalar_integer_interpreter, "fcvtn_scalar_integer");
 	append_table(process, "-0011110--10010-000000----------", (void*)emit_fcvta_scalar_integer_jit, (void*)call_fcvta_scalar_integer_interpreter, "fcvta_scalar_integer");
 	append_table(process, "-0011110--11000-000000----------", (void*)emit_fcvtm_scalar_integer_jit, (void*)call_fcvtm_scalar_integer_interpreter, "fcvtm_scalar_integer");
+	append_table(process, "0-0011100-1-----110101----------", (void*)emit_fadd_vector_jit, (void*)call_fadd_vector_interpreter, "fadd_vector");
+	append_table(process, "0-1011100-1-----110111----------", (void*)emit_fmul_vector_jit, (void*)call_fmul_vector_interpreter, "fmul_vector");
+	append_table(process, "0-0011101-1-----110101----------", (void*)emit_fsub_vector_jit, (void*)call_fsub_vector_interpreter, "fsub_vector");
+	append_table(process, "0-1011100-1-----111111----------", (void*)emit_fdiv_vector_jit, (void*)call_fdiv_vector_interpreter, "fdiv_vector");
+	append_table(process, "0-001110--1-----110011----------", (void*)emit_fmul_accumulate_vector_jit, (void*)call_fmul_accumulate_vector_interpreter, "fmul_accumulate_vector");
+	append_table(process, "0-1011100-1-----110101----------", (void*)emit_faddp_vector_jit, (void*)call_faddp_vector_interpreter, "faddp_vector");
+	append_table(process, "011111101-100001110110----------", (void*)emit_frsqrte_scalar_jit, (void*)call_frsqrte_scalar_interpreter, "frsqrte_scalar");
+	append_table(process, "0-1011101-100001110110----------", (void*)emit_frsqrte_vector_jit, (void*)call_frsqrte_vector_interpreter, "frsqrte_vector");
+	append_table(process, "0-0011101-1-----111111----------", (void*)emit_frsqrts_vector_jit, (void*)call_frsqrts_vector_interpreter, "frsqrts_vector");
+	append_table(process, "010111111-------1001-0----------", (void*)emit_fmul_scalar_by_element_jit, (void*)call_fmul_scalar_by_element_interpreter, "fmul_scalar_by_element");
+	append_table(process, "0-0011111-------1001-0----------", (void*)emit_fmul_vector_by_element_jit, (void*)call_fmul_vector_by_element_interpreter, "fmul_vector_by_element");
+	append_table(process, "010111111-------0-01-0----------", (void*)emit_fmul_accumulate_scalar_jit, (void*)call_fmul_accumulate_scalar_interpreter, "fmul_accumulate_scalar");
+	append_table(process, "0-0011111-------0-01-0----------", (void*)emit_fmul_accumulate_element_jit, (void*)call_fmul_accumulate_element_interpreter, "fmul_accumulate_element");
+	append_table(process, "00011110--100100110000----------", (void*)emit_frintp_scalar_jit, (void*)call_frintp_scalar_interpreter, "frintp_scalar");
+	append_table(process, "00011110--100101010000----------", (void*)emit_frintm_scalar_jit, (void*)call_frintm_scalar_interpreter, "frintm_scalar");
 	append_table(process, "-0011110--10100-000000----------", (void*)emit_fcvtp_scalar_integer_jit, (void*)call_fcvtp_scalar_integer_interpreter, "fcvtp_scalar_integer");
-	append_table(process, "0--01110--110000001110----------", (void*)emit_addlv_jit, (void*)call_addlv_interpreter, "addlv");
-	append_table(process, "0-001110--100000010110----------", (void*)emit_cnt_jit, (void*)call_cnt_interpreter, "cnt");
-	append_table(process, "110101010001--------------------", (void*)emit_msr_register_jit, (void*)call_msr_register_interpreter, "msr_register");
-	append_table(process, "110101010011--------------------", (void*)emit_mrs_register_jit, (void*)call_mrs_register_interpreter, "mrs_register");
-	append_table(process, "11010101000000110010-------11111", (void*)emit_hints_jit, (void*)call_hints_interpreter, "hints");
-	append_table(process, "1101010100-01-------------------", (void*)emit_sys_jit, (void*)call_sys_interpreter, "sys");
-	append_table(process, "11010101000000110011------------", (void*)emit_barriers_jit, (void*)call_barriers_interpreter, "barriers");
+}
+
+uint64_t sign_extend_interpreter(interpreter_data* ctx, uint64_t source, uint64_t count)
+{
+	uint64_t max = 64ULL;
+	uint64_t shift = ((uint64_t)max - (uint64_t)count);
+	return ((uint64_t)(sign_extend((uint64_t)(((uint64_t)source << (uint64_t)shift))) >> sign_extend((uint64_t)shift)));
+}
+
+template <typename O>
+O a_shift_reg_interpreter(interpreter_data* ctx, uint64_t m, uint64_t shift_type, uint64_t ammount)
+{
+	O result = X_interpreter(ctx,m);
+	if ((((uint64_t)shift_type == (uint64_t)0ULL)))
+	{
+		return ((O)result << (O)ammount);
+	}
+	else if ((((uint64_t)shift_type == (uint64_t)1ULL)))
+	{
+		return ((O)result >> (O)ammount);
+	}
+	else if ((((uint64_t)shift_type == (uint64_t)2ULL)))
+	{
+		return ((O)(sign_extend((O)result) >> sign_extend((O)ammount)));
+	}
+	else
+	{
+		return (rotate_right((O)result,(O)ammount));
+	}
+}
+
+template <typename O>
+O a_extend_reg_interpreter(interpreter_data* ctx, uint64_t m, uint64_t extend_type, uint64_t shift)
+{
+	O val = X_interpreter(ctx,m);
+	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
+	{
+		val = ((O)val & (O)255ULL);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
+	{
+		val = ((O)val & (O)65535ULL);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
+	{
+		val = ((O)val & (O)4294967295ULL);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
+	{
+		val = (O)sign_extend((uint8_t)val);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
+	{
+		val = (O)sign_extend((uint16_t)val);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
+	{
+		val = (O)sign_extend((uint32_t)val);
+	}
+	return ((O)val << (O)shift);
+}
+
+uint64_t a_extend_reg_64_interpreter(interpreter_data* ctx, uint64_t m, uint64_t extend_type, uint64_t shift)
+{
+	uint64_t val = X_interpreter(ctx,m);
+	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
+	{
+		val = ((uint64_t)val & (uint64_t)255ULL);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
+	{
+		val = ((uint64_t)val & (uint64_t)65535ULL);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
+	{
+		val = ((uint64_t)val & (uint64_t)4294967295ULL);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
+	{
+		val = (uint64_t)sign_extend((uint8_t)val);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
+	{
+		val = (uint64_t)sign_extend((uint16_t)val);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
+	{
+		val = (uint64_t)sign_extend((uint32_t)val);
+	}
+	return ((uint64_t)val << (uint64_t)shift);
+}
+
+template <typename O>
+O reverse_bytes_interpreter(interpreter_data* ctx, O source, uint64_t byte_count)
+{
+	O result = 0ULL;
+	for (uint64_t i = 0; i < (byte_count); i++)
+	{
+		O working = ((O)(((O)source >> (O)(((uint64_t)i * (uint64_t)8ULL)))) & (O)255ULL);
+		result = ((O)result | (O)(((O)working << (O)(((uint64_t)(((uint64_t)((uint64_t)byte_count - (uint64_t)i) - (uint64_t)1ULL)) * (uint64_t)8ULL)))));
+	}
+	return result;
+}
+
+uint64_t highest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t src, uint64_t size)
+{
+	for (uint64_t i = 0; i < (size); i++)
+	{
+		uint64_t bit_check = ((uint64_t)((uint64_t)size - (uint64_t)i) - (uint64_t)1ULL);
+		uint64_t bit = ((uint64_t)(((uint64_t)src >> (uint64_t)bit_check)) & (uint64_t)1ULL);
+		if ((bit))
+		{
+			return bit_check;
+		}
+	}
+	return -1ULL;
+}
+
+uint64_t ones_interpreter(interpreter_data* ctx, uint64_t size)
+{
+	if ((((uint64_t)size == (uint64_t)64ULL)))
+	{
+		return 18446744073709551615ULL;
+	}
+	return ((uint64_t)(((uint64_t)1ULL << (uint64_t)size)) - (uint64_t)1ULL);
+}
+
+uint64_t replicate_c_interpreter(interpreter_data* ctx, uint64_t source, uint64_t source_size, uint64_t count)
+{
+	uint64_t result = 0ULL;
+	for (uint64_t i = 0; i < (count); i++)
+	{
+		result = ((uint64_t)result | (uint64_t)(((uint64_t)(((uint64_t)source & (uint64_t)ones_interpreter(ctx,source_size))) << (uint64_t)(((uint64_t)i * (uint64_t)source_size)))));
+	}
+	return result;
+}
+
+uint64_t bits_c_interpreter(interpreter_data* ctx, uint64_t source, uint64_t top, uint64_t bottom)
+{
+	top = ((uint64_t)top + (uint64_t)1ULL);
+	uint64_t size = ((uint64_t)top - (uint64_t)bottom);
+	uint64_t mask = ones_interpreter(ctx,size);
+	return ((uint64_t)(((uint64_t)source >> (uint64_t)bottom)) & (uint64_t)mask);
+}
+
+uint64_t bit_c_interpreter(interpreter_data* ctx, uint64_t source, uint64_t bit)
+{
+	return ((uint64_t)(((uint64_t)source >> (uint64_t)bit)) & (uint64_t)1ULL);
+}
+
+uint64_t rotate_right_bits_interpreter(interpreter_data* ctx, uint64_t source, uint64_t ammount, uint64_t bit_count)
+{
+	source = ((uint64_t)source & (uint64_t)ones_interpreter(ctx,bit_count));
+	return (((uint64_t)(((uint64_t)source >> (uint64_t)ammount)) | (uint64_t)(((uint64_t)source << (uint64_t)(((uint64_t)bit_count - (uint64_t)ammount))))));
+}
+
+uint64_t decode_bitmask_tmask_interpreter(interpreter_data* ctx, uint64_t immN, uint64_t imms, uint64_t immr, uint64_t immediate, uint64_t M, uint64_t return_tmask)
+{
+	uint64_t levels;
+	uint64_t len = highest_bit_set_c_interpreter(ctx,((uint64_t)(((uint64_t)immN << (uint64_t)6ULL)) | (uint64_t)(((uint64_t)~imms & (uint64_t)ones_interpreter(ctx,6ULL)))),7ULL);
+	if ((((uint64_t)len < (uint64_t)1ULL)))
+	{
+		undefined_interpreter(ctx);
+	}
+	levels = ones_interpreter(ctx,len);
+	if ((((uint64_t)immediate && (uint64_t)((uint64_t)(((uint64_t)imms & (uint64_t)levels)) == (uint64_t)levels))))
+	{
+		undefined_interpreter(ctx);
+	}
+	uint64_t s = ((uint64_t)imms & (uint64_t)levels);
+	uint64_t r = ((uint64_t)immr & (uint64_t)levels);
+	uint64_t diff = ((uint64_t)s - (uint64_t)r);
+	uint64_t esize = ((uint64_t)1ULL << (uint64_t)len);
+	uint64_t d = bits_c_interpreter(ctx,diff,((uint64_t)len - (uint64_t)1ULL),0ULL);
+	uint64_t welem = ones_interpreter(ctx,((uint64_t)s + (uint64_t)1ULL));
+	uint64_t telem = ones_interpreter(ctx,((uint64_t)d + (uint64_t)1ULL));
+	if ((return_tmask))
+	{
+		return replicate_c_interpreter(ctx,telem,esize,((uint64_t)M / (uint64_t)esize));
+	}
+	else
+	{
+		return replicate_c_interpreter(ctx,rotate_right_bits_interpreter(ctx,welem,r,esize),esize,((uint64_t)M / (uint64_t)esize));
+	}
+}
+
+uint64_t decode_add_subtract_imm_12_interpreter(interpreter_data* ctx, uint64_t source, uint64_t shift)
+{
+	return ((uint64_t)source << (uint64_t)(((uint64_t)shift * (uint64_t)12ULL)));
+}
+
+template <typename O>
+O add_subtract_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_flags, uint64_t is_add)
+{
+	O d;
+	if ((is_add))
+	{
+		d = ((O)n + (O)m);
+	}
+	else
+	{
+		d = ((O)n - (O)m);
+	}
+	if ((set_flags))
+	{
+		_sys_interpreter(ctx,0ULL,(uint64_t)((O)(sign_extend((O)d) < sign_extend((O)0ULL))));
+		_sys_interpreter(ctx,1ULL,(uint64_t)((O)d == (O)0ULL));
+		if ((is_add))
+		{
+			_sys_interpreter(ctx,2ULL,(uint64_t)((O)d < (O)n));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)~(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
+		}
+		else
+		{
+			_sys_interpreter(ctx,2ULL,(uint64_t)((O)n >= (O)m));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
+		}
+	}
+	return d;
+}
+
+template <typename O>
+O add_subtract_carry_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_flags, uint64_t is_add, O carry)
+{
+	O d;
+	if ((is_add))
+	{
+		d = ((O)((O)n + (O)m) + (O)carry);
+	}
+	else
+	{
+		d = ((O)((O)n - (O)m) - (O)(((O)carry ^ (O)1ULL)));
+	}
+	if ((set_flags))
+	{
+		_sys_interpreter(ctx,0ULL,(uint64_t)((O)(sign_extend((O)d) < sign_extend((O)0ULL))));
+		_sys_interpreter(ctx,1ULL,(uint64_t)((O)d == (O)0ULL));
+		if ((is_add))
+		{
+			_sys_interpreter(ctx,2ULL,(uint64_t)((O)(((O)((O)d == (O)n) && (O)carry)) | (O)((O)d < (O)n)));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)~(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
+		}
+		else
+		{
+			_sys_interpreter(ctx,2ULL,(uint64_t)((O)(((O)((O)n == (O)m) && (O)carry)) | (O)((O)n > (O)m)));
+			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
+		}
+	}
+	return d;
+}
+
+uint8_t condition_holds_interpreter(interpreter_data* ctx, uint64_t cond)
+{
+	uint8_t n = _sys_interpreter(ctx,0ULL);
+	uint8_t z = _sys_interpreter(ctx,1ULL);
+	uint8_t c = _sys_interpreter(ctx,2ULL);
+	uint8_t v = _sys_interpreter(ctx,3ULL);
+	uint64_t raw_condition = ((uint64_t)cond >> (uint64_t)1ULL);
+	uint8_t result;
+	if ((((uint64_t)raw_condition == (uint64_t)0ULL)))
+	{
+		result = ((uint8_t)z == (uint8_t)1ULL);
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)1ULL)))
+	{
+		result = ((uint8_t)c == (uint8_t)1ULL);
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)2ULL)))
+	{
+		result = ((uint8_t)n == (uint8_t)1ULL);
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)3ULL)))
+	{
+		result = ((uint8_t)v == (uint8_t)1ULL);
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)4ULL)))
+	{
+		result = ((uint8_t)((uint8_t)c == (uint8_t)1ULL) && (uint8_t)((uint8_t)z == (uint8_t)0ULL));
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)5ULL)))
+	{
+		result = ((uint8_t)n == (uint8_t)v);
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)6ULL)))
+	{
+		result = ((uint8_t)(((uint8_t)n == (uint8_t)v)) && (uint8_t)((uint8_t)z == (uint8_t)0ULL));
+	}
+	else
+	{
+		result = 1ULL;
+	}
+	if ((((uint64_t)(((uint64_t)cond & (uint64_t)1ULL)) && (uint64_t)((uint64_t)cond != (uint64_t)15ULL))))
+	{
+		result = ((uint8_t)result ^ (uint8_t)1ULL);
+	}
+	return result;
+}
+
+void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint64_t link)
+{
+	uint64_t branch_location = X_interpreter(ctx,Rn);
+	if ((link))
+	{
+		uint64_t link_address = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+		X_interpreter(ctx,30ULL,link_address);
+	}
+	_branch_long_interpreter(ctx,branch_location);
+}
+
+uint64_t shift_left_check_interpreter(interpreter_data* ctx, uint64_t to_shift, uint64_t shift, uint64_t size)
+{
+	uint64_t result = 0ULL;
+	if ((((uint64_t)(sign_extend((uint64_t)shift) >= sign_extend((uint64_t)size)))))
+	{
+		result = 0ULL;
+	}
+	else
+	{
+		result = ((uint64_t)to_shift << (uint64_t)shift);
+	}
+	return result;
+}
+
+uint64_t shift_right_check_interpreter(interpreter_data* ctx, uint64_t to_shift, uint64_t shift, uint64_t size, uint64_t is_unsigned)
+{
+	uint64_t result = 0ULL;
+	if ((((uint64_t)(sign_extend((uint64_t)shift) >= sign_extend((uint64_t)size)))))
+	{
+		if ((((uint64_t)(((uint64_t)(sign_extend((uint64_t)to_shift) < sign_extend((uint64_t)0ULL)))) && (uint64_t)!is_unsigned)))
+		{
+			result = -1ULL;
+		}
+		else
+		{
+			result = 0ULL;
+		}
+	}
+	else
+	{
+		if ((is_unsigned))
+		{
+			result = ((uint64_t)to_shift >> (uint64_t)shift);
+		}
+		else
+		{
+			result = ((uint64_t)(sign_extend((uint64_t)to_shift) >> sign_extend((uint64_t)shift)));
+		}
+	}
+	return result;
+}
+
+uint64_t reverse_interpreter(interpreter_data* ctx, uint128_t word, uint64_t M, uint64_t N)
+{
+	uint128_t result = 0;
+	uint64_t swsize = M;
+	uint64_t sw = ((uint64_t)N / (uint64_t)swsize);
+	for (uint64_t s = 0; s < (sw); s++)
+	{
+		uint128_t::insert(&result, (((uint64_t)(((uint64_t)sw - (uint64_t)1ULL)) - (uint64_t)s)), swsize, (uint128_t::extract(word, s, swsize)));
+	}
+	return result;
+}
+
+void convert_to_int_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t Rd, uint64_t Rn, uint64_t round, uint64_t is_unsigned, uint64_t to_vector)
+{
+	uint64_t operand = V_interpreter(ctx,Rn);
+	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t result = FPToFixed_interpreter(ctx,operand,0ULL,is_unsigned,round,intsize,fltsize);
+	if ((to_vector))
+	{
+		V_interpreter(ctx,Rd,(uint128_t)result);
+	}
+	else
+	{
+		X_interpreter(ctx,Rd,result);
+	}
+}
+
+uint64_t lowest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t source)
+{
+	uint64_t size = 32ULL;
+	for (uint64_t i = 0; i < (size); i++)
+	{
+		uint64_t working_bit = ((uint64_t)(((uint64_t)source >> (uint64_t)i)) & (uint64_t)1ULL);
+		if ((working_bit))
+		{
+			return i;
+		}
+	}
+	return size;
+}
+
+void dup_element_interpreter(interpreter_data* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d)
+{
+	uint128_t operand = V_interpreter(ctx,n);
+	uint128_t result = 0;
+	uint64_t element = uint128_t::extract(operand, index, esize);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint128_t::insert(&result, e, esize, element);
+	}
+	V_interpreter(ctx,d,result);
+}
+
+uint64_t get_flt_size_interpreter(interpreter_data* ctx, uint64_t ftype)
+{
+	if ((((uint64_t)ftype == (uint64_t)2ULL)))
+	{
+		return 64ULL;
+	}
+	else
+	{
+		return ((uint64_t)8ULL << (uint64_t)(((uint64_t)ftype ^ (uint64_t)2ULL)));
+	}
+}
+
+uint64_t vfp_expand_imm_interpreter(interpreter_data* ctx, uint64_t imm8, uint64_t N)
+{
+	uint64_t E;
+	if ((((uint64_t)N == (uint64_t)16ULL)))
+	{
+		E = 5ULL;
+	}
+	else if ((((uint64_t)N == (uint64_t)32ULL)))
+	{
+		E = 8ULL;
+	}
+	else
+	{
+		E = 11ULL;
+	}
+	uint64_t F = ((uint64_t)(((uint64_t)N - (uint64_t)E)) - (uint64_t)1ULL);
+	uint64_t sign = ((uint64_t)(((uint64_t)imm8 >> (uint64_t)7ULL)) & (uint64_t)1ULL);
+	uint64_t exp = ((uint64_t)~(bit_c_interpreter(ctx,imm8,6ULL)) & (uint64_t)1ULL);
+	exp = ((uint64_t)(((uint64_t)exp << (uint64_t)(((uint64_t)E - (uint64_t)3ULL)))) | (uint64_t)replicate_c_interpreter(ctx,bit_c_interpreter(ctx,imm8,6ULL),1ULL,((uint64_t)E - (uint64_t)3ULL)));
+	exp = ((uint64_t)(((uint64_t)exp << (uint64_t)2ULL)) | (uint64_t)bits_c_interpreter(ctx,imm8,5ULL,4ULL));
+	uint64_t frac = ((uint64_t)bits_c_interpreter(ctx,imm8,3ULL,0ULL) << (uint64_t)(((uint64_t)F - (uint64_t)4ULL)));
+	uint64_t result = sign;
+	result = ((uint64_t)(((uint64_t)result << (uint64_t)(((uint64_t)((uint64_t)1ULL + (uint64_t)(((uint64_t)E - (uint64_t)3ULL))) + (uint64_t)2ULL)))) | (uint64_t)exp);
+	result = ((uint64_t)(((uint64_t)result << (uint64_t)(((uint64_t)4ULL + (uint64_t)(((uint64_t)F - (uint64_t)4ULL)))))) | (uint64_t)frac);
+	return result;
+}
+
+uint64_t expand_imm_interpreter(interpreter_data* ctx, uint64_t op, uint64_t cmode, uint64_t imm8)
+{
+	uint64_t imm64 = 0ULL;
+	uint64_t cmode_test = bits_c_interpreter(ctx,cmode,3ULL,1ULL);
+	if ((((uint64_t)cmode_test == (uint64_t)0ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,imm8,32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)1ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)8ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)2ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)16ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)3ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)24ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)4ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,imm8,16ULL,4ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)5ULL)))
+	{
+		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)8ULL),16ULL,4ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)6ULL)))
+	{
+		if ((((uint64_t)(((uint64_t)cmode & (uint64_t)1ULL)) == (uint64_t)0ULL)))
+		{
+			imm64 = replicate_c_interpreter(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)8ULL)) | (uint64_t)ones_interpreter(ctx,8ULL)),32ULL,2ULL);
+		}
+		else
+		{
+			imm64 = replicate_c_interpreter(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)16ULL)) | (uint64_t)ones_interpreter(ctx,16ULL)),32ULL,2ULL);
+		}
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)7ULL)))
+	{
+		if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
+		{
+			imm64 = replicate_c_interpreter(ctx,imm8,8ULL,8ULL);
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
+		{
+			for (uint64_t i = 0; i < (8ULL); i++)
+			{
+				uint64_t part = ((uint64_t)(((uint64_t)0ULL - (uint64_t)(((uint64_t)(((uint64_t)imm8 >> (uint64_t)i)) & (uint64_t)1ULL)))) & (uint64_t)255ULL);
+				imm64 = ((uint64_t)imm64 | (uint64_t)(((uint64_t)part << (uint64_t)(((uint64_t)i * (uint64_t)8ULL)))));
+			}
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
+		{
+			uint64_t p0 = bit_c_interpreter(ctx,imm8,7ULL);
+			uint64_t p1 = ((uint64_t)(~(bit_c_interpreter(ctx,imm8,6ULL))) & (uint64_t)1ULL);
+			uint64_t p2 = replicate_c_interpreter(ctx,bit_c_interpreter(ctx,imm8,6ULL),1ULL,5ULL);
+			uint64_t p3 = bits_c_interpreter(ctx,imm8,5ULL,0ULL);
+			uint64_t p4 = 0ULL;
+			uint64_t working = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)19ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)19ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL) + (uint64_t)1ULL)))));
+			imm64 = replicate_c_interpreter(ctx,working,32ULL,2ULL);
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
+		{
+			uint64_t p0 = bit_c_interpreter(ctx,imm8,7ULL);
+			uint64_t p1 = ((uint64_t)(~(bit_c_interpreter(ctx,imm8,6ULL))) & (uint64_t)1ULL);
+			uint64_t p2 = replicate_c_interpreter(ctx,bit_c_interpreter(ctx,imm8,6ULL),1ULL,8ULL);
+			uint64_t p3 = bits_c_interpreter(ctx,imm8,5ULL,0ULL);
+			uint64_t p4 = 0ULL;
+			imm64 = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)48ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)48ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL) + (uint64_t)1ULL)))));
+		}
+		else
+		{
+			undefined_interpreter(ctx);
+		}
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	return imm64;
+}
+
+void VPart_interpreter(interpreter_data* ctx, uint64_t n, uint64_t part, uint64_t width, uint64_t value)
+{
+	if ((((uint64_t)part == (uint64_t)0ULL)))
+	{
+		V_interpreter(ctx,n,(uint128_t)value);
+	}
+	else
+	{
+		uint128_t src = V_interpreter(ctx,n);
+		uint128_t::insert(&src, 1ULL, 64ULL, value);
+		V_interpreter(ctx,n,src);
+	}
+}
+
+uint64_t VPart_interpreter(interpreter_data* ctx, uint64_t n, uint64_t part, uint64_t width)
+{
+	return uint128_t::extract(V_interpreter(ctx,n), part, width);
+}
+
+uint64_t get_from_concacted_vector_interpreter(interpreter_data* ctx, uint128_t top, uint128_t bottom, uint64_t index, uint64_t element_count, uint64_t element_size)
+{
+	uint128_t working = bottom;
+	if ((((uint64_t)index >= (uint64_t)element_count)))
+	{
+		index = ((uint64_t)index - (uint64_t)element_count);
+		working = top;
+	}
+	return uint128_t::extract(working, index, element_size);
+}
+
+uint64_t call_float_binary_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t fpcr, uint64_t N, uint64_t function)
+{
+	return call_interpreter(ctx,operand1,operand2,fpcr,(uint64_t)N,(uint64_t)0ULL,(uint64_t)0ULL,function);
+}
+
+uint64_t call_float_unary_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t fpcr, uint64_t N, uint64_t function)
+{
+	return call_interpreter(ctx,operand,fpcr,(uint64_t)N,(uint64_t)0ULL,(uint64_t)0ULL,(uint64_t)0ULL,function);
+}
+
+void convert_to_float_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd, uint64_t from_vector)
+{
+	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	if (intsize == 32ULL)
+	{
+		if (fltsize == 16ULL)
+		{
+			uint16_t result;
+			uint32_t operand;
+			if ((from_vector))
+			{
+				operand = V_interpreter(ctx,Rn);
+			}
+			else
+			{
+				operand = X_interpreter(ctx,Rn);
+			}
+			if ((U))
+			{
+				result = convert_to_float<uint16_t, uint32_t>(operand, 0);
+			}
+			else
+			{
+				result = convert_to_float<uint16_t, uint32_t>(operand, 1);
+			}
+			V_interpreter(ctx,Rd,(uint128_t)result);
+		}
+		if (fltsize == 32ULL)
+		{
+			uint32_t result;
+			uint32_t operand;
+			if ((from_vector))
+			{
+				operand = V_interpreter(ctx,Rn);
+			}
+			else
+			{
+				operand = X_interpreter(ctx,Rn);
+			}
+			if ((U))
+			{
+				result = convert_to_float<uint32_t, uint32_t>(operand, 0);
+			}
+			else
+			{
+				result = convert_to_float<uint32_t, uint32_t>(operand, 1);
+			}
+			V_interpreter(ctx,Rd,(uint128_t)result);
+		}
+		if (fltsize == 64ULL)
+		{
+			uint64_t result;
+			uint32_t operand;
+			if ((from_vector))
+			{
+				operand = V_interpreter(ctx,Rn);
+			}
+			else
+			{
+				operand = X_interpreter(ctx,Rn);
+			}
+			if ((U))
+			{
+				result = convert_to_float<uint64_t, uint32_t>(operand, 0);
+			}
+			else
+			{
+				result = convert_to_float<uint64_t, uint32_t>(operand, 1);
+			}
+			V_interpreter(ctx,Rd,(uint128_t)result);
+		}
+		
+	}
+	if (intsize == 64ULL)
+	{
+		if (fltsize == 16ULL)
+		{
+			uint16_t result;
+			uint64_t operand;
+			if ((from_vector))
+			{
+				operand = V_interpreter(ctx,Rn);
+			}
+			else
+			{
+				operand = X_interpreter(ctx,Rn);
+			}
+			if ((U))
+			{
+				result = convert_to_float<uint16_t, uint64_t>(operand, 0);
+			}
+			else
+			{
+				result = convert_to_float<uint16_t, uint64_t>(operand, 1);
+			}
+			V_interpreter(ctx,Rd,(uint128_t)result);
+		}
+		if (fltsize == 32ULL)
+		{
+			uint32_t result;
+			uint64_t operand;
+			if ((from_vector))
+			{
+				operand = V_interpreter(ctx,Rn);
+			}
+			else
+			{
+				operand = X_interpreter(ctx,Rn);
+			}
+			if ((U))
+			{
+				result = convert_to_float<uint32_t, uint64_t>(operand, 0);
+			}
+			else
+			{
+				result = convert_to_float<uint32_t, uint64_t>(operand, 1);
+			}
+			V_interpreter(ctx,Rd,(uint128_t)result);
+		}
+		if (fltsize == 64ULL)
+		{
+			uint64_t result;
+			uint64_t operand;
+			if ((from_vector))
+			{
+				operand = V_interpreter(ctx,Rn);
+			}
+			else
+			{
+				operand = X_interpreter(ctx,Rn);
+			}
+			if ((U))
+			{
+				result = convert_to_float<uint64_t, uint64_t>(operand, 0);
+			}
+			else
+			{
+				result = convert_to_float<uint64_t, uint64_t>(operand, 1);
+			}
+			V_interpreter(ctx,Rd,(uint128_t)result);
+		}
+		
+	}
+	
+}
+
+uint128_t replicate_vector_interpreter(interpreter_data* ctx, uint128_t source, uint64_t v_size, uint64_t count)
+{
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (count); e++)
+	{
+		uint128_t::insert(&result, e, v_size, (uint128_t::extract(source, 0ULL, 64ULL)));
+	}
+	return result;
+}
+
+void ld1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t R, uint64_t Rm, uint64_t o2, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t scale = bits_c_interpreter(ctx,opcode,2ULL,1ULL);
+	uint64_t selem = ((uint64_t)(((uint64_t)(((uint64_t)bit_c_interpreter(ctx,opcode,0ULL) << (uint64_t)1ULL)) | (uint64_t)R)) + (uint64_t)1ULL);
+	uint64_t replicate = 0ULL;
+	uint64_t index;
+	if ((((uint64_t)scale == (uint64_t)3ULL)))
+	{
+		scale = size;
+		replicate = 1ULL;
+	}
+	else if ((((uint64_t)scale == (uint64_t)0ULL)))
+	{
+		index = Q;
+		index = ((uint64_t)(((uint64_t)index << (uint64_t)1ULL)) | (uint64_t)S);
+		index = ((uint64_t)(((uint64_t)index << (uint64_t)2ULL)) | (uint64_t)size);
+	}
+	else if ((((uint64_t)scale == (uint64_t)1ULL)))
+	{
+		index = Q;
+		index = ((uint64_t)(((uint64_t)index << (uint64_t)1ULL)) | (uint64_t)S);
+		index = ((uint64_t)(((uint64_t)index << (uint64_t)1ULL)) | (uint64_t)bit_c_interpreter(ctx,size,1ULL));
+	}
+	else if ((((uint64_t)scale == (uint64_t)2ULL)))
+	{
+		if ((((uint64_t)(((uint64_t)size & (uint64_t)1ULL)) == (uint64_t)0ULL)))
+		{
+			index = ((uint64_t)(((uint64_t)Q << (uint64_t)1ULL)) | (uint64_t)S);
+		}
+		else
+		{
+			index = Q;
+			scale = 3ULL;
+		}
+	}
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)scale);
+	uint64_t ebytes = ((uint64_t)esize / (uint64_t)8ULL);
+	uint64_t address = XSP_interpreter(ctx,Rn);
+	uint64_t offs = 0ULL;
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 8ULL)
+	{
+		uint64_t t = Rt;
+		if ((replicate))
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint8_t element = mem_interpreter<uint8_t>(ctx,eaddr);
+				V_interpreter(ctx,t,replicate_vector_interpreter(ctx,(uint128_t)element,esize,((uint64_t)datasize / (uint64_t)esize)));
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		else
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint128_t rval = V_interpreter(ctx,t);
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint128_t::insert(&rval, index, esize, mem_interpreter<uint8_t>(ctx,eaddr));
+				V_interpreter(ctx,t,rval);
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 16ULL)
+	{
+		uint64_t t = Rt;
+		if ((replicate))
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint16_t element = mem_interpreter<uint16_t>(ctx,eaddr);
+				V_interpreter(ctx,t,replicate_vector_interpreter(ctx,(uint128_t)element,esize,((uint64_t)datasize / (uint64_t)esize)));
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		else
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint128_t rval = V_interpreter(ctx,t);
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint128_t::insert(&rval, index, esize, mem_interpreter<uint16_t>(ctx,eaddr));
+				V_interpreter(ctx,t,rval);
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 32ULL)
+	{
+		uint64_t t = Rt;
+		if ((replicate))
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint32_t element = mem_interpreter<uint32_t>(ctx,eaddr);
+				V_interpreter(ctx,t,replicate_vector_interpreter(ctx,(uint128_t)element,esize,((uint64_t)datasize / (uint64_t)esize)));
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		else
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint128_t rval = V_interpreter(ctx,t);
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint128_t::insert(&rval, index, esize, mem_interpreter<uint32_t>(ctx,eaddr));
+				V_interpreter(ctx,t,rval);
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 64ULL)
+	{
+		uint64_t t = Rt;
+		if ((replicate))
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint64_t element = mem_interpreter<uint64_t>(ctx,eaddr);
+				V_interpreter(ctx,t,replicate_vector_interpreter(ctx,(uint128_t)element,esize,((uint64_t)datasize / (uint64_t)esize)));
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		else
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint128_t rval = V_interpreter(ctx,t);
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint128_t::insert(&rval, index, esize, mem_interpreter<uint64_t>(ctx,eaddr));
+				V_interpreter(ctx,t,rval);
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 128ULL)
+	{
+		uint64_t t = Rt;
+		if ((replicate))
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint128_t element = mem_interpreter<uint128_t>(ctx,eaddr);
+				V_interpreter(ctx,t,replicate_vector_interpreter(ctx,(uint128_t)element,esize,((uint64_t)datasize / (uint64_t)esize)));
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		else
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				uint128_t rval = V_interpreter(ctx,t);
+				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+				uint128_t::insert(&rval, index, esize, mem_interpreter<uint128_t>(ctx,eaddr));
+				V_interpreter(ctx,t,rval);
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	
+}
+
+uint64_t FPAdd_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPAdd_I);
+}
+
+uint64_t FPSub_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPSub_I);
+}
+
+uint64_t FPMul_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMul_I);
+}
+
+uint64_t FPDiv_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPDiv_I);
+}
+
+uint64_t FPMax_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMax_I);
+}
+
+uint64_t FPMin_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMin_I);
+}
+
+uint64_t FPMaxNum_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMaxNum_I);
+}
+
+uint64_t FPMinNum_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMinNum_I);
+}
+
+uint64_t FPCompare_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPCompare_I);
+}
+
+uint64_t FPRSqrtStepFused_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPRSqrtStepFused_I);
+}
+
+uint64_t FPCompareEQ_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPCompareEQ_I);
+}
+
+uint64_t FPCompareGT_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPCompareGT_I);
+}
+
+uint64_t FPCompareGE_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPCompareGE_I);
+}
+
+uint64_t FPSqrt_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
+{
+	return call_float_unary_interpreter(ctx,operand,FPCR,N,(uint64_t)FPSqrt_I);
+}
+
+uint64_t FPNeg_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
+{
+	return call_float_unary_interpreter(ctx,operand,FPCR,N,(uint64_t)FPNeg_I);
+}
+
+uint64_t FPAbs_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
+{
+	return call_float_unary_interpreter(ctx,operand,FPCR,N,(uint64_t)FPAbs_I);
+}
+
+uint64_t FPRSqrtEstimate_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
+{
+	return call_float_unary_interpreter(ctx,operand,FPCR,N,(uint64_t)FPRSqrtEstimate_I);
+}
+
+uint64_t FixedToFP_interpreter(interpreter_data* ctx, uint64_t source, uint64_t fracbits, uint64_t is_unsigned, uint64_t to, uint64_t from)
+{
+	return call_interpreter(ctx,source,(uint64_t)fracbits,(uint64_t)is_unsigned,(uint64_t)to,(uint64_t)from,(uint64_t)0ULL,(uint64_t)FixedToFP_I);
+}
+
+uint64_t FPToFixed_interpreter(interpreter_data* ctx, uint64_t source, uint64_t fracbits, uint64_t is_unsigned, uint64_t round, uint64_t to, uint64_t from)
+{
+	return call_interpreter(ctx,source,(uint64_t)fracbits,(uint64_t)is_unsigned,(uint64_t)round,(uint64_t)to,(uint64_t)from,(uint64_t)FPToFixed_I);
+}
+
+uint64_t FPConvert_interpreter(interpreter_data* ctx, uint64_t source, uint64_t to, uint64_t from)
+{
+	return call_interpreter(ctx,source,(uint64_t)0ULL,(uint64_t)0ULL,(uint64_t)to,(uint64_t)from,(uint64_t)0ULL,(uint64_t)FPConvert_I);
+}
+
+uint64_t FPRoundInt_interpreter(interpreter_data* ctx, uint64_t source, uint64_t fpcr, uint64_t rounding, uint64_t N)
+{
+	return call_interpreter(ctx,source,fpcr,(uint64_t)rounding,(uint64_t)N,(uint64_t)0ULL,(uint64_t)0ULL,(uint64_t)FPRoundInt_I);
+}
+
+uint64_t FPMulAdd_interpreter(interpreter_data* ctx, uint64_t addend, uint64_t element1, uint64_t element2, uint64_t fpcr, uint64_t N)
+{
+	return call_interpreter(ctx,addend,element1,element2,fpcr,(uint64_t)N,(uint64_t)0ULL,(uint64_t)FPMulAdd_I);
 }
 
 void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -1600,14 +3602,14 @@ void add_subtract_carry_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t
 	{
 		uint32_t operand1 = X_interpreter(ctx,Rn);
 		uint32_t operand2 = X_interpreter(ctx,Rm);
-		uint32_t result = add_subtract_carry_impl_interpreter<uint32_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint32_t)_sys_interpreter(ctx,nzcv_c));
+		uint32_t result = add_subtract_carry_impl_interpreter<uint32_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint32_t)_sys_interpreter(ctx,(uint64_t)nzcv_c));
 		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	if (sf == 1ULL)
 	{
 		uint64_t operand1 = X_interpreter(ctx,Rn);
 		uint64_t operand2 = X_interpreter(ctx,Rm);
-		uint64_t result = add_subtract_carry_impl_interpreter<uint64_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint64_t)_sys_interpreter(ctx,nzcv_c));
+		uint64_t result = add_subtract_carry_impl_interpreter<uint64_t>(ctx,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),(uint64_t)_sys_interpreter(ctx,(uint64_t)nzcv_c));
 		X_interpreter(ctx,Rd,(uint64_t)result);
 	}
 	
@@ -2135,10 +4137,10 @@ void logical_immediate_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t 
 		{
 			result = ((uint32_t)operand1 & (uint32_t)operand2);
 			X_interpreter(ctx,Rd,(uint64_t)result);
-			_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
-			_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
-			_sys_interpreter(ctx,nzcv_c,(uint64_t)0ULL);
-			_sys_interpreter(ctx,nzcv_v,(uint64_t)0ULL);
+			_sys_interpreter(ctx,(uint64_t)nzcv_n,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
+			_sys_interpreter(ctx,(uint64_t)nzcv_z,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_c,(uint64_t)0ULL);
+			_sys_interpreter(ctx,(uint64_t)nzcv_v,(uint64_t)0ULL);
 			return;
 		}
 		XSP_interpreter(ctx,Rd,(uint64_t)result);
@@ -2164,10 +4166,10 @@ void logical_immediate_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t 
 		{
 			result = ((uint64_t)operand1 & (uint64_t)operand2);
 			X_interpreter(ctx,Rd,(uint64_t)result);
-			_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
-			_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
-			_sys_interpreter(ctx,nzcv_c,(uint64_t)0ULL);
-			_sys_interpreter(ctx,nzcv_v,(uint64_t)0ULL);
+			_sys_interpreter(ctx,(uint64_t)nzcv_n,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
+			_sys_interpreter(ctx,(uint64_t)nzcv_z,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_c,(uint64_t)0ULL);
+			_sys_interpreter(ctx,(uint64_t)nzcv_v,(uint64_t)0ULL);
 			return;
 		}
 		XSP_interpreter(ctx,Rd,(uint64_t)result);
@@ -2193,10 +4195,10 @@ void logical_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op
 			result = ((uint32_t)operand1 & (uint32_t)operand2);
 			if ((((uint64_t)opc == (uint64_t)3ULL)))
 			{
-				_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
-				_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
-				_sys_interpreter(ctx,nzcv_c,(uint64_t)0ULL);
-				_sys_interpreter(ctx,nzcv_v,(uint64_t)0ULL);
+				_sys_interpreter(ctx,(uint64_t)nzcv_n,(uint64_t)((uint32_t)(sign_extend((uint32_t)result) < sign_extend((uint32_t)0ULL))));
+				_sys_interpreter(ctx,(uint64_t)nzcv_z,(uint64_t)((uint32_t)result == (uint32_t)0ULL));
+				_sys_interpreter(ctx,(uint64_t)nzcv_c,(uint64_t)0ULL);
+				_sys_interpreter(ctx,(uint64_t)nzcv_v,(uint64_t)0ULL);
 			}
 		}
 		else if ((((uint64_t)opc == (uint64_t)1ULL)))
@@ -2223,10 +4225,10 @@ void logical_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op
 			result = ((uint64_t)operand1 & (uint64_t)operand2);
 			if ((((uint64_t)opc == (uint64_t)3ULL)))
 			{
-				_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
-				_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
-				_sys_interpreter(ctx,nzcv_c,(uint64_t)0ULL);
-				_sys_interpreter(ctx,nzcv_v,(uint64_t)0ULL);
+				_sys_interpreter(ctx,(uint64_t)nzcv_n,(uint64_t)((uint64_t)(sign_extend((uint64_t)result) < sign_extend((uint64_t)0ULL))));
+				_sys_interpreter(ctx,(uint64_t)nzcv_z,(uint64_t)((uint64_t)result == (uint64_t)0ULL));
+				_sys_interpreter(ctx,(uint64_t)nzcv_c,(uint64_t)0ULL);
+				_sys_interpreter(ctx,(uint64_t)nzcv_v,(uint64_t)0ULL);
 			}
 		}
 		else if ((((uint64_t)opc == (uint64_t)1ULL)))
@@ -2313,10 +4315,10 @@ void conditional_compare_interpreter(interpreter_data* ctx, uint64_t sf, uint64_
 		}
 		else
 		{
-			_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,nzcv_c,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,nzcv_v,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_n,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_z,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_c,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_v,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 		}
 	}
 	if (sf == 1ULL)
@@ -2337,10 +4339,10 @@ void conditional_compare_interpreter(interpreter_data* ctx, uint64_t sf, uint64_
 		}
 		else
 		{
-			_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,nzcv_c,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
-			_sys_interpreter(ctx,nzcv_v,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_n,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_z,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_c,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
+			_sys_interpreter(ctx,(uint64_t)nzcv_v,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 		}
 	}
 	
@@ -2401,6 +4403,162 @@ void pc_rel_addressing_interpreter(interpreter_data* ctx, uint64_t op, uint64_t 
 		instruction_pc = ((uint64_t)instruction_pc & (uint64_t)~4095ULL);
 	}
 	X_interpreter(ctx,Rd,(uint64_t)((uint64_t)instruction_pc + (uint64_t)offset));
+}
+
+void branch_register_interpreter(interpreter_data* ctx, uint64_t l, uint64_t Rn)
+{
+	branch_long_universal_interpreter(ctx,Rn,l);
+}
+
+void return_register_interpreter(interpreter_data* ctx, uint64_t Rn)
+{
+	branch_long_universal_interpreter(ctx,Rn,0ULL);
+}
+
+void test_bit_branch_interpreter(interpreter_data* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt)
+{
+	uint64_t bit_pos = ((uint64_t)b40 + (uint64_t)(((uint64_t)b5 << (uint64_t)5ULL)));
+	uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm14,14ULL) << (uint64_t)2ULL)));
+	uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+	uint64_t src = X_interpreter(ctx,Rt);
+	uint8_t branch_pass = ((uint64_t)(((uint64_t)(((uint64_t)src >> (uint64_t)bit_pos)) & (uint64_t)1ULL)) == (uint64_t)op);
+	_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)branch_pass);
+}
+
+void compare_and_branch_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt)
+{
+	if (sf == 0ULL)
+	{
+		uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm19,19ULL) << (uint64_t)2ULL)));
+		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+		uint32_t operand = X_interpreter(ctx,Rt);
+		uint8_t branch_pass;
+		if ((!op))
+		{
+			branch_pass = ((uint32_t)operand == (uint32_t)0ULL);
+		}
+		else
+		{
+			branch_pass = ((uint32_t)operand != (uint32_t)0ULL);
+		}
+		_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)branch_pass);
+	}
+	if (sf == 1ULL)
+	{
+		uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm19,19ULL) << (uint64_t)2ULL)));
+		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+		uint64_t operand = X_interpreter(ctx,Rt);
+		uint8_t branch_pass;
+		if ((!op))
+		{
+			branch_pass = ((uint64_t)operand == (uint64_t)0ULL);
+		}
+		else
+		{
+			branch_pass = ((uint64_t)operand != (uint64_t)0ULL);
+		}
+		_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)branch_pass);
+	}
+	
+}
+
+void b_unconditional_interpreter(interpreter_data* ctx, uint64_t op, uint64_t imm26)
+{
+	uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm26,26ULL) << (uint64_t)2ULL)));
+	if ((op))
+	{
+		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+		X_interpreter(ctx,30ULL,(uint64_t)next_location);
+	}
+	_branch_short_interpreter(ctx,new_location);
+}
+
+void b_conditional_interpreter(interpreter_data* ctx, uint64_t imm19, uint64_t cond)
+{
+	uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm19,19ULL) << (uint64_t)2ULL)));
+	uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
+	_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)condition_holds_interpreter(ctx,cond));
+}
+
+void svc_interpreter(interpreter_data* ctx, uint64_t imm16)
+{
+	call_supervisor_interpreter(ctx,imm16);
+}
+
+void msr_register_interpreter(interpreter_data* ctx, uint64_t imm15, uint64_t Rt)
+{
+	uint64_t operand = X_interpreter(ctx,Rt);
+	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	{
+		_sys_interpreter(ctx,(uint64_t)fpcr,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	{
+		_sys_interpreter(ctx,(uint64_t)fpsr,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
+	{
+		_sys_interpreter(ctx,(uint64_t)thread_local_1,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
+	{
+		_sys_interpreter(ctx,(uint64_t)thread_local_0,operand);
+	}
+	else
+	{
+		undefined_with_interpreter(ctx,imm15);
+	}
+}
+
+void mrs_register_interpreter(interpreter_data* ctx, uint64_t imm15, uint64_t Rt)
+{
+	uint64_t operand;
+	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	{
+		operand = _sys_interpreter(ctx,(uint64_t)fpcr);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	{
+		operand = _sys_interpreter(ctx,(uint64_t)fpsr);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
+	{
+		operand = _sys_interpreter(ctx,(uint64_t)thread_local_1);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
+	{
+		operand = _sys_interpreter(ctx,(uint64_t)thread_local_0);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24321ULL)))
+	{
+		operand = call_counter_interpreter(ctx);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)22529ULL)))
+	{
+		operand = 2219098116ULL;
+	}
+	else
+	{
+		undefined_with_interpreter(ctx,imm15);
+	}
+	X_interpreter(ctx,Rt,operand);
+}
+
+void hints_interpreter(interpreter_data* ctx, uint64_t imm7)
+{
+}
+
+void sys_interpreter(interpreter_data* ctx, uint64_t L, uint64_t imm19)
+{
+}
+
+void barriers_interpreter(interpreter_data* ctx, uint64_t CRm, uint64_t op2, uint64_t Rt)
+{
+	if ((((uint64_t)((uint64_t)op2 == (uint64_t)2ULL) && (uint64_t)((uint64_t)Rt == (uint64_t)31ULL))))
+	{
+		_sys_interpreter(ctx,(uint64_t)exclusive_address,(uint64_t)-1ULL);
+		_sys_interpreter(ctx,(uint64_t)exclusive_value,(uint64_t)-1ULL);
+	}
 }
 
 void load_store_register_post_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t Rn, uint64_t Rt)
@@ -3584,8 +5742,8 @@ void load_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, ui
 		uint8_t value = mem_interpreter<uint8_t>(ctx,address);
 		if ((is_exclusive))
 		{
-			_sys_interpreter(ctx,exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
-			_sys_interpreter(ctx,exclusive_value,(uint64_t)value);
+			_sys_interpreter(ctx,(uint64_t)exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
+			_sys_interpreter(ctx,(uint64_t)exclusive_value,(uint64_t)value);
 		}
 		X_interpreter(ctx,Rt,(uint64_t)value);
 	}
@@ -3594,8 +5752,8 @@ void load_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, ui
 		uint16_t value = mem_interpreter<uint16_t>(ctx,address);
 		if ((is_exclusive))
 		{
-			_sys_interpreter(ctx,exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
-			_sys_interpreter(ctx,exclusive_value,(uint64_t)value);
+			_sys_interpreter(ctx,(uint64_t)exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
+			_sys_interpreter(ctx,(uint64_t)exclusive_value,(uint64_t)value);
 		}
 		X_interpreter(ctx,Rt,(uint64_t)value);
 	}
@@ -3604,8 +5762,8 @@ void load_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, ui
 		uint32_t value = mem_interpreter<uint32_t>(ctx,address);
 		if ((is_exclusive))
 		{
-			_sys_interpreter(ctx,exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
-			_sys_interpreter(ctx,exclusive_value,(uint64_t)value);
+			_sys_interpreter(ctx,(uint64_t)exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
+			_sys_interpreter(ctx,(uint64_t)exclusive_value,(uint64_t)value);
 		}
 		X_interpreter(ctx,Rt,(uint64_t)value);
 	}
@@ -3614,8 +5772,8 @@ void load_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, ui
 		uint64_t value = mem_interpreter<uint64_t>(ctx,address);
 		if ((is_exclusive))
 		{
-			_sys_interpreter(ctx,exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
-			_sys_interpreter(ctx,exclusive_value,(uint64_t)value);
+			_sys_interpreter(ctx,(uint64_t)exclusive_address,((uint64_t)address & (uint64_t)~63ULL));
+			_sys_interpreter(ctx,(uint64_t)exclusive_value,(uint64_t)value);
 		}
 		X_interpreter(ctx,Rt,(uint64_t)value);
 	}
@@ -3631,11 +5789,11 @@ void store_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, u
 		if ((is_exclusive))
 		{
 			uint64_t mask = ~63ULL;
-			uint64_t _exclusive_address = _sys_interpreter(ctx,exclusive_address);
+			uint64_t _exclusive_address = _sys_interpreter(ctx,(uint64_t)exclusive_address);
 			if ((((uint64_t)_exclusive_address == (uint64_t)(((uint64_t)address & (uint64_t)mask)))))
 			{
 				uint8_t to_swap = X_interpreter(ctx,Rt);
-				uint8_t expecting = _sys_interpreter(ctx,exclusive_value);
+				uint8_t expecting = _sys_interpreter(ctx,(uint64_t)exclusive_value);
 				uint8_t cas_success = compare_and_swap_interpreter(ctx,address,(uint64_t)expecting,(uint64_t)to_swap,datasize);
 				X_interpreter(ctx,Rs,(uint64_t)((uint8_t)cas_success ^ (uint8_t)1ULL));
 			}
@@ -3654,11 +5812,11 @@ void store_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, u
 		if ((is_exclusive))
 		{
 			uint64_t mask = ~63ULL;
-			uint64_t _exclusive_address = _sys_interpreter(ctx,exclusive_address);
+			uint64_t _exclusive_address = _sys_interpreter(ctx,(uint64_t)exclusive_address);
 			if ((((uint64_t)_exclusive_address == (uint64_t)(((uint64_t)address & (uint64_t)mask)))))
 			{
 				uint16_t to_swap = X_interpreter(ctx,Rt);
-				uint16_t expecting = _sys_interpreter(ctx,exclusive_value);
+				uint16_t expecting = _sys_interpreter(ctx,(uint64_t)exclusive_value);
 				uint16_t cas_success = compare_and_swap_interpreter(ctx,address,(uint64_t)expecting,(uint64_t)to_swap,datasize);
 				X_interpreter(ctx,Rs,(uint64_t)((uint16_t)cas_success ^ (uint16_t)1ULL));
 			}
@@ -3677,11 +5835,11 @@ void store_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, u
 		if ((is_exclusive))
 		{
 			uint64_t mask = ~63ULL;
-			uint64_t _exclusive_address = _sys_interpreter(ctx,exclusive_address);
+			uint64_t _exclusive_address = _sys_interpreter(ctx,(uint64_t)exclusive_address);
 			if ((((uint64_t)_exclusive_address == (uint64_t)(((uint64_t)address & (uint64_t)mask)))))
 			{
 				uint32_t to_swap = X_interpreter(ctx,Rt);
-				uint32_t expecting = _sys_interpreter(ctx,exclusive_value);
+				uint32_t expecting = _sys_interpreter(ctx,(uint64_t)exclusive_value);
 				uint32_t cas_success = compare_and_swap_interpreter(ctx,address,(uint64_t)expecting,(uint64_t)to_swap,datasize);
 				X_interpreter(ctx,Rs,(uint64_t)((uint32_t)cas_success ^ (uint32_t)1ULL));
 			}
@@ -3700,11 +5858,11 @@ void store_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, u
 		if ((is_exclusive))
 		{
 			uint64_t mask = ~63ULL;
-			uint64_t _exclusive_address = _sys_interpreter(ctx,exclusive_address);
+			uint64_t _exclusive_address = _sys_interpreter(ctx,(uint64_t)exclusive_address);
 			if ((((uint64_t)_exclusive_address == (uint64_t)(((uint64_t)address & (uint64_t)mask)))))
 			{
 				uint64_t to_swap = X_interpreter(ctx,Rt);
-				uint64_t expecting = _sys_interpreter(ctx,exclusive_value);
+				uint64_t expecting = _sys_interpreter(ctx,(uint64_t)exclusive_value);
 				uint64_t cas_success = compare_and_swap_interpreter(ctx,address,(uint64_t)expecting,(uint64_t)to_swap,datasize);
 				X_interpreter(ctx,Rs,(uint64_t)((uint64_t)cas_success ^ (uint64_t)1ULL));
 			}
@@ -3721,617 +5879,62 @@ void store_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, u
 	
 }
 
-void branch_register_interpreter(interpreter_data* ctx, uint64_t l, uint64_t Rn)
+uint64_t _compare_and_swap_interpreter(interpreter_data* ctx, uint64_t physical_address, uint64_t expecting, uint64_t to_swap, uint64_t size)
 {
-	branch_long_universal_interpreter(ctx,Rn,l);
+	return call_interpreter(ctx,physical_address,expecting,to_swap,(uint64_t)size,(uint64_t)0ULL,(uint64_t)0ULL,(uint64_t)compare_and_swap_interpreter_cpp);
 }
 
-void return_register_interpreter(interpreter_data* ctx, uint64_t Rn)
+uint64_t compare_and_swap_interpreter(interpreter_data* ctx, uint64_t address, uint64_t expecting, uint64_t to_swap, uint64_t size)
 {
-	branch_long_universal_interpreter(ctx,Rn,0ULL);
-}
-
-void test_bit_branch_interpreter(interpreter_data* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt)
-{
-	uint64_t bit_pos = ((uint64_t)b40 + (uint64_t)(((uint64_t)b5 << (uint64_t)5ULL)));
-	uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm14,14ULL) << (uint64_t)2ULL)));
-	uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
-	uint64_t src = X_interpreter(ctx,Rt);
-	uint8_t branch_pass = ((uint64_t)(((uint64_t)(((uint64_t)src >> (uint64_t)bit_pos)) & (uint64_t)1ULL)) == (uint64_t)op);
-	_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)branch_pass);
-}
-
-void compare_and_branch_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt)
-{
-	if (sf == 0ULL)
-	{
-		uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm19,19ULL) << (uint64_t)2ULL)));
-		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
-		uint32_t operand = X_interpreter(ctx,Rt);
-		uint8_t branch_pass;
-		if ((!op))
-		{
-			branch_pass = ((uint32_t)operand == (uint32_t)0ULL);
-		}
-		else
-		{
-			branch_pass = ((uint32_t)operand != (uint32_t)0ULL);
-		}
-		_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)branch_pass);
-	}
-	if (sf == 1ULL)
-	{
-		uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm19,19ULL) << (uint64_t)2ULL)));
-		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
-		uint64_t operand = X_interpreter(ctx,Rt);
-		uint8_t branch_pass;
-		if ((!op))
-		{
-			branch_pass = ((uint64_t)operand == (uint64_t)0ULL);
-		}
-		else
-		{
-			branch_pass = ((uint64_t)operand != (uint64_t)0ULL);
-		}
-		_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)branch_pass);
-	}
-	
-}
-
-void b_unconditional_interpreter(interpreter_data* ctx, uint64_t op, uint64_t imm26)
-{
-	uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm26,26ULL) << (uint64_t)2ULL)));
-	if ((op))
-	{
-		uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
-		X_interpreter(ctx,30ULL,(uint64_t)next_location);
-	}
-	_branch_short_interpreter(ctx,new_location);
-}
-
-void b_conditional_interpreter(interpreter_data* ctx, uint64_t imm19, uint64_t cond)
-{
-	uint64_t new_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)(((uint64_t)sign_extend_interpreter(ctx,imm19,19ULL) << (uint64_t)2ULL)));
-	uint64_t next_location = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
-	_branch_conditional_interpreter(ctx,new_location,next_location,(uint64_t)condition_holds_interpreter(ctx,cond));
-}
-
-void svc_interpreter(interpreter_data* ctx, uint64_t imm16)
-{
-	call_supervisor_interpreter(ctx,imm16);
-}
-
-uint64_t sign_extend_interpreter(interpreter_data* ctx, uint64_t source, uint64_t count)
-{
-	uint64_t max = 64ULL;
-	uint64_t shift = ((uint64_t)max - (uint64_t)count);
-	return ((uint64_t)(sign_extend((uint64_t)(((uint64_t)source << (uint64_t)shift))) >> sign_extend((uint64_t)shift)));
+	address = translate_address_interpreter(ctx,address);
+	return _compare_and_swap_interpreter(ctx,address,expecting,to_swap,size);
 }
 
 template <typename O>
-O a_shift_reg_interpreter(interpreter_data* ctx, uint64_t m, uint64_t shift_type, uint64_t ammount)
+void mem_interpreter(interpreter_data* ctx, uint64_t address, O value)
 {
-	O result = X_interpreter(ctx,m);
-	if ((((uint64_t)shift_type == (uint64_t)0ULL)))
-	{
-		return ((O)result << (O)ammount);
-	}
-	else if ((((uint64_t)shift_type == (uint64_t)1ULL)))
-	{
-		return ((O)result >> (O)ammount);
-	}
-	else if ((((uint64_t)shift_type == (uint64_t)2ULL)))
-	{
-		return ((O)(sign_extend((O)result) >> sign_extend((O)ammount)));
-	}
-	else
-	{
-		return (rotate_right((O)result,(O)ammount));
-	}
+	address = translate_address_interpreter(ctx,address);
+	*(O*)address = value;
 }
 
 template <typename O>
-O a_extend_reg_interpreter(interpreter_data* ctx, uint64_t m, uint64_t extend_type, uint64_t shift)
+O mem_interpreter(interpreter_data* ctx, uint64_t address)
 {
-	O val = X_interpreter(ctx,m);
-	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
-	{
-		val = ((O)val & (O)255ULL);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
-	{
-		val = ((O)val & (O)65535ULL);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
-	{
-		val = ((O)val & (O)4294967295ULL);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
-	{
-		val = (O)sign_extend((uint8_t)val);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
-	{
-		val = (O)sign_extend((uint16_t)val);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
-	{
-		val = (O)sign_extend((uint32_t)val);
-	}
-	return ((O)val << (O)shift);
+	address = translate_address_interpreter(ctx,address);
+	return *(O*)address;
 }
 
-uint64_t a_extend_reg_64_interpreter(interpreter_data* ctx, uint64_t m, uint64_t extend_type, uint64_t shift)
+uint64_t XSP_interpreter(interpreter_data* ctx, uint64_t reg_id)
 {
-	uint64_t val = X_interpreter(ctx,m);
-	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
-	{
-		val = ((uint64_t)val & (uint64_t)255ULL);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
-	{
-		val = ((uint64_t)val & (uint64_t)65535ULL);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
-	{
-		val = ((uint64_t)val & (uint64_t)4294967295ULL);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
-	{
-		val = (uint64_t)sign_extend((uint8_t)val);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
-	{
-		val = (uint64_t)sign_extend((uint16_t)val);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
-	{
-		val = (uint64_t)sign_extend((uint32_t)val);
-	}
-	return ((uint64_t)val << (uint64_t)shift);
+	return _x_interpreter(ctx,reg_id);
 }
 
-template <typename O>
-O reverse_bytes_interpreter(interpreter_data* ctx, O source, uint64_t byte_count)
+void XSP_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 {
-	O result = 0ULL;
-	for (uint64_t i = 0; i < (byte_count); i++)
-	{
-		O working = ((O)(((O)source >> (O)(((uint64_t)i * (uint64_t)8ULL)))) & (O)255ULL);
-		result = ((O)result | (O)(((O)working << (O)(((uint64_t)(((uint64_t)((uint64_t)byte_count - (uint64_t)i) - (uint64_t)1ULL)) * (uint64_t)8ULL)))));
-	}
-	return result;
+	_x_interpreter(ctx,reg_id,value);
 }
 
-uint64_t highest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t src, uint64_t size)
+uint64_t X_interpreter(interpreter_data* ctx, uint64_t reg_id)
 {
-	for (uint64_t i = 0; i < (size); i++)
+	if ((((uint64_t)reg_id == (uint64_t)31ULL)))
 	{
-		uint64_t bit_check = ((uint64_t)((uint64_t)size - (uint64_t)i) - (uint64_t)1ULL);
-		uint64_t bit = ((uint64_t)(((uint64_t)src >> (uint64_t)bit_check)) & (uint64_t)1ULL);
-		if ((bit))
-		{
-			return bit_check;
-		}
-	}
-	return -1ULL;
-}
-
-uint64_t ones_interpreter(interpreter_data* ctx, uint64_t size)
-{
-	if ((((uint64_t)size == (uint64_t)64ULL)))
-	{
-		return 18446744073709551615ULL;
-	}
-	return ((uint64_t)(((uint64_t)1ULL << (uint64_t)size)) - (uint64_t)1ULL);
-}
-
-uint64_t replicate_c_interpreter(interpreter_data* ctx, uint64_t source, uint64_t source_size, uint64_t count)
-{
-	uint64_t result = 0ULL;
-	for (uint64_t i = 0; i < (count); i++)
-	{
-		result = ((uint64_t)result | (uint64_t)(((uint64_t)(((uint64_t)source & (uint64_t)ones_interpreter(ctx,source_size))) << (uint64_t)(((uint64_t)i * (uint64_t)source_size)))));
-	}
-	return result;
-}
-
-uint64_t bits_c_interpreter(interpreter_data* ctx, uint64_t source, uint64_t top, uint64_t bottom)
-{
-	top = ((uint64_t)top + (uint64_t)1ULL);
-	uint64_t size = ((uint64_t)top - (uint64_t)bottom);
-	uint64_t mask = ones_interpreter(ctx,size);
-	return ((uint64_t)(((uint64_t)source >> (uint64_t)bottom)) & (uint64_t)mask);
-}
-
-uint64_t bit_c_interpreter(interpreter_data* ctx, uint64_t source, uint64_t bit)
-{
-	return ((uint64_t)(((uint64_t)source >> (uint64_t)bit)) & (uint64_t)1ULL);
-}
-
-uint64_t rotate_right_bits_interpreter(interpreter_data* ctx, uint64_t source, uint64_t ammount, uint64_t bit_count)
-{
-	source = ((uint64_t)source & (uint64_t)ones_interpreter(ctx,bit_count));
-	return (((uint64_t)(((uint64_t)source >> (uint64_t)ammount)) | (uint64_t)(((uint64_t)source << (uint64_t)(((uint64_t)bit_count - (uint64_t)ammount))))));
-}
-
-uint64_t decode_bitmask_tmask_interpreter(interpreter_data* ctx, uint64_t immN, uint64_t imms, uint64_t immr, uint64_t immediate, uint64_t M, uint64_t return_tmask)
-{
-	uint64_t levels;
-	uint64_t len = highest_bit_set_c_interpreter(ctx,((uint64_t)(((uint64_t)immN << (uint64_t)6ULL)) | (uint64_t)(((uint64_t)~imms & (uint64_t)ones_interpreter(ctx,6ULL)))),7ULL);
-	if ((((uint64_t)len < (uint64_t)1ULL)))
-	{
-		undefined_interpreter(ctx);
-	}
-	levels = ones_interpreter(ctx,len);
-	if ((((uint64_t)immediate && (uint64_t)((uint64_t)(((uint64_t)imms & (uint64_t)levels)) == (uint64_t)levels))))
-	{
-		undefined_interpreter(ctx);
-	}
-	uint64_t s = ((uint64_t)imms & (uint64_t)levels);
-	uint64_t r = ((uint64_t)immr & (uint64_t)levels);
-	uint64_t diff = ((uint64_t)s - (uint64_t)r);
-	uint64_t esize = ((uint64_t)1ULL << (uint64_t)len);
-	uint64_t d = bits_c_interpreter(ctx,diff,((uint64_t)len - (uint64_t)1ULL),0ULL);
-	uint64_t welem = ones_interpreter(ctx,((uint64_t)s + (uint64_t)1ULL));
-	uint64_t telem = ones_interpreter(ctx,((uint64_t)d + (uint64_t)1ULL));
-	if ((return_tmask))
-	{
-		return replicate_c_interpreter(ctx,telem,esize,((uint64_t)M / (uint64_t)esize));
+		return 0ULL;
 	}
 	else
 	{
-		return replicate_c_interpreter(ctx,rotate_right_bits_interpreter(ctx,welem,r,esize),esize,((uint64_t)M / (uint64_t)esize));
+		return _x_interpreter(ctx,reg_id);
 	}
 }
 
-uint64_t decode_add_subtract_imm_12_interpreter(interpreter_data* ctx, uint64_t source, uint64_t shift)
+void X_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 {
-	return ((uint64_t)source << (uint64_t)(((uint64_t)shift * (uint64_t)12ULL)));
-}
-
-template <typename O>
-O add_subtract_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_flags, uint64_t is_add)
-{
-	O d;
-	if ((is_add))
+	if ((((uint64_t)reg_id == (uint64_t)31ULL)))
 	{
-		d = ((O)n + (O)m);
+		return;
 	}
 	else
 	{
-		d = ((O)n - (O)m);
-	}
-	if ((set_flags))
-	{
-		_sys_interpreter(ctx,0ULL,(uint64_t)((O)(sign_extend((O)d) < sign_extend((O)0ULL))));
-		_sys_interpreter(ctx,1ULL,(uint64_t)((O)d == (O)0ULL));
-		if ((is_add))
-		{
-			_sys_interpreter(ctx,2ULL,(uint64_t)((O)d < (O)n));
-			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)~(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
-		}
-		else
-		{
-			_sys_interpreter(ctx,2ULL,(uint64_t)((O)n >= (O)m));
-			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
-		}
-	}
-	return d;
-}
-
-template <typename O>
-O add_subtract_carry_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_flags, uint64_t is_add, O carry)
-{
-	O d;
-	if ((is_add))
-	{
-		d = ((O)((O)n + (O)m) + (O)carry);
-	}
-	else
-	{
-		d = ((O)((O)n - (O)m) - (O)(((O)carry ^ (O)1ULL)));
-	}
-	if ((set_flags))
-	{
-		_sys_interpreter(ctx,0ULL,(uint64_t)((O)(sign_extend((O)d) < sign_extend((O)0ULL))));
-		_sys_interpreter(ctx,1ULL,(uint64_t)((O)d == (O)0ULL));
-		if ((is_add))
-		{
-			_sys_interpreter(ctx,2ULL,(uint64_t)((O)(((O)((O)d == (O)n) && (O)carry)) | (O)((O)d < (O)n)));
-			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)~(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
-		}
-		else
-		{
-			_sys_interpreter(ctx,2ULL,(uint64_t)((O)(((O)((O)n == (O)m) && (O)carry)) | (O)((O)n > (O)m)));
-			_sys_interpreter(ctx,3ULL,(uint64_t)((O)(sign_extend((O)(((O)(((O)d ^ (O)n)) & (O)(((O)n ^ (O)m))))) < sign_extend((O)0ULL))));
-		}
-	}
-	return d;
-}
-
-uint8_t condition_holds_interpreter(interpreter_data* ctx, uint64_t cond)
-{
-	uint8_t n = _sys_interpreter(ctx,0ULL);
-	uint8_t z = _sys_interpreter(ctx,1ULL);
-	uint8_t c = _sys_interpreter(ctx,2ULL);
-	uint8_t v = _sys_interpreter(ctx,3ULL);
-	uint64_t raw_condition = ((uint64_t)cond >> (uint64_t)1ULL);
-	uint8_t result;
-	if ((((uint64_t)raw_condition == (uint64_t)0ULL)))
-	{
-		result = ((uint8_t)z == (uint8_t)1ULL);
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)1ULL)))
-	{
-		result = ((uint8_t)c == (uint8_t)1ULL);
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)2ULL)))
-	{
-		result = ((uint8_t)n == (uint8_t)1ULL);
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)3ULL)))
-	{
-		result = ((uint8_t)v == (uint8_t)1ULL);
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)4ULL)))
-	{
-		result = ((uint8_t)((uint8_t)c == (uint8_t)1ULL) && (uint8_t)((uint8_t)z == (uint8_t)0ULL));
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)5ULL)))
-	{
-		result = ((uint8_t)n == (uint8_t)v);
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)6ULL)))
-	{
-		result = ((uint8_t)(((uint8_t)n == (uint8_t)v)) && (uint8_t)((uint8_t)z == (uint8_t)0ULL));
-	}
-	else
-	{
-		result = 1ULL;
-	}
-	if ((((uint64_t)(((uint64_t)cond & (uint64_t)1ULL)) && (uint64_t)((uint64_t)cond != (uint64_t)15ULL))))
-	{
-		result = ((uint8_t)result ^ (uint8_t)1ULL);
-	}
-	return result;
-}
-
-void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint64_t link)
-{
-	uint64_t branch_location = X_interpreter(ctx,Rn);
-	if ((link))
-	{
-		uint64_t link_address = ((uint64_t)_get_pc_interpreter(ctx) + (uint64_t)4ULL);
-		X_interpreter(ctx,30ULL,link_address);
-	}
-	_branch_long_interpreter(ctx,branch_location);
-}
-
-template <typename O>
-O vector_shift_interpreter(interpreter_data* ctx, O element, O shift, uint64_t bit_count, uint64_t is_unsigned)
-{
-	O result = 0ULL;
-	if ((!is_unsigned))
-	{
-		element = (uint64_t)sign_extend(element);
-	}
-	if ((((O)(sign_extend((O)shift) >= sign_extend((O)0ULL)))))
-	{
-		if ((((O)(sign_extend((O)shift) >= sign_extend((O)bit_count)))))
-		{
-			result = 0ULL;
-		}
-		else
-		{
-			result = ((O)element << (O)shift);
-		}
-	}
-	else
-	{
-		shift = -shift;
-		if ((((O)(sign_extend((O)shift) >= sign_extend((O)bit_count)))))
-		{
-			if ((((O)((O)(((O)(((O)element >> (O)(((uint64_t)bit_count - (uint64_t)1ULL)))) & (O)1ULL)) == (O)1ULL) && (O)!is_unsigned)))
-			{
-				result = -1ULL;
-			}
-			else
-			{
-				result = 0ULL;
-			}
-		}
-		else
-		{
-			if ((!is_unsigned))
-			{
-				result = ((O)(sign_extend((O)element) >> sign_extend((O)shift)));
-			}
-			else
-			{
-				result = ((O)element >> (O)shift);
-			}
-		}
-	}
-	return result;
-}
-
-void convert_to_int_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t Rd, uint64_t Rn, uint64_t round, uint64_t is_unsigned, uint64_t to_vector)
-{
-	uint64_t operand = V_interpreter(ctx,Rn);
-	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t result = FPToFixed_interpreter(ctx,operand,0ULL,is_unsigned,round,intsize,fltsize);
-	if ((to_vector))
-	{
-		V_interpreter(ctx,Rd,(uint128_t)result);
-	}
-	else
-	{
-		X_interpreter(ctx,Rd,result);
-	}
-}
-
-uint64_t lowest_bit_set_c_interpreter(interpreter_data* ctx, uint64_t source)
-{
-	uint64_t size = 32ULL;
-	for (uint64_t i = 0; i < (size); i++)
-	{
-		uint64_t working_bit = ((uint64_t)(((uint64_t)source >> (uint64_t)i)) & (uint64_t)1ULL);
-		if ((working_bit))
-		{
-			return i;
-		}
-	}
-	return size;
-}
-
-void dup_element_interpreter(interpreter_data* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d)
-{
-	uint128_t operand = V_interpreter(ctx,n);
-	uint128_t result = 0;
-	uint64_t element = uint128_t::extract(operand, index, esize);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint128_t::insert(&result, e, esize, element);
-	}
-	V_interpreter(ctx,d,result);
-}
-
-uint64_t get_flt_size_interpreter(interpreter_data* ctx, uint64_t ftype)
-{
-	if ((((uint64_t)ftype == (uint64_t)2ULL)))
-	{
-		return 64ULL;
-	}
-	else
-	{
-		return ((uint64_t)8ULL << (uint64_t)(((uint64_t)ftype ^ (uint64_t)2ULL)));
-	}
-}
-
-uint64_t vfp_expand_imm_interpreter(interpreter_data* ctx, uint64_t imm8, uint64_t N)
-{
-	uint64_t E;
-	if ((((uint64_t)N == (uint64_t)16ULL)))
-	{
-		E = 5ULL;
-	}
-	else if ((((uint64_t)N == (uint64_t)32ULL)))
-	{
-		E = 8ULL;
-	}
-	else
-	{
-		E = 11ULL;
-	}
-	uint64_t F = ((uint64_t)(((uint64_t)N - (uint64_t)E)) - (uint64_t)1ULL);
-	uint64_t sign = ((uint64_t)(((uint64_t)imm8 >> (uint64_t)7ULL)) & (uint64_t)1ULL);
-	uint64_t exp = ((uint64_t)~(bit_c_interpreter(ctx,imm8,6ULL)) & (uint64_t)1ULL);
-	exp = ((uint64_t)(((uint64_t)exp << (uint64_t)(((uint64_t)E - (uint64_t)3ULL)))) | (uint64_t)replicate_c_interpreter(ctx,bit_c_interpreter(ctx,imm8,6ULL),1ULL,((uint64_t)E - (uint64_t)3ULL)));
-	exp = ((uint64_t)(((uint64_t)exp << (uint64_t)2ULL)) | (uint64_t)bits_c_interpreter(ctx,imm8,5ULL,4ULL));
-	uint64_t frac = ((uint64_t)bits_c_interpreter(ctx,imm8,3ULL,0ULL) << (uint64_t)(((uint64_t)F - (uint64_t)4ULL)));
-	uint64_t result = sign;
-	result = ((uint64_t)(((uint64_t)result << (uint64_t)(((uint64_t)((uint64_t)1ULL + (uint64_t)(((uint64_t)E - (uint64_t)3ULL))) + (uint64_t)2ULL)))) | (uint64_t)exp);
-	result = ((uint64_t)(((uint64_t)result << (uint64_t)(((uint64_t)4ULL + (uint64_t)(((uint64_t)F - (uint64_t)4ULL)))))) | (uint64_t)frac);
-	return result;
-}
-
-uint64_t expand_imm_interpreter(interpreter_data* ctx, uint64_t op, uint64_t cmode, uint64_t imm8)
-{
-	uint64_t imm64 = 0ULL;
-	uint64_t cmode_test = bits_c_interpreter(ctx,cmode,3ULL,1ULL);
-	if ((((uint64_t)cmode_test == (uint64_t)0ULL)))
-	{
-		imm64 = replicate_c_interpreter(ctx,imm8,32ULL,2ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)1ULL)))
-	{
-		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)8ULL),32ULL,2ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)2ULL)))
-	{
-		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)16ULL),32ULL,2ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)3ULL)))
-	{
-		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)24ULL),32ULL,2ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)4ULL)))
-	{
-		imm64 = replicate_c_interpreter(ctx,imm8,16ULL,4ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)5ULL)))
-	{
-		imm64 = replicate_c_interpreter(ctx,((uint64_t)imm8 << (uint64_t)8ULL),16ULL,4ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)6ULL)))
-	{
-		if ((((uint64_t)(((uint64_t)cmode & (uint64_t)1ULL)) == (uint64_t)0ULL)))
-		{
-			imm64 = replicate_c_interpreter(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)8ULL)) | (uint64_t)ones_interpreter(ctx,8ULL)),32ULL,2ULL);
-		}
-		else
-		{
-			imm64 = replicate_c_interpreter(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)16ULL)) | (uint64_t)ones_interpreter(ctx,16ULL)),32ULL,2ULL);
-		}
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)7ULL)))
-	{
-		if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
-		{
-			imm64 = replicate_c_interpreter(ctx,imm8,8ULL,8ULL);
-		}
-		else if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
-		{
-			for (uint64_t i = 0; i < (8ULL); i++)
-			{
-				uint64_t part = ((uint64_t)(((uint64_t)0ULL - (uint64_t)(((uint64_t)(((uint64_t)imm8 >> (uint64_t)i)) & (uint64_t)1ULL)))) & (uint64_t)255ULL);
-				imm64 = ((uint64_t)imm64 | (uint64_t)(((uint64_t)part << (uint64_t)(((uint64_t)i * (uint64_t)8ULL)))));
-			}
-		}
-		else if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
-		{
-			uint64_t p0 = bit_c_interpreter(ctx,imm8,7ULL);
-			uint64_t p1 = ((uint64_t)(~(bit_c_interpreter(ctx,imm8,6ULL))) & (uint64_t)1ULL);
-			uint64_t p2 = replicate_c_interpreter(ctx,bit_c_interpreter(ctx,imm8,6ULL),1ULL,5ULL);
-			uint64_t p3 = bits_c_interpreter(ctx,imm8,5ULL,0ULL);
-			uint64_t p4 = 0ULL;
-			uint64_t working = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)19ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)19ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL) + (uint64_t)1ULL)))));
-			imm64 = replicate_c_interpreter(ctx,working,32ULL,2ULL);
-		}
-		else if ((((uint64_t)((uint64_t)bit_c_interpreter(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
-		{
-			uint64_t p0 = bit_c_interpreter(ctx,imm8,7ULL);
-			uint64_t p1 = ((uint64_t)(~(bit_c_interpreter(ctx,imm8,6ULL))) & (uint64_t)1ULL);
-			uint64_t p2 = replicate_c_interpreter(ctx,bit_c_interpreter(ctx,imm8,6ULL),1ULL,8ULL);
-			uint64_t p3 = bits_c_interpreter(ctx,imm8,5ULL,0ULL);
-			uint64_t p4 = 0ULL;
-			imm64 = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)48ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)48ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL) + (uint64_t)1ULL)))));
-		}
-		else
-		{
-			undefined_interpreter(ctx);
-		}
-	}
-	else
-	{
-		undefined_interpreter(ctx);
-	}
-	return imm64;
-}
-
-void VPart_interpreter(interpreter_data* ctx, uint64_t n, uint64_t part, uint64_t width, uint64_t value)
-{
-	if ((((uint64_t)part == (uint64_t)0ULL)))
-	{
-		V_interpreter(ctx,n,(uint128_t)value);
-	}
-	else
-	{
-		uint128_t src = V_interpreter(ctx,n);
-		uint128_t::insert(&src, 1ULL, 64ULL, value);
-		V_interpreter(ctx,n,src);
+		_x_interpreter(ctx,reg_id,value);
 	}
 }
 
@@ -4601,161 +6204,78 @@ void fmov_general_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype
 	}
 }
 
-void convert_to_float_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd, uint64_t from_vector)
-{
-	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	if (intsize == 32ULL)
-	{
-		if (fltsize == 16ULL)
-		{
-			uint16_t result;
-			uint32_t operand;
-			if ((from_vector))
-			{
-				operand = V_interpreter(ctx,Rn);
-			}
-			else
-			{
-				operand = X_interpreter(ctx,Rn);
-			}
-			if ((U))
-			{
-				result = convert_to_float<uint16_t, uint32_t>(operand, 0);
-			}
-			else
-			{
-				result = convert_to_float<uint16_t, uint32_t>(operand, 1);
-			}
-			V_interpreter(ctx,Rd,(uint128_t)result);
-		}
-		if (fltsize == 32ULL)
-		{
-			uint32_t result;
-			uint32_t operand;
-			if ((from_vector))
-			{
-				operand = V_interpreter(ctx,Rn);
-			}
-			else
-			{
-				operand = X_interpreter(ctx,Rn);
-			}
-			if ((U))
-			{
-				result = convert_to_float<uint32_t, uint32_t>(operand, 0);
-			}
-			else
-			{
-				result = convert_to_float<uint32_t, uint32_t>(operand, 1);
-			}
-			V_interpreter(ctx,Rd,(uint128_t)result);
-		}
-		if (fltsize == 64ULL)
-		{
-			uint64_t result;
-			uint32_t operand;
-			if ((from_vector))
-			{
-				operand = V_interpreter(ctx,Rn);
-			}
-			else
-			{
-				operand = X_interpreter(ctx,Rn);
-			}
-			if ((U))
-			{
-				result = convert_to_float<uint64_t, uint32_t>(operand, 0);
-			}
-			else
-			{
-				result = convert_to_float<uint64_t, uint32_t>(operand, 1);
-			}
-			V_interpreter(ctx,Rd,(uint128_t)result);
-		}
-		
-	}
-	if (intsize == 64ULL)
-	{
-		if (fltsize == 16ULL)
-		{
-			uint16_t result;
-			uint64_t operand;
-			if ((from_vector))
-			{
-				operand = V_interpreter(ctx,Rn);
-			}
-			else
-			{
-				operand = X_interpreter(ctx,Rn);
-			}
-			if ((U))
-			{
-				result = convert_to_float<uint16_t, uint64_t>(operand, 0);
-			}
-			else
-			{
-				result = convert_to_float<uint16_t, uint64_t>(operand, 1);
-			}
-			V_interpreter(ctx,Rd,(uint128_t)result);
-		}
-		if (fltsize == 32ULL)
-		{
-			uint32_t result;
-			uint64_t operand;
-			if ((from_vector))
-			{
-				operand = V_interpreter(ctx,Rn);
-			}
-			else
-			{
-				operand = X_interpreter(ctx,Rn);
-			}
-			if ((U))
-			{
-				result = convert_to_float<uint32_t, uint64_t>(operand, 0);
-			}
-			else
-			{
-				result = convert_to_float<uint32_t, uint64_t>(operand, 1);
-			}
-			V_interpreter(ctx,Rd,(uint128_t)result);
-		}
-		if (fltsize == 64ULL)
-		{
-			uint64_t result;
-			uint64_t operand;
-			if ((from_vector))
-			{
-				operand = V_interpreter(ctx,Rn);
-			}
-			else
-			{
-				operand = X_interpreter(ctx,Rn);
-			}
-			if ((U))
-			{
-				result = convert_to_float<uint64_t, uint64_t>(operand, 0);
-			}
-			else
-			{
-				result = convert_to_float<uint64_t, uint64_t>(operand, 1);
-			}
-			V_interpreter(ctx,Rd,(uint128_t)result);
-		}
-		
-	}
-	
-}
-
 void convert_to_float_gp_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
 {
 	convert_to_float_interpreter(ctx,sf,ftype,U,Rn,Rd,0ULL);
 }
 
-void convert_to_float_vector_interpreter(interpreter_data* ctx, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
+void convert_to_float_vector_scalar_interpreter(interpreter_data* ctx, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
 {
 	convert_to_float_interpreter(ctx,sz,sz,U,Rn,Rd,1ULL);
+}
+
+void convert_to_float_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	if (esize == 16ULL)
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element = uint128_t::extract(operand, e, esize);
+			uint64_t working;
+			if ((U))
+			{
+				working = convert_to_float<uint16_t, uint64_t>(element, 0);
+			}
+			else
+			{
+				working = convert_to_float<uint16_t, uint64_t>(element, 1);
+			}
+			uint128_t::insert(&result, e, esize, working);
+		}
+		V_interpreter(ctx,Rd,result);
+	}
+	if (esize == 32ULL)
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element = uint128_t::extract(operand, e, esize);
+			uint64_t working;
+			if ((U))
+			{
+				working = convert_to_float<uint32_t, uint64_t>(element, 0);
+			}
+			else
+			{
+				working = convert_to_float<uint32_t, uint64_t>(element, 1);
+			}
+			uint128_t::insert(&result, e, esize, working);
+		}
+		V_interpreter(ctx,Rd,result);
+	}
+	if (esize == 64ULL)
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element = uint128_t::extract(operand, e, esize);
+			uint64_t working;
+			if ((U))
+			{
+				working = convert_to_float<uint64_t, uint64_t>(element, 0);
+			}
+			else
+			{
+				working = convert_to_float<uint64_t, uint64_t>(element, 1);
+			}
+			uint128_t::insert(&result, e, esize, working);
+		}
+		V_interpreter(ctx,Rd,result);
+	}
+	
 }
 
 void floating_point_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
@@ -4764,7 +6284,7 @@ void floating_point_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, ui
 	uint64_t operand1 = V_interpreter(ctx,Rn);
 	uint64_t operand2 = V_interpreter(ctx,Rm);
 	uint64_t result;
-	uint64_t fpcr_state = _sys_interpreter(ctx,fpcr);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
 	if ((((uint64_t)opcode == (uint64_t)0ULL)))
 	{
 		result = FPMul_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
@@ -4826,167 +6346,47 @@ void conversion_between_floating_point_and_fixed_point_interpreter(interpreter_d
 	else if ((((uint64_t)rmode == (uint64_t)3ULL)))
 	{
 		uint64_t source = V_interpreter(ctx,Rn);
-		result = FPToFixed_interpreter(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)1ULL),FPRounding_ZERO,intsize,fltsize);
+		result = FPToFixed_interpreter(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)1ULL),(uint64_t)FPRounding_ZERO,intsize,fltsize);
 		X_interpreter(ctx,Rd,result);
 	}
 	else
 	{
-		undefined_with_interpreter(ctx,0ULL);
+		undefined_with_interpreter(ctx,100ULL);
 	}
 }
 
-void advanced_simd_three_same_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
+void shl_immedaite_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t immh, uint64_t immb, uint64_t Rn, uint64_t Rd)
 {
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)highest_bit_set_c_interpreter(ctx,immh,32ULL));
 	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
 	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t shift = ((uint64_t)(((uint64_t)(((uint64_t)immh << (uint64_t)3ULL)) | (uint64_t)immb)) - (uint64_t)esize);
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element = uint128_t::extract(operand, e, esize);
+		element = ((uint64_t)element << (uint64_t)shift);
+		uint128_t::insert(&result, e, esize, element);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void sshr_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t immh, uint64_t immb, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)highest_bit_set_c_interpreter(ctx,immh,32ULL));
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t shift = ((uint64_t)(((uint64_t)esize * (uint64_t)2ULL)) - (uint64_t)(((uint64_t)(((uint64_t)immh << (uint64_t)3ULL)) | (uint64_t)immb)));
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
 	if (esize == 8ULL)
 	{
 		for (uint64_t e = 0; e < (elements); e++)
 		{
-			uint64_t element1 = uint128_t::extract(operand1, e, esize);
-			uint64_t element2 = uint128_t::extract(operand2, e, esize);
-			if ((((uint64_t)opcode == (uint64_t)0ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint8_t)element1);
-					element2 = (uint64_t)sign_extend((uint8_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)element1 + (uint64_t)element2)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint8_t)element1);
-					element2 = (uint64_t)sign_extend((uint8_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)((uint64_t)element1 + (uint64_t)element2) + (uint64_t)1ULL)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint8_t)element1);
-					element2 = (uint64_t)sign_extend((uint8_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)element1 - (uint64_t)element2)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
-			{
-				uint8_t valid;
-				if ((U))
-				{
-					valid = ((uint8_t)((uint8_t)element1) > (uint8_t)((uint8_t)element2));
-				}
-				else
-				{
-					valid = ((uint8_t)(sign_extend((uint8_t)((uint8_t)element1)) > sign_extend((uint8_t)((uint8_t)element2))));
-				}
-				uint128_t::insert(&result, e, esize, (((uint8_t)0ULL - (uint8_t)valid)));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
-			{
-				uint8_t valid;
-				if ((U))
-				{
-					valid = ((uint8_t)((uint8_t)element1) >= (uint8_t)((uint8_t)element2));
-				}
-				else
-				{
-					valid = ((uint8_t)(sign_extend((uint8_t)((uint8_t)element1)) >= sign_extend((uint8_t)((uint8_t)element2))));
-				}
-				uint128_t::insert(&result, e, esize, (((uint8_t)0ULL - (uint8_t)valid)));
-			}
-			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
-			{
-				uint8_t element = element1;
-				uint8_t shift = (uint8_t)sign_extend((uint8_t)element2);
-				element = vector_shift_interpreter<uint8_t>(ctx,element,shift,esize,U);
-				uint128_t::insert(&result, e, esize, element);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
-			{
-				uint8_t working = 0ULL;
-				if ((U))
-				{
-					if ((((uint64_t)element1 > (uint64_t)element2)))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				else
-				{
-					if ((((uint8_t)(sign_extend((uint8_t)((uint8_t)element1)) > sign_extend((uint8_t)((uint8_t)element2))))))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				uint128_t::insert(&result, e, esize, working);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
-			{
-				uint8_t working = 0ULL;
-				if ((U))
-				{
-					if ((((uint64_t)element1 < (uint64_t)element2)))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				else
-				{
-					if ((((uint8_t)(sign_extend((uint8_t)((uint8_t)element1)) < sign_extend((uint8_t)((uint8_t)element2))))))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				uint128_t::insert(&result, e, esize, working);
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ~element2;
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ~element2;
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
-			{
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
-			}
-			else
-			{
-				undefined_with_interpreter(ctx,0ULL);
-			}
+			uint64_t element = uint128_t::extract(operand, e, esize);
+			element = shift_right_check_interpreter(ctx,(uint64_t)sign_extend((uint8_t)element),(uint64_t)shift,esize,0ULL);
+			uint128_t::insert(&result, e, esize, element);
 		}
 		V_interpreter(ctx,Rd,result);
 	}
@@ -4994,146 +6394,9 @@ void advanced_simd_three_same_interpreter(interpreter_data* ctx, uint64_t Q, uin
 	{
 		for (uint64_t e = 0; e < (elements); e++)
 		{
-			uint64_t element1 = uint128_t::extract(operand1, e, esize);
-			uint64_t element2 = uint128_t::extract(operand2, e, esize);
-			if ((((uint64_t)opcode == (uint64_t)0ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint16_t)element1);
-					element2 = (uint64_t)sign_extend((uint16_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)element1 + (uint64_t)element2)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint16_t)element1);
-					element2 = (uint64_t)sign_extend((uint16_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)((uint64_t)element1 + (uint64_t)element2) + (uint64_t)1ULL)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint16_t)element1);
-					element2 = (uint64_t)sign_extend((uint16_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)element1 - (uint64_t)element2)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
-			{
-				uint16_t valid;
-				if ((U))
-				{
-					valid = ((uint16_t)((uint16_t)element1) > (uint16_t)((uint16_t)element2));
-				}
-				else
-				{
-					valid = ((uint16_t)(sign_extend((uint16_t)((uint16_t)element1)) > sign_extend((uint16_t)((uint16_t)element2))));
-				}
-				uint128_t::insert(&result, e, esize, (((uint16_t)0ULL - (uint16_t)valid)));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
-			{
-				uint16_t valid;
-				if ((U))
-				{
-					valid = ((uint16_t)((uint16_t)element1) >= (uint16_t)((uint16_t)element2));
-				}
-				else
-				{
-					valid = ((uint16_t)(sign_extend((uint16_t)((uint16_t)element1)) >= sign_extend((uint16_t)((uint16_t)element2))));
-				}
-				uint128_t::insert(&result, e, esize, (((uint16_t)0ULL - (uint16_t)valid)));
-			}
-			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
-			{
-				uint16_t element = element1;
-				uint16_t shift = (uint16_t)sign_extend((uint8_t)element2);
-				element = vector_shift_interpreter<uint16_t>(ctx,element,shift,esize,U);
-				uint128_t::insert(&result, e, esize, element);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
-			{
-				uint16_t working = 0ULL;
-				if ((U))
-				{
-					if ((((uint64_t)element1 > (uint64_t)element2)))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				else
-				{
-					if ((((uint16_t)(sign_extend((uint16_t)((uint16_t)element1)) > sign_extend((uint16_t)((uint16_t)element2))))))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				uint128_t::insert(&result, e, esize, working);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
-			{
-				uint16_t working = 0ULL;
-				if ((U))
-				{
-					if ((((uint64_t)element1 < (uint64_t)element2)))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				else
-				{
-					if ((((uint16_t)(sign_extend((uint16_t)((uint16_t)element1)) < sign_extend((uint16_t)((uint16_t)element2))))))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				uint128_t::insert(&result, e, esize, working);
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ~element2;
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ~element2;
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
-			{
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
-			}
-			else
-			{
-				undefined_with_interpreter(ctx,0ULL);
-			}
+			uint64_t element = uint128_t::extract(operand, e, esize);
+			element = shift_right_check_interpreter(ctx,(uint64_t)sign_extend((uint16_t)element),(uint64_t)shift,esize,0ULL);
+			uint128_t::insert(&result, e, esize, element);
 		}
 		V_interpreter(ctx,Rd,result);
 	}
@@ -5141,146 +6404,9 @@ void advanced_simd_three_same_interpreter(interpreter_data* ctx, uint64_t Q, uin
 	{
 		for (uint64_t e = 0; e < (elements); e++)
 		{
-			uint64_t element1 = uint128_t::extract(operand1, e, esize);
-			uint64_t element2 = uint128_t::extract(operand2, e, esize);
-			if ((((uint64_t)opcode == (uint64_t)0ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint32_t)element1);
-					element2 = (uint64_t)sign_extend((uint32_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)element1 + (uint64_t)element2)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint32_t)element1);
-					element2 = (uint64_t)sign_extend((uint32_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)((uint64_t)element1 + (uint64_t)element2) + (uint64_t)1ULL)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint32_t)element1);
-					element2 = (uint64_t)sign_extend((uint32_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)element1 - (uint64_t)element2)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
-			{
-				uint32_t valid;
-				if ((U))
-				{
-					valid = ((uint32_t)((uint32_t)element1) > (uint32_t)((uint32_t)element2));
-				}
-				else
-				{
-					valid = ((uint32_t)(sign_extend((uint32_t)((uint32_t)element1)) > sign_extend((uint32_t)((uint32_t)element2))));
-				}
-				uint128_t::insert(&result, e, esize, (((uint32_t)0ULL - (uint32_t)valid)));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
-			{
-				uint32_t valid;
-				if ((U))
-				{
-					valid = ((uint32_t)((uint32_t)element1) >= (uint32_t)((uint32_t)element2));
-				}
-				else
-				{
-					valid = ((uint32_t)(sign_extend((uint32_t)((uint32_t)element1)) >= sign_extend((uint32_t)((uint32_t)element2))));
-				}
-				uint128_t::insert(&result, e, esize, (((uint32_t)0ULL - (uint32_t)valid)));
-			}
-			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
-			{
-				uint32_t element = element1;
-				uint32_t shift = (uint32_t)sign_extend((uint8_t)element2);
-				element = vector_shift_interpreter<uint32_t>(ctx,element,shift,esize,U);
-				uint128_t::insert(&result, e, esize, element);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
-			{
-				uint32_t working = 0ULL;
-				if ((U))
-				{
-					if ((((uint64_t)element1 > (uint64_t)element2)))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				else
-				{
-					if ((((uint32_t)(sign_extend((uint32_t)((uint32_t)element1)) > sign_extend((uint32_t)((uint32_t)element2))))))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				uint128_t::insert(&result, e, esize, working);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
-			{
-				uint32_t working = 0ULL;
-				if ((U))
-				{
-					if ((((uint64_t)element1 < (uint64_t)element2)))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				else
-				{
-					if ((((uint32_t)(sign_extend((uint32_t)((uint32_t)element1)) < sign_extend((uint32_t)((uint32_t)element2))))))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				uint128_t::insert(&result, e, esize, working);
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ~element2;
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ~element2;
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
-			{
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
-			}
-			else
-			{
-				undefined_with_interpreter(ctx,0ULL);
-			}
+			uint64_t element = uint128_t::extract(operand, e, esize);
+			element = shift_right_check_interpreter(ctx,(uint64_t)sign_extend((uint32_t)element),(uint64_t)shift,esize,0ULL);
+			uint128_t::insert(&result, e, esize, element);
 		}
 		V_interpreter(ctx,Rd,result);
 	}
@@ -5288,296 +6414,386 @@ void advanced_simd_three_same_interpreter(interpreter_data* ctx, uint64_t Q, uin
 	{
 		for (uint64_t e = 0; e < (elements); e++)
 		{
-			uint64_t element1 = uint128_t::extract(operand1, e, esize);
-			uint64_t element2 = uint128_t::extract(operand2, e, esize);
-			if ((((uint64_t)opcode == (uint64_t)0ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint64_t)element1);
-					element2 = (uint64_t)sign_extend((uint64_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)element1 + (uint64_t)element2)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint64_t)element1);
-					element2 = (uint64_t)sign_extend((uint64_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)((uint64_t)element1 + (uint64_t)element2) + (uint64_t)1ULL)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
-			{
-				if ((!U))
-				{
-					element1 = (uint64_t)sign_extend((uint64_t)element1);
-					element2 = (uint64_t)sign_extend((uint64_t)element2);
-				}
-				uint128_t::insert(&result, e, esize, ((uint64_t)(((uint64_t)element1 - (uint64_t)element2)) >> (uint64_t)1ULL));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
-			{
-				uint64_t valid;
-				if ((U))
-				{
-					valid = ((uint64_t)((uint64_t)element1) > (uint64_t)((uint64_t)element2));
-				}
-				else
-				{
-					valid = ((uint64_t)(sign_extend((uint64_t)((uint64_t)element1)) > sign_extend((uint64_t)((uint64_t)element2))));
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)0ULL - (uint64_t)valid)));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
-			{
-				uint64_t valid;
-				if ((U))
-				{
-					valid = ((uint64_t)((uint64_t)element1) >= (uint64_t)((uint64_t)element2));
-				}
-				else
-				{
-					valid = ((uint64_t)(sign_extend((uint64_t)((uint64_t)element1)) >= sign_extend((uint64_t)((uint64_t)element2))));
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)0ULL - (uint64_t)valid)));
-			}
-			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
-			{
-				uint64_t element = element1;
-				uint64_t shift = (uint64_t)sign_extend((uint8_t)element2);
-				element = vector_shift_interpreter<uint64_t>(ctx,element,shift,esize,U);
-				uint128_t::insert(&result, e, esize, element);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
-			{
-				uint64_t working = 0ULL;
-				if ((U))
-				{
-					if ((((uint64_t)element1 > (uint64_t)element2)))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				else
-				{
-					if ((((uint64_t)(sign_extend((uint64_t)((uint64_t)element1)) > sign_extend((uint64_t)((uint64_t)element2))))))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				uint128_t::insert(&result, e, esize, working);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
-			{
-				uint64_t working = 0ULL;
-				if ((U))
-				{
-					if ((((uint64_t)element1 < (uint64_t)element2)))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				else
-				{
-					if ((((uint64_t)(sign_extend((uint64_t)((uint64_t)element1)) < sign_extend((uint64_t)((uint64_t)element2))))))
-					{
-						working = element1;
-					}
-					else
-					{
-						working = element2;
-					}
-				}
-				uint128_t::insert(&result, e, esize, working);
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ~element2;
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ~element2;
-				}
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
-			{
-				uint128_t::insert(&result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
-			}
-			else
-			{
-				undefined_with_interpreter(ctx,0ULL);
-			}
+			uint64_t element = uint128_t::extract(operand, e, esize);
+			element = shift_right_check_interpreter(ctx,(uint64_t)sign_extend((uint64_t)element),(uint64_t)shift,esize,0ULL);
+			uint128_t::insert(&result, e, esize, element);
 		}
 		V_interpreter(ctx,Rd,result);
 	}
 	
 }
 
-void floating_point_conditional_select_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd)
+void shll_shll2_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t immh, uint64_t immb, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	if (fltsize == 32ULL)
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)highest_bit_set_c_interpreter(ctx,bits_c_interpreter(ctx,immh,2ULL,0ULL),32ULL));
+	uint64_t datasize = 64ULL;
+	uint64_t part = Q;
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t shift = ((uint64_t)(((uint64_t)(((uint64_t)immh << (uint64_t)3ULL)) | (uint64_t)immb)) - (uint64_t)esize);
+	uint64_t operand = VPart_interpreter(ctx,Rn,part,datasize);
+	uint128_t result = 0;
+	uint128_t working_vector = 0;
+	uint128_t::insert(&working_vector, 0ULL, datasize, operand);
+	if (esize == 8ULL)
 	{
-		uint32_t result = 0ULL;
-		if ((condition_holds_interpreter(ctx,cond)))
+		for (uint64_t e = 0; e < (elements); e++)
 		{
-			result = operand1;
+			uint64_t element = uint128_t::extract(working_vector, e, esize);
+			if ((!U))
+			{
+				element = (uint64_t)sign_extend((uint8_t)element);
+			}
+			element = ((uint64_t)element << (uint64_t)shift);
+			uint128_t::insert(&result, e, (((uint64_t)2ULL * (uint64_t)esize)), element);
 		}
-		else
-		{
-			result = operand2;
-		}
-		V_interpreter(ctx,Rd,(uint128_t)result);
+		V_interpreter(ctx,Rd,result);
 	}
-	if (fltsize == 64ULL)
+	if (esize == 16ULL)
 	{
-		uint64_t result = 0ULL;
-		if ((condition_holds_interpreter(ctx,cond)))
+		for (uint64_t e = 0; e < (elements); e++)
 		{
-			result = operand1;
+			uint64_t element = uint128_t::extract(working_vector, e, esize);
+			if ((!U))
+			{
+				element = (uint64_t)sign_extend((uint16_t)element);
+			}
+			element = ((uint64_t)element << (uint64_t)shift);
+			uint128_t::insert(&result, e, (((uint64_t)2ULL * (uint64_t)esize)), element);
 		}
-		else
+		V_interpreter(ctx,Rd,result);
+	}
+	if (esize == 32ULL)
+	{
+		for (uint64_t e = 0; e < (elements); e++)
 		{
-			result = operand2;
+			uint64_t element = uint128_t::extract(working_vector, e, esize);
+			if ((!U))
+			{
+				element = (uint64_t)sign_extend((uint32_t)element);
+			}
+			element = ((uint64_t)element << (uint64_t)shift);
+			uint128_t::insert(&result, e, (((uint64_t)2ULL * (uint64_t)esize)), element);
 		}
-		V_interpreter(ctx,Rd,(uint128_t)result);
+		V_interpreter(ctx,Rd,result);
+	}
+	if (esize == 64ULL)
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element = uint128_t::extract(working_vector, e, esize);
+			if ((!U))
+			{
+				element = (uint64_t)sign_extend((uint64_t)element);
+			}
+			element = ((uint64_t)element << (uint64_t)shift);
+			uint128_t::insert(&result, e, (((uint64_t)2ULL * (uint64_t)esize)), element);
+		}
+		V_interpreter(ctx,Rd,result);
 	}
 	
 }
 
-void fmov_scalar_immediate_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
+void rev64_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t imm = vfp_expand_imm_interpreter(ctx,imm8,fltsize);
-	V_interpreter(ctx,Rd,(uint128_t)imm);
+	uint64_t csize = 64ULL;
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t containers = ((uint64_t)datasize / (uint64_t)csize);
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	for (uint64_t c = 0; c < (containers); c++)
+	{
+		uint64_t container = uint128_t::extract(operand, c, csize);
+		uint128_t::insert(&result, c, csize, reverse_interpreter(ctx,(uint128_t)container,esize,csize));
+	}
+	V_interpreter(ctx,Rd,result);
 }
 
-void fcvt_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t opc, uint64_t Rn, uint64_t Rd)
+void neg_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t srcsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t dstsize = get_flt_size_interpreter(ctx,opc);
-	uint64_t operand = V_interpreter(ctx,Rn);
-	V_interpreter(ctx,Rd,(uint128_t)FPConvert_interpreter(ctx,operand,dstsize,srcsize));
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint128_t::insert(&result, e, esize, -(uint128_t::extract(operand, e, esize)));
+	}
+	V_interpreter(ctx,Rd,result);
 }
 
-void floating_point_data_processing_one_source_interpreter(interpreter_data* ctx, uint64_t M, uint64_t S, uint64_t ftype, uint64_t opcode, uint64_t Rn, uint64_t Rd)
+void not_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t operand = V_interpreter(ctx,Rn);
-	uint64_t result = 0ULL;
-	uint64_t fpcr_state = _sys_interpreter(ctx,fpcr);
-	if ((((uint64_t)opcode == (uint64_t)1ULL)))
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint64_t esize = 8ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		result = FPAbs_interpreter(ctx,operand,fpcr_state,fltsize);
+		uint128_t::insert(&result, e, esize, ~(uint128_t::extract(operand, e, esize)));
 	}
-	else if ((((uint64_t)opcode == (uint64_t)2ULL)))
+	V_interpreter(ctx,Rd,result);
+}
+
+void abs_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
+{
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		result = FPNeg_interpreter(ctx,operand,fpcr_state,fltsize);
+		if (esize == 8ULL)
+		{
+			uint8_t working = (uint128_t::extract(operand, e, esize));
+			if ((((uint8_t)(sign_extend((uint8_t)working) < sign_extend((uint8_t)0ULL)))))
+			{
+				working = -working;
+			}
+			uint128_t::insert(&result, e, esize, working);
+		}
+		if (esize == 16ULL)
+		{
+			uint16_t working = (uint128_t::extract(operand, e, esize));
+			if ((((uint16_t)(sign_extend((uint16_t)working) < sign_extend((uint16_t)0ULL)))))
+			{
+				working = -working;
+			}
+			uint128_t::insert(&result, e, esize, working);
+		}
+		if (esize == 32ULL)
+		{
+			uint32_t working = (uint128_t::extract(operand, e, esize));
+			if ((((uint32_t)(sign_extend((uint32_t)working) < sign_extend((uint32_t)0ULL)))))
+			{
+				working = -working;
+			}
+			uint128_t::insert(&result, e, esize, working);
+		}
+		if (esize == 64ULL)
+		{
+			uint64_t working = (uint128_t::extract(operand, e, esize));
+			if ((((uint64_t)(sign_extend((uint64_t)working) < sign_extend((uint64_t)0ULL)))))
+			{
+				working = -working;
+			}
+			uint128_t::insert(&result, e, esize, working);
+		}
+		
 	}
-	else if ((((uint64_t)opcode == (uint64_t)3ULL)))
+	V_interpreter(ctx,Rd,result);
+}
+
+void mul_vector_index_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi;
+	if ((((uint64_t)size == (uint64_t)1ULL)))
 	{
-		result = FPSqrt_interpreter(ctx,operand,fpcr_state,fltsize);
+		index = H;
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)index << (uint64_t)1ULL)));
+		index = ((uint64_t)M | (uint64_t)(((uint64_t)index << (uint64_t)1ULL)));
+		rm_hi = 0ULL;
+	}
+	else if ((((uint64_t)size == (uint64_t)2ULL)))
+	{
+		index = H;
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)index << (uint64_t)1ULL)));
+		rm_hi = M;
 	}
 	else
 	{
-		undefined_with_interpreter(ctx,0ULL);
+		undefined_interpreter(ctx);
 	}
-	uint128_t vector = 0;
-	uint128_t::insert(&vector, 0ULL, fltsize, result);
-	V_interpreter(ctx,Rd,vector);
-}
-
-void fcmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc)
-{
-	uint64_t datasize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t cmp_with_zero = ((uint64_t)opc == (uint64_t)1ULL);
-	uint64_t operand1 = V_interpreter(ctx,Rn);
-	uint64_t operand2;
-	uint64_t fpcr_state = _sys_interpreter(ctx,fpcr);
-	if ((cmp_with_zero))
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t element2 = uint128_t::extract(operand2, index, esize);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		operand2 = 0ULL;
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t product = ((uint64_t)element1 * (uint64_t)element2);
+		uint128_t::insert(&result, e, esize, product);
 	}
-	else
+	V_interpreter(ctx,Rd,result);
+}
+
+void mul_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		operand2 = V_interpreter(ctx,Rm);
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint64_t working = ((uint64_t)element1 * (uint64_t)element2);
+		uint128_t::insert(&result, e, esize, working);
 	}
-	uint64_t nzcv = FPCompare_interpreter(ctx,operand1,operand2,fpcr_state,datasize);
-	_sys_interpreter(ctx,nzcv_n,((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
-	_sys_interpreter(ctx,nzcv_z,((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
-	_sys_interpreter(ctx,nzcv_c,((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
-	_sys_interpreter(ctx,nzcv_v,((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
+	V_interpreter(ctx,Rd,result);
 }
 
-void fccmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t nzcv)
+void ext_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t imm4, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t datasize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t operand1 = V_interpreter(ctx,Rn);
-	uint64_t operand2 = V_interpreter(ctx,Rm);
-	uint64_t fpcr_state = _sys_interpreter(ctx,fpcr);
-	if ((condition_holds_interpreter(ctx,cond)))
+	uint128_t lo = V_interpreter(ctx,Rn);
+	uint128_t hi = V_interpreter(ctx,Rm);
+	uint64_t vector_size = ((uint64_t)8ULL << (uint64_t)Q);
+	uint64_t start = imm4;
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (vector_size); e++)
 	{
-		uint64_t success_nzcv = FPCompare_interpreter(ctx,operand1,operand2,fpcr_state,datasize);
-		_sys_interpreter(ctx,nzcv_n,((uint64_t)(((uint64_t)success_nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
-		_sys_interpreter(ctx,nzcv_z,((uint64_t)(((uint64_t)success_nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
-		_sys_interpreter(ctx,nzcv_c,((uint64_t)(((uint64_t)success_nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
-		_sys_interpreter(ctx,nzcv_v,((uint64_t)(((uint64_t)success_nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
+		uint8_t working = get_from_concacted_vector_interpreter(ctx,hi,lo,((uint64_t)start + (uint64_t)e),vector_size,8ULL);
+		uint128_t::insert(&result, e, 8ULL, working);
 	}
-	else
+	V_interpreter(ctx,Rd,result);
+}
+
+void compare_above_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		_sys_interpreter(ctx,nzcv_n,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
-		_sys_interpreter(ctx,nzcv_z,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
-		_sys_interpreter(ctx,nzcv_c,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
-		_sys_interpreter(ctx,nzcv_v,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
+		if (esize == 8ULL)
+		{
+			uint8_t element1 = uint128_t::extract(operand1, e, esize);
+			uint8_t element2 = uint128_t::extract(operand2, e, esize);
+			uint8_t working;
+			if ((U))
+			{
+				working = ((uint8_t)element1 > (uint8_t)element2);
+			}
+			else
+			{
+				working = ((uint8_t)(sign_extend((uint8_t)element1) > sign_extend((uint8_t)element2)));
+			}
+			uint128_t::insert(&result, e, esize, (((uint8_t)0ULL - (uint8_t)working)));
+		}
+		if (esize == 16ULL)
+		{
+			uint16_t element1 = uint128_t::extract(operand1, e, esize);
+			uint16_t element2 = uint128_t::extract(operand2, e, esize);
+			uint16_t working;
+			if ((U))
+			{
+				working = ((uint16_t)element1 > (uint16_t)element2);
+			}
+			else
+			{
+				working = ((uint16_t)(sign_extend((uint16_t)element1) > sign_extend((uint16_t)element2)));
+			}
+			uint128_t::insert(&result, e, esize, (((uint16_t)0ULL - (uint16_t)working)));
+		}
+		if (esize == 32ULL)
+		{
+			uint32_t element1 = uint128_t::extract(operand1, e, esize);
+			uint32_t element2 = uint128_t::extract(operand2, e, esize);
+			uint32_t working;
+			if ((U))
+			{
+				working = ((uint32_t)element1 > (uint32_t)element2);
+			}
+			else
+			{
+				working = ((uint32_t)(sign_extend((uint32_t)element1) > sign_extend((uint32_t)element2)));
+			}
+			uint128_t::insert(&result, e, esize, (((uint32_t)0ULL - (uint32_t)working)));
+		}
+		if (esize == 64ULL)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element2 = uint128_t::extract(operand2, e, esize);
+			uint64_t working;
+			if ((U))
+			{
+				working = ((uint64_t)element1 > (uint64_t)element2);
+			}
+			else
+			{
+				working = ((uint64_t)(sign_extend((uint64_t)element1) > sign_extend((uint64_t)element2)));
+			}
+			uint128_t::insert(&result, e, esize, (((uint64_t)0ULL - (uint64_t)working)));
+		}
+		
 	}
+	V_interpreter(ctx,Rd,result);
 }
 
-void fcvtz_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+void shl_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,FPRounding_ZERO,U,0ULL);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element = uint128_t::extract(operand1, e, esize);
+		uint64_t shift = (uint64_t)sign_extend((uint8_t)(uint128_t::extract(operand2, e, esize)));
+		if ((!U))
+		{
+			if (esize == 8ULL)
+			{
+				element = (uint64_t)sign_extend((uint8_t)element);
+			}
+			if (esize == 16ULL)
+			{
+				element = (uint64_t)sign_extend((uint16_t)element);
+			}
+			if (esize == 32ULL)
+			{
+				element = (uint64_t)sign_extend((uint32_t)element);
+			}
+			if (esize == 64ULL)
+			{
+				element = (uint64_t)sign_extend((uint64_t)element);
+			}
+			
+		}
+		if ((((uint64_t)(sign_extend((uint64_t)shift) >= sign_extend((uint64_t)0ULL)))))
+		{
+			element = shift_left_check_interpreter(ctx,element,shift,esize);
+		}
+		else
+		{
+			shift = -shift;
+			element = shift_right_check_interpreter(ctx,element,shift,esize,U);
+		}
+		uint128_t::insert(&result, e, esize, element);
+	}
+	V_interpreter(ctx,Rd,result);
 }
 
-void fcvtn_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+void add_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,FPRounding_TIEEVEN,U,0ULL);
-}
-
-void fcvta_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,FPRounding_TIEAWAY,U,0ULL);
-}
-
-void fcvtm_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,FPRounding_NEGINF,U,0ULL);
-}
-
-void fcvtp_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,FPRounding_POSINF,U,0ULL);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, (((uint64_t)element1 + (uint64_t)element2)));
+	}
+	V_interpreter(ctx,Rd,result);
 }
 
 void addlv_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rn, uint64_t Rd)
@@ -5643,134 +6859,1542 @@ void cnt_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t 
 	V_interpreter(ctx,Rd,result);
 }
 
-uint64_t compare_and_swap_interpreter(interpreter_data* ctx, uint64_t address, uint64_t expecting, uint64_t to_swap, uint64_t size)
+void orr_orn_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t invert, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	address = translate_address_interpreter(ctx,address);
-	return _compare_and_swap_interpreter(ctx,address,expecting,to_swap,size);
-}
-
-template <typename O>
-void mem_interpreter(interpreter_data* ctx, uint64_t address, O value)
-{
-	address = translate_address_interpreter(ctx,address);
-	*(O*)address = value;
-}
-
-template <typename O>
-O mem_interpreter(interpreter_data* ctx, uint64_t address)
-{
-	address = translate_address_interpreter(ctx,address);
-	return *(O*)address;
-}
-
-uint64_t XSP_interpreter(interpreter_data* ctx, uint64_t reg_id)
-{
-	return _x_interpreter(ctx,reg_id);
-}
-
-void XSP_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
-{
-	_x_interpreter(ctx,reg_id,value);
-}
-
-uint64_t X_interpreter(interpreter_data* ctx, uint64_t reg_id)
-{
-	if ((((uint64_t)reg_id == (uint64_t)31ULL)))
+	uint64_t esize = 64ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		return 0ULL;
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		if ((invert))
+		{
+			element2 = ~element2;
+		}
+		uint128_t::insert(&result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void bsl_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = 64ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rm);
+	uint128_t operand2 = V_interpreter(ctx,Rd);
+	uint128_t operand3 = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint64_t element3 = uint128_t::extract(operand3, e, esize);
+		uint128_t::insert(&result, e, esize, (((uint64_t)element1 ^ (uint64_t)(((uint64_t)(((uint64_t)element1 ^ (uint64_t)element3)) & (uint64_t)element2)))));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void and_bic_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t invert, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = 64ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		if ((invert))
+		{
+			element2 = ~element2;
+		}
+		uint128_t::insert(&result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void eor_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = 64ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void xnt_xnt2_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = 64ULL;
+	uint64_t part = Q;
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t mask = -1ULL;
+	if ((((uint64_t)esize != (uint64_t)64ULL)))
+	{
+		mask = ((uint64_t)(((uint64_t)1ULL << (uint64_t)esize)) - (uint64_t)1ULL);
+	}
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element = uint128_t::extract(operand, e, (((uint64_t)2ULL * (uint64_t)esize)));
+		uint128_t::insert(&result, e, esize, (((uint64_t)element & (uint64_t)mask)));
+	}
+	VPart_interpreter(ctx,Rd,part,datasize,(uint64_t)result);
+}
+
+void zip_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rm, uint64_t op, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t part = op;
+	uint64_t pairs = ((uint64_t)elements / (uint64_t)2ULL);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t base = ((uint64_t)part * (uint64_t)pairs);
+	for (uint64_t p = 0; p < (pairs); p++)
+	{
+		uint128_t::insert(&result, (((uint64_t)((uint64_t)2ULL * (uint64_t)p) + (uint64_t)0ULL)), esize, (uint128_t::extract(operand1, (((uint64_t)base + (uint64_t)p)), esize)));
+		uint128_t::insert(&result, (((uint64_t)((uint64_t)2ULL * (uint64_t)p) + (uint64_t)1ULL)), esize, (uint128_t::extract(operand2, (((uint64_t)base + (uint64_t)p)), esize)));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void tbl_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t len, uint64_t Rn, uint64_t Rd)
+{
+	store_context_interpreter(ctx);
+	uint64_t vector_context = get_vector_context_interpreter(ctx);
+	call_interpreter(ctx,vector_context,(uint64_t)Rd,(uint64_t)Rn,(uint64_t)len,(uint64_t)Rm,(uint64_t)Q,(uint64_t)table_lookup_fallback);
+	load_context_interpreter(ctx);
+}
+
+void ld1r_no_offset_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	ld1_interpreter(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,6ULL,0ULL,size,Rn,Rt);
+}
+
+void ld1r_post_index_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	ld1_interpreter(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,6ULL,0ULL,size,Rn,Rt);
+}
+
+void ld1_single_structure_no_offset_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	ld1_interpreter(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt);
+}
+
+void ld1_single_structure_post_index_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	ld1_interpreter(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt);
+}
+
+void floating_point_conditional_select_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	if (fltsize == 32ULL)
+	{
+		uint32_t result = 0ULL;
+		if ((condition_holds_interpreter(ctx,cond)))
+		{
+			result = operand1;
+		}
+		else
+		{
+			result = operand2;
+		}
+		V_interpreter(ctx,Rd,(uint128_t)result);
+	}
+	if (fltsize == 64ULL)
+	{
+		uint64_t result = 0ULL;
+		if ((condition_holds_interpreter(ctx,cond)))
+		{
+			result = operand1;
+		}
+		else
+		{
+			result = operand2;
+		}
+		V_interpreter(ctx,Rd,(uint128_t)result);
+	}
+	
+}
+
+void fcmeq_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint64_t working;
+		working = ((uint64_t)0ULL - (uint64_t)FPCompareEQ_interpreter(ctx,element1,element2,fpcr_state,esize));
+		uint128_t::insert(&result, e, esize, working);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fcmg_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint64_t working;
+		if ((U))
+		{
+			working = ((uint64_t)0ULL - (uint64_t)FPCompareGE_interpreter(ctx,element1,element2,fpcr_state,esize));
+		}
+		else
+		{
+			working = ((uint64_t)0ULL - (uint64_t)FPCompareGT_interpreter(ctx,element1,element2,fpcr_state,esize));
+		}
+		uint128_t::insert(&result, e, esize, working);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fcmeq_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = 0ULL;
+		uint64_t working = ((uint64_t)0ULL - (uint64_t)FPCompareEQ_interpreter(ctx,element1,element2,fpcr_state,esize));
+		uint128_t::insert(&result, e, esize, working);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fcmg_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = 0ULL;
+		uint64_t working;
+		if ((U))
+		{
+			working = ((uint64_t)0ULL - (uint64_t)FPCompareGE_interpreter(ctx,element1,element2,fpcr_state,esize));
+		}
+		else
+		{
+			working = ((uint64_t)0ULL - (uint64_t)FPCompareGT_interpreter(ctx,element1,element2,fpcr_state,esize));
+		}
+		uint128_t::insert(&result, e, esize, working);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmov_scalar_immediate_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t imm = vfp_expand_imm_interpreter(ctx,imm8,fltsize);
+	V_interpreter(ctx,Rd,(uint128_t)imm);
+}
+
+void fcvt_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t opc, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t srcsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t dstsize = get_flt_size_interpreter(ctx,opc);
+	uint64_t operand = V_interpreter(ctx,Rn);
+	V_interpreter(ctx,Rd,(uint128_t)FPConvert_interpreter(ctx,operand,dstsize,srcsize));
+}
+
+void fabs_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t operand = V_interpreter(ctx,Rn);
+	uint64_t result = 0ULL;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	result = FPAbs_interpreter(ctx,operand,fpcr_state,fltsize);
+	uint128_t vector = 0;
+	uint128_t::insert(&vector, 0ULL, fltsize, result);
+	V_interpreter(ctx,Rd,vector);
+}
+
+void fneg_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t operand = V_interpreter(ctx,Rn);
+	uint64_t result = 0ULL;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	result = FPNeg_interpreter(ctx,operand,fpcr_state,fltsize);
+	uint128_t vector = 0;
+	uint128_t::insert(&vector, 0ULL, fltsize, result);
+	V_interpreter(ctx,Rd,vector);
+}
+
+void fsqrt_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t operand = V_interpreter(ctx,Rn);
+	uint64_t result = 0ULL;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	result = FPSqrt_interpreter(ctx,operand,fpcr_state,fltsize);
+	uint128_t vector = 0;
+	uint128_t::insert(&vector, 0ULL, fltsize, result);
+	V_interpreter(ctx,Rd,vector);
+}
+
+void fcmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc)
+{
+	uint64_t datasize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t cmp_with_zero = ((uint64_t)opc == (uint64_t)1ULL);
+	uint64_t operand1 = V_interpreter(ctx,Rn);
+	uint64_t operand2;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	if ((cmp_with_zero))
+	{
+		operand2 = 0ULL;
 	}
 	else
 	{
-		return _x_interpreter(ctx,reg_id);
+		operand2 = V_interpreter(ctx,Rm);
 	}
+	uint64_t nzcv = FPCompare_interpreter(ctx,operand1,operand2,fpcr_state,datasize);
+	_sys_interpreter(ctx,(uint64_t)nzcv_n,((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
+	_sys_interpreter(ctx,(uint64_t)nzcv_z,((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
+	_sys_interpreter(ctx,(uint64_t)nzcv_c,((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
+	_sys_interpreter(ctx,(uint64_t)nzcv_v,((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 }
 
-void X_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
+void fccmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t nzcv)
 {
-	if ((((uint64_t)reg_id == (uint64_t)31ULL)))
+	uint64_t datasize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t operand1 = V_interpreter(ctx,Rn);
+	uint64_t operand2 = V_interpreter(ctx,Rm);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	if ((condition_holds_interpreter(ctx,cond)))
 	{
-		return;
+		uint64_t success_nzcv = FPCompare_interpreter(ctx,operand1,operand2,fpcr_state,datasize);
+		_sys_interpreter(ctx,(uint64_t)nzcv_n,((uint64_t)(((uint64_t)success_nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
+		_sys_interpreter(ctx,(uint64_t)nzcv_z,((uint64_t)(((uint64_t)success_nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
+		_sys_interpreter(ctx,(uint64_t)nzcv_c,((uint64_t)(((uint64_t)success_nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
+		_sys_interpreter(ctx,(uint64_t)nzcv_v,((uint64_t)(((uint64_t)success_nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 	}
 	else
 	{
-		_x_interpreter(ctx,reg_id,value);
+		_sys_interpreter(ctx,(uint64_t)nzcv_n,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL));
+		_sys_interpreter(ctx,(uint64_t)nzcv_z,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL));
+		_sys_interpreter(ctx,(uint64_t)nzcv_c,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
+		_sys_interpreter(ctx,(uint64_t)nzcv_v,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 	}
 }
 
-void msr_register_interpreter(interpreter_data* ctx, uint64_t imm15, uint64_t Rt)
+void fcvtz_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t operand = X_interpreter(ctx,Rt);
-	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_ZERO,U,0ULL);
+}
+
+void fcvtn_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEEVEN,U,0ULL);
+}
+
+void fcvta_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEAWAY,U,0ULL);
+}
+
+void fcvtm_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_NEGINF,U,0ULL);
+}
+
+void fadd_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		_sys_interpreter(ctx,fpcr,operand);
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, FPAdd_interpreter(ctx,element1,element2,fpcr_state,esize));
 	}
-	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmul_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		_sys_interpreter(ctx,fpsr,operand);
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, FPMul_interpreter(ctx,element1,element2,fpcr_state,esize));
 	}
-	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
+	V_interpreter(ctx,Rd,result);
+}
+
+void fsub_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		_sys_interpreter(ctx,thread_local_1,operand);
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, FPSub_interpreter(ctx,element1,element2,fpcr_state,esize));
 	}
-	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
+	V_interpreter(ctx,Rd,result);
+}
+
+void fdiv_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		_sys_interpreter(ctx,thread_local_0,operand);
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, FPDiv_interpreter(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmul_accumulate_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t neg, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t operand3 = V_interpreter(ctx,Rd);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint64_t element3 = uint128_t::extract(operand3, e, esize);
+		if ((neg))
+		{
+			element1 = FPNeg_interpreter(ctx,element1,fpcr_state,esize);
+		}
+		uint128_t::insert(&result, e, esize, FPMulAdd_interpreter(ctx,element3,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void faddp_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint128_t lo = V_interpreter(ctx,Rn);
+	uint128_t hi = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = get_from_concacted_vector_interpreter(ctx,hi,lo,((uint64_t)2ULL * (uint64_t)e),((uint64_t)datasize / (uint64_t)esize),esize);
+		uint64_t element2 = get_from_concacted_vector_interpreter(ctx,hi,lo,((uint64_t)(((uint64_t)2ULL * (uint64_t)e)) + (uint64_t)1ULL),((uint64_t)datasize / (uint64_t)esize),esize);
+		uint128_t::insert(&result, e, esize, FPAdd_interpreter(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void frsqrte_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t operand = V_interpreter(ctx,Rn);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t result = FPRSqrtEstimate_interpreter(ctx,operand,fpcr_state,esize);
+	if ((((uint64_t)esize == (uint64_t)32ULL)))
+	{
+		result = ((uint64_t)result & (uint64_t)4294967295ULL);
+	}
+	V_interpreter(ctx,Rd,(uint128_t)result);
+}
+
+void frsqrte_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element = uint128_t::extract(operand, e, esize);
+		element = FPRSqrtEstimate_interpreter(ctx,element,fpcr_state,esize);
+		uint128_t::insert(&result, e, esize, element);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void frsqrts_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, FPRSqrtStepFused_interpreter(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmul_scalar_by_element_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
 	}
 	else
 	{
-		undefined_with_interpreter(ctx,imm15);
+		undefined_interpreter(ctx);
 	}
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t product = FPMul_interpreter(ctx,(uint64_t)operand1,uint128_t::extract(operand2, index, esize),fpcr_state,esize);
+	uint128_t::insert(&result, 0ULL, esize, product);
+	V_interpreter(ctx,Rd,result);
 }
 
-void mrs_register_interpreter(interpreter_data* ctx, uint64_t imm15, uint64_t Rt)
+void fmul_vector_by_element_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t operand;
-	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
 	{
-		operand = _sys_interpreter(ctx,fpcr);
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
 	}
-	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
 	{
-		operand = _sys_interpreter(ctx,fpsr);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
-	{
-		operand = _sys_interpreter(ctx,thread_local_1);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
-	{
-		operand = _sys_interpreter(ctx,thread_local_0);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)24321ULL)))
-	{
-		operand = call_counter_interpreter(ctx);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)22529ULL)))
-	{
-		operand = 2219098116ULL;
+		index = H;
 	}
 	else
 	{
-		undefined_with_interpreter(ctx,imm15);
+		undefined_interpreter(ctx);
 	}
-	X_interpreter(ctx,Rt,operand);
-}
-
-void hints_interpreter(interpreter_data* ctx, uint64_t imm7)
-{
-}
-
-void sys_interpreter(interpreter_data* ctx, uint64_t L, uint64_t imm19)
-{
-}
-
-void barriers_interpreter(interpreter_data* ctx, uint64_t CRm, uint64_t op2, uint64_t Rt)
-{
-	if ((((uint64_t)((uint64_t)op2 == (uint64_t)2ULL) && (uint64_t)((uint64_t)Rt == (uint64_t)31ULL))))
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t element2 = uint128_t::extract(operand2, index, esize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		_sys_interpreter(ctx,exclusive_address,(uint64_t)-1ULL);
-		_sys_interpreter(ctx,exclusive_value,(uint64_t)-1ULL);
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint128_t::insert(&result, e, esize, FPMul_interpreter(ctx,element1,element2,fpcr_state,esize));
 	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmul_accumulate_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	uint128_t operand3 = V_interpreter(ctx,Rd);
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t element1 = operand1;
+	if ((neg))
+	{
+		element1 = FPNeg_interpreter(ctx,element1,fpcr_state,esize);
+	}
+	uint64_t product_accumalant = FPMulAdd_interpreter(ctx,(uint64_t)operand3,element1,uint128_t::extract(operand2, index, esize),fpcr_state,esize);
+	uint128_t::insert(&result, 0ULL, esize, product_accumalant);
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmul_accumulate_element_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	uint128_t operand3 = V_interpreter(ctx,Rd);
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t element2 = uint128_t::extract(operand2, index, esize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element3 = uint128_t::extract(operand3, e, esize);
+		if ((neg))
+		{
+			element1 = FPNeg_interpreter(ctx,element1,fpcr_state,esize);
+		}
+		uint128_t::insert(&result, e, esize, FPMulAdd_interpreter(ctx,element3,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void frint_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd, uint64_t rounding)
+{
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t esize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t working = FPRoundInt_interpreter(ctx,(uint64_t)operand1,fpcr_state,rounding,esize);
+	uint128_t::insert(&result, 0ULL, esize, working);
+	V_interpreter(ctx,Rd,result);
+}
+
+void frintp_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	frint_interpreter(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_POSINF);
+}
+
+void frintm_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	frint_interpreter(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_NEGINF);
+}
+
+void fcvtp_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_POSINF,U,0ULL);
+}
+
+uint64_t sign_extend_jit(ssa_emit_context* ctx, uint64_t source, uint64_t count)
+{
+	uint64_t max = 64ULL;
+	uint64_t shift = ((uint64_t)max - (uint64_t)count);
+	return ((uint64_t)(sign_extend((uint64_t)(((uint64_t)source << (uint64_t)shift))) >> sign_extend((uint64_t)shift)));
+}
+
+ir_operand a_shift_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t shift_type, uint64_t ammount)
+{
+	ir_operand result = copy_new_raw_size(ctx, X_jit(ctx,m), O);
+	if ((((uint64_t)shift_type == (uint64_t)0ULL)))
+	{
+		return ssa_emit_context::emit_ssa(ctx, ir_shift_left, result, ir_operand::create_con(ammount, O));
+	}
+	else if ((((uint64_t)shift_type == (uint64_t)1ULL)))
+	{
+		return ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, result, ir_operand::create_con(ammount, O));
+	}
+	else if ((((uint64_t)shift_type == (uint64_t)2ULL)))
+	{
+		return ssa_emit_context::emit_ssa(ctx, ir_shift_right_signed, result, ir_operand::create_con(ammount, O));
+	}
+	else
+	{
+		return ssa_emit_context::emit_ssa(ctx, ir_rotate_right, result, ir_operand::create_con(ammount, O));
+	}
+}
+
+ir_operand a_extend_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t extend_type, uint64_t shift)
+{
+	ir_operand val = copy_new_raw_size(ctx, X_jit(ctx,m), O);
+	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(255ULL, O));
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(65535ULL, O));
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(4294967295ULL, O));
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int8), O);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int16), O);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int32), O);
+	}
+	return ssa_emit_context::emit_ssa(ctx, ir_shift_left, val, ir_operand::create_con(shift, O));
+}
+
+ir_operand a_extend_reg_64_jit(ssa_emit_context* ctx, uint64_t m, uint64_t extend_type, uint64_t shift)
+{
+	ir_operand val = X_jit(ctx,m);
+	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(255ULL, int64));
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(65535ULL, int64));
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(4294967295ULL, int64));
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int8), int64);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int16), int64);
+	}
+	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
+	{
+		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int32), int64);
+	}
+	return ssa_emit_context::emit_ssa(ctx, ir_shift_left, val, ir_operand::create_con(shift, int64));
+}
+
+ir_operand reverse_bytes_jit(ssa_emit_context* ctx,uint64_t O, ir_operand source, uint64_t byte_count)
+{
+	ir_operand result = ir_operand::create_con(0ULL, O);
+	for (uint64_t i = 0; i < (byte_count); i++)
+	{
+		ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, source, ir_operand::create_con((((uint64_t)i * (uint64_t)8ULL)), O)), ir_operand::create_con(255ULL, O));
+		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, result, ssa_emit_context::emit_ssa(ctx, ir_shift_left, working, ir_operand::create_con((((uint64_t)(((uint64_t)((uint64_t)byte_count - (uint64_t)i) - (uint64_t)1ULL)) * (uint64_t)8ULL)), O)));
+	}
+	return result;
+}
+
+uint64_t highest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t src, uint64_t size)
+{
+	for (uint64_t i = 0; i < (size); i++)
+	{
+		uint64_t bit_check = ((uint64_t)((uint64_t)size - (uint64_t)i) - (uint64_t)1ULL);
+		uint64_t bit = ((uint64_t)(((uint64_t)src >> (uint64_t)bit_check)) & (uint64_t)1ULL);
+		if ((bit))
+		{
+			return bit_check;
+		}
+	}
+	return -1ULL;
+}
+
+uint64_t ones_jit(ssa_emit_context* ctx, uint64_t size)
+{
+	if ((((uint64_t)size == (uint64_t)64ULL)))
+	{
+		return 18446744073709551615ULL;
+	}
+	return ((uint64_t)(((uint64_t)1ULL << (uint64_t)size)) - (uint64_t)1ULL);
+}
+
+uint64_t replicate_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t source_size, uint64_t count)
+{
+	uint64_t result = 0ULL;
+	for (uint64_t i = 0; i < (count); i++)
+	{
+		result = ((uint64_t)result | (uint64_t)(((uint64_t)(((uint64_t)source & (uint64_t)ones_jit(ctx,source_size))) << (uint64_t)(((uint64_t)i * (uint64_t)source_size)))));
+	}
+	return result;
+}
+
+uint64_t bits_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t top, uint64_t bottom)
+{
+	top = ((uint64_t)top + (uint64_t)1ULL);
+	uint64_t size = ((uint64_t)top - (uint64_t)bottom);
+	uint64_t mask = ones_jit(ctx,size);
+	return ((uint64_t)(((uint64_t)source >> (uint64_t)bottom)) & (uint64_t)mask);
+}
+
+uint64_t bit_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t bit)
+{
+	return ((uint64_t)(((uint64_t)source >> (uint64_t)bit)) & (uint64_t)1ULL);
+}
+
+uint64_t rotate_right_bits_jit(ssa_emit_context* ctx, uint64_t source, uint64_t ammount, uint64_t bit_count)
+{
+	source = ((uint64_t)source & (uint64_t)ones_jit(ctx,bit_count));
+	return (((uint64_t)(((uint64_t)source >> (uint64_t)ammount)) | (uint64_t)(((uint64_t)source << (uint64_t)(((uint64_t)bit_count - (uint64_t)ammount))))));
+}
+
+uint64_t decode_bitmask_tmask_jit(ssa_emit_context* ctx, uint64_t immN, uint64_t imms, uint64_t immr, uint64_t immediate, uint64_t M, uint64_t return_tmask)
+{
+	uint64_t levels;
+	uint64_t len = highest_bit_set_c_jit(ctx,((uint64_t)(((uint64_t)immN << (uint64_t)6ULL)) | (uint64_t)(((uint64_t)~imms & (uint64_t)ones_jit(ctx,6ULL)))),7ULL);
+	if ((((uint64_t)len < (uint64_t)1ULL)))
+	{
+		undefined_jit(ctx);
+	}
+	levels = ones_jit(ctx,len);
+	if ((((uint64_t)immediate && (uint64_t)((uint64_t)(((uint64_t)imms & (uint64_t)levels)) == (uint64_t)levels))))
+	{
+		undefined_jit(ctx);
+	}
+	uint64_t s = ((uint64_t)imms & (uint64_t)levels);
+	uint64_t r = ((uint64_t)immr & (uint64_t)levels);
+	uint64_t diff = ((uint64_t)s - (uint64_t)r);
+	uint64_t esize = ((uint64_t)1ULL << (uint64_t)len);
+	uint64_t d = bits_c_jit(ctx,diff,((uint64_t)len - (uint64_t)1ULL),0ULL);
+	uint64_t welem = ones_jit(ctx,((uint64_t)s + (uint64_t)1ULL));
+	uint64_t telem = ones_jit(ctx,((uint64_t)d + (uint64_t)1ULL));
+	if ((return_tmask))
+	{
+		return replicate_c_jit(ctx,telem,esize,((uint64_t)M / (uint64_t)esize));
+	}
+	else
+	{
+		return replicate_c_jit(ctx,rotate_right_bits_jit(ctx,welem,r,esize),esize,((uint64_t)M / (uint64_t)esize));
+	}
+}
+
+uint64_t decode_add_subtract_imm_12_jit(ssa_emit_context* ctx, uint64_t source, uint64_t shift)
+{
+	return ((uint64_t)source << (uint64_t)(((uint64_t)shift * (uint64_t)12ULL)));
+}
+
+ir_operand add_subtract_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add)
+{
+	ir_operand d;
+	if ((is_add))
+	{
+		d = ssa_emit_context::emit_ssa(ctx, ir_add, n, m);
+	}
+	else
+	{
+		d = ssa_emit_context::emit_ssa(ctx, ir_subtract, n, m);
+	}
+	if ((set_flags))
+	{
+		_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, d, ir_operand::create_con(0ULL, O)), int64));
+		_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, ir_operand::create_con(0ULL, O)), int64));
+		if ((is_add))
+		{
+			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, d, n), int64));
+			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m))), ir_operand::create_con(0ULL, O)), int64));
+		}
+		else
+		{
+			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_unsigned, n, m), int64));
+			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m)), ir_operand::create_con(0ULL, O)), int64));
+		}
+	}
+	return d;
+}
+
+ir_operand add_subtract_carry_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add, ir_operand carry)
+{
+	ir_operand d;
+	if ((is_add))
+	{
+		d = ssa_emit_context::emit_ssa(ctx, ir_add, ssa_emit_context::emit_ssa(ctx, ir_add, n, m), carry);
+	}
+	else
+	{
+		d = ssa_emit_context::emit_ssa(ctx, ir_subtract, ssa_emit_context::emit_ssa(ctx, ir_subtract, n, m), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, carry, ir_operand::create_con(1ULL, O)));
+	}
+	if ((set_flags))
+	{
+		_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, d, ir_operand::create_con(0ULL, O)), int64));
+		_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, ir_operand::create_con(0ULL, O)), int64));
+		if ((is_add))
+		{
+			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, n), carry), ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, d, n)), int64));
+			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m))), ir_operand::create_con(0ULL, O)), int64));
+		}
+		else
+		{
+			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, m), carry), ssa_emit_context::emit_ssa(ctx, ir_compare_greater_unsigned, n, m)), int64));
+			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m)), ir_operand::create_con(0ULL, O)), int64));
+		}
+	}
+	return d;
+}
+
+ir_operand condition_holds_jit(ssa_emit_context* ctx, uint64_t cond)
+{
+	ir_operand n = copy_new_raw_size(ctx, _sys_jit(ctx,0ULL), int8);
+	ir_operand z = copy_new_raw_size(ctx, _sys_jit(ctx,1ULL), int8);
+	ir_operand c = copy_new_raw_size(ctx, _sys_jit(ctx,2ULL), int8);
+	ir_operand v = copy_new_raw_size(ctx, _sys_jit(ctx,3ULL), int8);
+	uint64_t raw_condition = ((uint64_t)cond >> (uint64_t)1ULL);
+	ir_operand result;
+	if ((((uint64_t)raw_condition == (uint64_t)0ULL)))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, z, ir_operand::create_con(1ULL, int8));
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)1ULL)))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, c, ir_operand::create_con(1ULL, int8));
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)2ULL)))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, ir_operand::create_con(1ULL, int8));
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)3ULL)))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, v, ir_operand::create_con(1ULL, int8));
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)4ULL)))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, c, ir_operand::create_con(1ULL, int8)), ssa_emit_context::emit_ssa(ctx, ir_compare_equal, z, ir_operand::create_con(0ULL, int8)));
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)5ULL)))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, v);
+	}
+	else if ((((uint64_t)raw_condition == (uint64_t)6ULL)))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, v), ssa_emit_context::emit_ssa(ctx, ir_compare_equal, z, ir_operand::create_con(0ULL, int8)));
+	}
+	else
+	{
+		result = ir_operand::create_con(1ULL, int8);
+	}
+	if ((((uint64_t)(((uint64_t)cond & (uint64_t)1ULL)) && (uint64_t)((uint64_t)cond != (uint64_t)15ULL))))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, result, ir_operand::create_con(1ULL, int8));
+	}
+	return result;
+}
+
+void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link)
+{
+	ir_operand branch_location = X_jit(ctx,Rn);
+	if ((link))
+	{
+		ir_operand link_address = ir_operand::create_con(((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL), int64);
+		X_jit(ctx,30ULL,link_address);
+	}
+	_branch_long_jit(ctx,branch_location);
+}
+
+ir_operand shift_left_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_operand shift, uint64_t size)
+{
+	ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, int64));
+	{
+	    ir_operand end = ir_operation_block::create_label(ctx->ir);
+	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+	
+	    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(size, int64));
+	
+	    ir_operation_block::jump_if(ctx->ir,yes, condition);
+		{
+			ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_left, to_shift, copy_new_raw_size(ctx, shift, int64)));
+		}
+	    
+	    ir_operation_block::jump(ctx->ir,end);
+	    ir_operation_block::mark_label(ctx->ir, yes);
+	
+		{
+			ssa_emit_context::move(ctx,result,ir_operand::create_con(0ULL, int64));
+		}
+	
+	    ir_operation_block::mark_label(ctx->ir, end);
+	}
+	return result;
+}
+
+ir_operand shift_right_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_operand shift, uint64_t size, uint64_t is_unsigned)
+{
+	ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, int64));
+	{
+	    ir_operand end = ir_operation_block::create_label(ctx->ir);
+	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+	
+	    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(size, int64));
+	
+	    ir_operation_block::jump_if(ctx->ir,yes, condition);
+		{
+			if ((is_unsigned))
+			{
+				ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, to_shift, copy_new_raw_size(ctx, shift, int64)));
+			}
+			else
+			{
+				ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_right_signed, to_shift, copy_new_raw_size(ctx, shift, int64)));
+			}
+		}
+	    
+	    ir_operation_block::jump(ctx->ir,end);
+	    ir_operation_block::mark_label(ctx->ir, yes);
+	
+		{
+			{
+			    ir_operand end = ir_operation_block::create_label(ctx->ir);
+			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+			
+			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, to_shift, ir_operand::create_con(0ULL, int64)), ir_operand::create_con(!is_unsigned, int64));
+			
+			    ir_operation_block::jump_if(ctx->ir,yes, condition);
+				{
+					ssa_emit_context::move(ctx,result,ir_operand::create_con(0ULL, int64));
+				}
+			    
+			    ir_operation_block::jump(ctx->ir,end);
+			    ir_operation_block::mark_label(ctx->ir, yes);
+			
+				{
+					ssa_emit_context::move(ctx,result,ir_operand::create_con(-1ULL, int64));
+				}
+			
+			    ir_operation_block::mark_label(ctx->ir, end);
+			}
+		}
+	
+	    ir_operation_block::mark_label(ctx->ir, end);
+	}
+	return result;
+}
+
+ir_operand reverse_jit(ssa_emit_context* ctx, ir_operand word, uint64_t M, uint64_t N)
+{
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t swsize = M;
+	uint64_t sw = ((uint64_t)N / (uint64_t)swsize);
+	for (uint64_t s = 0; s < (sw); s++)
+	{
+		ssa_emit_context::vector_insert(ctx,result, (((uint64_t)(((uint64_t)sw - (uint64_t)1ULL)) - (uint64_t)s)), swsize, ssa_emit_context::vector_extract(ctx,word, s, swsize));
+	}
+	return copy_new_raw_size(ctx, result, int64);
+}
+
+void convert_to_int_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t Rd, uint64_t Rn, uint64_t round, uint64_t is_unsigned, uint64_t to_vector)
+{
+	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	ir_operand result = FPToFixed_jit(ctx,operand,0ULL,is_unsigned,round,intsize,fltsize);
+	if ((to_vector))
+	{
+		V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
+	}
+	else
+	{
+		X_jit(ctx,Rd,result);
+	}
+}
+
+uint64_t lowest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t source)
+{
+	uint64_t size = 32ULL;
+	for (uint64_t i = 0; i < (size); i++)
+	{
+		uint64_t working_bit = ((uint64_t)(((uint64_t)source >> (uint64_t)i)) & (uint64_t)1ULL);
+		if ((working_bit))
+		{
+			return i;
+		}
+	}
+	return size;
+}
+
+void dup_element_jit(ssa_emit_context* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d)
+{
+	ir_operand operand = V_jit(ctx,n);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand element = ssa_emit_context::vector_extract(ctx,operand, index, esize);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
+	}
+	V_jit(ctx,d,result);
+}
+
+uint64_t get_flt_size_jit(ssa_emit_context* ctx, uint64_t ftype)
+{
+	if ((((uint64_t)ftype == (uint64_t)2ULL)))
+	{
+		return 64ULL;
+	}
+	else
+	{
+		return ((uint64_t)8ULL << (uint64_t)(((uint64_t)ftype ^ (uint64_t)2ULL)));
+	}
+}
+
+uint64_t vfp_expand_imm_jit(ssa_emit_context* ctx, uint64_t imm8, uint64_t N)
+{
+	uint64_t E;
+	if ((((uint64_t)N == (uint64_t)16ULL)))
+	{
+		E = 5ULL;
+	}
+	else if ((((uint64_t)N == (uint64_t)32ULL)))
+	{
+		E = 8ULL;
+	}
+	else
+	{
+		E = 11ULL;
+	}
+	uint64_t F = ((uint64_t)(((uint64_t)N - (uint64_t)E)) - (uint64_t)1ULL);
+	uint64_t sign = ((uint64_t)(((uint64_t)imm8 >> (uint64_t)7ULL)) & (uint64_t)1ULL);
+	uint64_t exp = ((uint64_t)~(bit_c_jit(ctx,imm8,6ULL)) & (uint64_t)1ULL);
+	exp = ((uint64_t)(((uint64_t)exp << (uint64_t)(((uint64_t)E - (uint64_t)3ULL)))) | (uint64_t)replicate_c_jit(ctx,bit_c_jit(ctx,imm8,6ULL),1ULL,((uint64_t)E - (uint64_t)3ULL)));
+	exp = ((uint64_t)(((uint64_t)exp << (uint64_t)2ULL)) | (uint64_t)bits_c_jit(ctx,imm8,5ULL,4ULL));
+	uint64_t frac = ((uint64_t)bits_c_jit(ctx,imm8,3ULL,0ULL) << (uint64_t)(((uint64_t)F - (uint64_t)4ULL)));
+	uint64_t result = sign;
+	result = ((uint64_t)(((uint64_t)result << (uint64_t)(((uint64_t)((uint64_t)1ULL + (uint64_t)(((uint64_t)E - (uint64_t)3ULL))) + (uint64_t)2ULL)))) | (uint64_t)exp);
+	result = ((uint64_t)(((uint64_t)result << (uint64_t)(((uint64_t)4ULL + (uint64_t)(((uint64_t)F - (uint64_t)4ULL)))))) | (uint64_t)frac);
+	return result;
+}
+
+uint64_t expand_imm_jit(ssa_emit_context* ctx, uint64_t op, uint64_t cmode, uint64_t imm8)
+{
+	uint64_t imm64 = 0ULL;
+	uint64_t cmode_test = bits_c_jit(ctx,cmode,3ULL,1ULL);
+	if ((((uint64_t)cmode_test == (uint64_t)0ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,imm8,32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)1ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)8ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)2ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)16ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)3ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)24ULL),32ULL,2ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)4ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,imm8,16ULL,4ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)5ULL)))
+	{
+		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)8ULL),16ULL,4ULL);
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)6ULL)))
+	{
+		if ((((uint64_t)(((uint64_t)cmode & (uint64_t)1ULL)) == (uint64_t)0ULL)))
+		{
+			imm64 = replicate_c_jit(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)8ULL)) | (uint64_t)ones_jit(ctx,8ULL)),32ULL,2ULL);
+		}
+		else
+		{
+			imm64 = replicate_c_jit(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)16ULL)) | (uint64_t)ones_jit(ctx,16ULL)),32ULL,2ULL);
+		}
+	}
+	else if ((((uint64_t)cmode_test == (uint64_t)7ULL)))
+	{
+		if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
+		{
+			imm64 = replicate_c_jit(ctx,imm8,8ULL,8ULL);
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
+		{
+			for (uint64_t i = 0; i < (8ULL); i++)
+			{
+				uint64_t part = ((uint64_t)(((uint64_t)0ULL - (uint64_t)(((uint64_t)(((uint64_t)imm8 >> (uint64_t)i)) & (uint64_t)1ULL)))) & (uint64_t)255ULL);
+				imm64 = ((uint64_t)imm64 | (uint64_t)(((uint64_t)part << (uint64_t)(((uint64_t)i * (uint64_t)8ULL)))));
+			}
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
+		{
+			uint64_t p0 = bit_c_jit(ctx,imm8,7ULL);
+			uint64_t p1 = ((uint64_t)(~(bit_c_jit(ctx,imm8,6ULL))) & (uint64_t)1ULL);
+			uint64_t p2 = replicate_c_jit(ctx,bit_c_jit(ctx,imm8,6ULL),1ULL,5ULL);
+			uint64_t p3 = bits_c_jit(ctx,imm8,5ULL,0ULL);
+			uint64_t p4 = 0ULL;
+			uint64_t working = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)19ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)19ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL) + (uint64_t)1ULL)))));
+			imm64 = replicate_c_jit(ctx,working,32ULL,2ULL);
+		}
+		else if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
+		{
+			uint64_t p0 = bit_c_jit(ctx,imm8,7ULL);
+			uint64_t p1 = ((uint64_t)(~(bit_c_jit(ctx,imm8,6ULL))) & (uint64_t)1ULL);
+			uint64_t p2 = replicate_c_jit(ctx,bit_c_jit(ctx,imm8,6ULL),1ULL,8ULL);
+			uint64_t p3 = bits_c_jit(ctx,imm8,5ULL,0ULL);
+			uint64_t p4 = 0ULL;
+			imm64 = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)48ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)48ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL) + (uint64_t)1ULL)))));
+		}
+		else
+		{
+			undefined_jit(ctx);
+		}
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	return imm64;
+}
+
+void VPart_jit(ssa_emit_context* ctx, uint64_t n, uint64_t part, uint64_t width, ir_operand value)
+{
+	if ((((uint64_t)part == (uint64_t)0ULL)))
+	{
+		V_jit(ctx,n,copy_new_raw_size(ctx, value, int128));
+	}
+	else
+	{
+		ir_operand src = V_jit(ctx,n);
+		ssa_emit_context::vector_insert(ctx,src, 1ULL, 64ULL, value);
+		V_jit(ctx,n,src);
+	}
+}
+
+ir_operand VPart_jit(ssa_emit_context* ctx, uint64_t n, uint64_t part, uint64_t width)
+{
+	return ssa_emit_context::vector_extract(ctx,V_jit(ctx,n), part, width);
+}
+
+ir_operand get_from_concacted_vector_jit(ssa_emit_context* ctx, ir_operand top, ir_operand bottom, uint64_t index, uint64_t element_count, uint64_t element_size)
+{
+	ir_operand working = bottom;
+	if ((((uint64_t)index >= (uint64_t)element_count)))
+	{
+		index = ((uint64_t)index - (uint64_t)element_count);
+		working = top;
+	}
+	return ssa_emit_context::vector_extract(ctx,working, index, element_size);
+}
+
+ir_operand call_float_binary_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand fpcr, uint64_t N, uint64_t function)
+{
+	return call_jit(ctx,operand1,operand2,fpcr,ir_operand::create_con(N, int64),ir_operand::create_con(0ULL, int64),ir_operand::create_con(0ULL, int64),function);
+}
+
+ir_operand call_float_unary_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand fpcr, uint64_t N, uint64_t function)
+{
+	return call_jit(ctx,operand,fpcr,ir_operand::create_con(N, int64),ir_operand::create_con(0ULL, int64),ir_operand::create_con(0ULL, int64),ir_operand::create_con(0ULL, int64),function);
+}
+
+void convert_to_float_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd, uint64_t from_vector)
+{
+	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	uint64_t I = intsize == 32ULL ? int32 : intsize == 64ULL ? int64 : 0;
+	{
+		uint64_t F = fltsize == 16ULL ? int16 : fltsize == 32ULL ? int32 : fltsize == 64ULL ? int64 : 0;
+		{
+			ir_operand result;
+			ir_operand operand;
+			if ((from_vector))
+			{
+				operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), I);
+			}
+			else
+			{
+				operand = copy_new_raw_size(ctx, X_jit(ctx,Rn), I);
+			}
+			if ((U))
+			{
+				result = ssa_emit_context::convert_to_float(ctx,operand,F,I, 0);
+			}
+			else
+			{
+				result = ssa_emit_context::convert_to_float(ctx,operand,F,I, 1);
+			}
+			V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
+		}
+	}
+}
+
+ir_operand replicate_vector_jit(ssa_emit_context* ctx, ir_operand source, uint64_t v_size, uint64_t count)
+{
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (count); e++)
+	{
+		ssa_emit_context::vector_insert(ctx,result, e, v_size, ssa_emit_context::vector_extract(ctx,source, 0ULL, 64ULL));
+	}
+	return result;
+}
+
+void ld1_jit(ssa_emit_context* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t R, uint64_t Rm, uint64_t o2, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t scale = bits_c_jit(ctx,opcode,2ULL,1ULL);
+	uint64_t selem = ((uint64_t)(((uint64_t)(((uint64_t)bit_c_jit(ctx,opcode,0ULL) << (uint64_t)1ULL)) | (uint64_t)R)) + (uint64_t)1ULL);
+	uint64_t replicate = 0ULL;
+	uint64_t index;
+	if ((((uint64_t)scale == (uint64_t)3ULL)))
+	{
+		scale = size;
+		replicate = 1ULL;
+	}
+	else if ((((uint64_t)scale == (uint64_t)0ULL)))
+	{
+		index = Q;
+		index = ((uint64_t)(((uint64_t)index << (uint64_t)1ULL)) | (uint64_t)S);
+		index = ((uint64_t)(((uint64_t)index << (uint64_t)2ULL)) | (uint64_t)size);
+	}
+	else if ((((uint64_t)scale == (uint64_t)1ULL)))
+	{
+		index = Q;
+		index = ((uint64_t)(((uint64_t)index << (uint64_t)1ULL)) | (uint64_t)S);
+		index = ((uint64_t)(((uint64_t)index << (uint64_t)1ULL)) | (uint64_t)bit_c_jit(ctx,size,1ULL));
+	}
+	else if ((((uint64_t)scale == (uint64_t)2ULL)))
+	{
+		if ((((uint64_t)(((uint64_t)size & (uint64_t)1ULL)) == (uint64_t)0ULL)))
+		{
+			index = ((uint64_t)(((uint64_t)Q << (uint64_t)1ULL)) | (uint64_t)S);
+		}
+		else
+		{
+			index = Q;
+			scale = 3ULL;
+		}
+	}
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)scale);
+	uint64_t ebytes = ((uint64_t)esize / (uint64_t)8ULL);
+	ir_operand address = XSP_jit(ctx,Rn);
+	uint64_t offs = 0ULL;
+	uint64_t O = (((uint64_t)ebytes * (uint64_t)8ULL)) == 8ULL ? int8 : (((uint64_t)ebytes * (uint64_t)8ULL)) == 16ULL ? int16 : (((uint64_t)ebytes * (uint64_t)8ULL)) == 32ULL ? int32 : (((uint64_t)ebytes * (uint64_t)8ULL)) == 64ULL ? int64 : (((uint64_t)ebytes * (uint64_t)8ULL)) == 128ULL ? int128 : 0;
+	{
+		uint64_t t = Rt;
+		if ((replicate))
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				ir_operand eaddr = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offs, int64));
+				ir_operand element = copy_new_raw_size(ctx, mem_jit(ctx,O,eaddr), O);
+				V_jit(ctx,t,replicate_vector_jit(ctx,copy_new_raw_size(ctx, element, int128),esize,((uint64_t)datasize / (uint64_t)esize)));
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		else
+		{
+			for (uint64_t s = 0; s < (selem); s++)
+			{
+				ir_operand rval = V_jit(ctx,t);
+				ir_operand eaddr = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offs, int64));
+				ssa_emit_context::vector_insert(ctx,rval, index, esize, mem_jit(ctx,O,eaddr));
+				V_jit(ctx,t,rval);
+				offs = ((uint64_t)offs + (uint64_t)ebytes);
+				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+			}
+		}
+		if ((wback))
+		{
+			ir_operand _offs = ir_operand::create_con(offs, int64);
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_jit(ctx,Rm);
+			}
+			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, _offs);
+			XSP_jit(ctx,Rn,address);
+		}
+	}
+}
+
+ir_operand FPAdd_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPAdd_I);
+}
+
+ir_operand FPSub_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPSub_I);
+}
+
+ir_operand FPMul_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMul_I);
+}
+
+ir_operand FPDiv_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPDiv_I);
+}
+
+ir_operand FPMax_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMax_I);
+}
+
+ir_operand FPMin_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMin_I);
+}
+
+ir_operand FPMaxNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMaxNum_I);
+}
+
+ir_operand FPMinNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMinNum_I);
+}
+
+ir_operand FPCompare_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPCompare_I);
+}
+
+ir_operand FPRSqrtStepFused_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPRSqrtStepFused_I);
+}
+
+ir_operand FPCompareEQ_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPCompareEQ_I);
+}
+
+ir_operand FPCompareGT_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPCompareGT_I);
+}
+
+ir_operand FPCompareGE_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPCompareGE_I);
+}
+
+ir_operand FPSqrt_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N)
+{
+	return call_float_unary_jit(ctx,operand,FPCR,N,(uint64_t)FPSqrt_I);
+}
+
+ir_operand FPNeg_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N)
+{
+	return call_float_unary_jit(ctx,operand,FPCR,N,(uint64_t)FPNeg_I);
+}
+
+ir_operand FPAbs_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N)
+{
+	return call_float_unary_jit(ctx,operand,FPCR,N,(uint64_t)FPAbs_I);
+}
+
+ir_operand FPRSqrtEstimate_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N)
+{
+	return call_float_unary_jit(ctx,operand,FPCR,N,(uint64_t)FPRSqrtEstimate_I);
+}
+
+ir_operand FixedToFP_jit(ssa_emit_context* ctx, ir_operand source, uint64_t fracbits, uint64_t is_unsigned, uint64_t to, uint64_t from)
+{
+	return call_jit(ctx,source,ir_operand::create_con(fracbits, int64),ir_operand::create_con(is_unsigned, int64),ir_operand::create_con(to, int64),ir_operand::create_con(from, int64),ir_operand::create_con(0ULL, int64),(uint64_t)FixedToFP_I);
+}
+
+ir_operand FPToFixed_jit(ssa_emit_context* ctx, ir_operand source, uint64_t fracbits, uint64_t is_unsigned, uint64_t round, uint64_t to, uint64_t from)
+{
+	return call_jit(ctx,source,ir_operand::create_con(fracbits, int64),ir_operand::create_con(is_unsigned, int64),ir_operand::create_con(round, int64),ir_operand::create_con(to, int64),ir_operand::create_con(from, int64),(uint64_t)FPToFixed_I);
+}
+
+ir_operand FPConvert_jit(ssa_emit_context* ctx, ir_operand source, uint64_t to, uint64_t from)
+{
+	return call_jit(ctx,source,ir_operand::create_con(0ULL, int64),ir_operand::create_con(0ULL, int64),ir_operand::create_con(to, int64),ir_operand::create_con(from, int64),ir_operand::create_con(0ULL, int64),(uint64_t)FPConvert_I);
+}
+
+ir_operand FPRoundInt_jit(ssa_emit_context* ctx, ir_operand source, ir_operand fpcr, uint64_t rounding, uint64_t N)
+{
+	return call_jit(ctx,source,fpcr,ir_operand::create_con(rounding, int64),ir_operand::create_con(N, int64),ir_operand::create_con(0ULL, int64),ir_operand::create_con(0ULL, int64),(uint64_t)FPRoundInt_I);
+}
+
+ir_operand FPMulAdd_jit(ssa_emit_context* ctx, ir_operand addend, ir_operand element1, ir_operand element2, ir_operand fpcr, uint64_t N)
+{
+	return call_jit(ctx,addend,element1,element2,fpcr,ir_operand::create_con(N, int64),ir_operand::create_con(0ULL, int64),(uint64_t)FPMulAdd_I);
 }
 
 void add_subtract_imm12_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -5829,7 +8453,7 @@ void add_subtract_carry_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 	{
 		ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
-		ir_operand result = copy_new_raw_size(ctx, add_subtract_carry_impl_jit(ctx,O,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),copy_new_raw_size(ctx, _sys_jit(ctx,nzcv_c), O)), O);
+		ir_operand result = copy_new_raw_size(ctx, add_subtract_carry_impl_jit(ctx,O,operand1,operand2,((uint64_t)S == (uint64_t)1ULL),((uint64_t)op == (uint64_t)0ULL),copy_new_raw_size(ctx, _sys_jit(ctx,(uint64_t)nzcv_c), O)), O);
 		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 	}
 }
@@ -6224,10 +8848,10 @@ void logical_immediate_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uin
 		{
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand1, operand2);
 			X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
-			_sys_jit(ctx,nzcv_n,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
-			_sys_jit(ctx,nzcv_z,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
-			_sys_jit(ctx,nzcv_c,ir_operand::create_con(0ULL, int64));
-			_sys_jit(ctx,nzcv_v,ir_operand::create_con(0ULL, int64));
+			_sys_jit(ctx,(uint64_t)nzcv_n,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
+			_sys_jit(ctx,(uint64_t)nzcv_z,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
+			_sys_jit(ctx,(uint64_t)nzcv_c,ir_operand::create_con(0ULL, int64));
+			_sys_jit(ctx,(uint64_t)nzcv_v,ir_operand::create_con(0ULL, int64));
 			return;
 		}
 		XSP_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
@@ -6252,10 +8876,10 @@ void logical_shifted_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uint6
 			result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, operand1, operand2);
 			if ((((uint64_t)opc == (uint64_t)3ULL)))
 			{
-				_sys_jit(ctx,nzcv_n,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
-				_sys_jit(ctx,nzcv_z,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
-				_sys_jit(ctx,nzcv_c,ir_operand::create_con(0ULL, int64));
-				_sys_jit(ctx,nzcv_v,ir_operand::create_con(0ULL, int64));
+				_sys_jit(ctx,(uint64_t)nzcv_n,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, result, ir_operand::create_con(0ULL, O)), int64));
+				_sys_jit(ctx,(uint64_t)nzcv_z,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, result, ir_operand::create_con(0ULL, O)), int64));
+				_sys_jit(ctx,(uint64_t)nzcv_c,ir_operand::create_con(0ULL, int64));
+				_sys_jit(ctx,(uint64_t)nzcv_v,ir_operand::create_con(0ULL, int64));
 			}
 		}
 		else if ((((uint64_t)opc == (uint64_t)1ULL)))
@@ -6322,10 +8946,10 @@ void conditional_compare_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, ui
 		
 		    ir_operation_block::jump_if(ctx->ir,yes, condition);
 			{
-				_sys_jit(ctx,nzcv_n,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL), int64));
-				_sys_jit(ctx,nzcv_z,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL), int64));
-				_sys_jit(ctx,nzcv_c,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL), int64));
-				_sys_jit(ctx,nzcv_v,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL), int64));
+				_sys_jit(ctx,(uint64_t)nzcv_n,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL), int64));
+				_sys_jit(ctx,(uint64_t)nzcv_z,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL), int64));
+				_sys_jit(ctx,(uint64_t)nzcv_c,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL), int64));
+				_sys_jit(ctx,(uint64_t)nzcv_v,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL), int64));
 			}
 		    
 		    ir_operation_block::jump(ctx->ir,end);
@@ -6385,6 +9009,145 @@ void pc_rel_addressing_jit(ssa_emit_context* ctx, uint64_t op, uint64_t immlo, u
 		instruction_pc = ((uint64_t)instruction_pc & (uint64_t)~4095ULL);
 	}
 	X_jit(ctx,Rd,ir_operand::create_con(((uint64_t)instruction_pc + (uint64_t)offset), int64));
+}
+
+void branch_register_jit(ssa_emit_context* ctx, uint64_t l, uint64_t Rn)
+{
+	branch_long_universal_jit(ctx,Rn,l);
+}
+
+void return_register_jit(ssa_emit_context* ctx, uint64_t Rn)
+{
+	branch_long_universal_jit(ctx,Rn,0ULL);
+}
+
+void test_bit_branch_jit(ssa_emit_context* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt)
+{
+	uint64_t bit_pos = ((uint64_t)b40 + (uint64_t)(((uint64_t)b5 << (uint64_t)5ULL)));
+	uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm14,14ULL) << (uint64_t)2ULL)));
+	uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
+	ir_operand src = X_jit(ctx,Rt);
+	ir_operand branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, src, ir_operand::create_con(bit_pos, int64)), ir_operand::create_con(1ULL, int64)), ir_operand::create_con(op, int64)), int8);
+	_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, branch_pass, int64));
+}
+
+void compare_and_branch_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt)
+{
+	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : 0;
+	{
+		uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm19,19ULL) << (uint64_t)2ULL)));
+		uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
+		ir_operand operand = copy_new_raw_size(ctx, X_jit(ctx,Rt), O);
+		ir_operand branch_pass;
+		if ((!op))
+		{
+			branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, operand, ir_operand::create_con(0ULL, O)), int8);
+		}
+		else
+		{
+			branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_not_equal, operand, ir_operand::create_con(0ULL, O)), int8);
+		}
+		_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, branch_pass, int64));
+	}
+}
+
+void b_unconditional_jit(ssa_emit_context* ctx, uint64_t op, uint64_t imm26)
+{
+	uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm26,26ULL) << (uint64_t)2ULL)));
+	if ((op))
+	{
+		uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
+		X_jit(ctx,30ULL,ir_operand::create_con(next_location, int64));
+	}
+	_branch_short_jit(ctx,new_location);
+}
+
+void b_conditional_jit(ssa_emit_context* ctx, uint64_t imm19, uint64_t cond)
+{
+	uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm19,19ULL) << (uint64_t)2ULL)));
+	uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
+	_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, condition_holds_jit(ctx,cond), int64));
+}
+
+void svc_jit(ssa_emit_context* ctx, uint64_t imm16)
+{
+	call_supervisor_jit(ctx,imm16);
+}
+
+void msr_register_jit(ssa_emit_context* ctx, uint64_t imm15, uint64_t Rt)
+{
+	ir_operand operand = X_jit(ctx,Rt);
+	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	{
+		_sys_jit(ctx,(uint64_t)fpcr,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	{
+		_sys_jit(ctx,(uint64_t)fpsr,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
+	{
+		_sys_jit(ctx,(uint64_t)thread_local_1,operand);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
+	{
+		_sys_jit(ctx,(uint64_t)thread_local_0,operand);
+	}
+	else
+	{
+		undefined_with_jit(ctx,imm15);
+	}
+}
+
+void mrs_register_jit(ssa_emit_context* ctx, uint64_t imm15, uint64_t Rt)
+{
+	ir_operand operand;
+	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	{
+		operand = _sys_jit(ctx,(uint64_t)fpcr);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	{
+		operand = _sys_jit(ctx,(uint64_t)fpsr);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
+	{
+		operand = _sys_jit(ctx,(uint64_t)thread_local_1);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
+	{
+		operand = _sys_jit(ctx,(uint64_t)thread_local_0);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)24321ULL)))
+	{
+		operand = call_counter_jit(ctx);
+	}
+	else if ((((uint64_t)imm15 == (uint64_t)22529ULL)))
+	{
+		operand = ir_operand::create_con(2219098116ULL, int64);
+	}
+	else
+	{
+		undefined_with_jit(ctx,imm15);
+	}
+	X_jit(ctx,Rt,operand);
+}
+
+void hints_jit(ssa_emit_context* ctx, uint64_t imm7)
+{
+}
+
+void sys_jit(ssa_emit_context* ctx, uint64_t L, uint64_t imm19)
+{
+}
+
+void barriers_jit(ssa_emit_context* ctx, uint64_t CRm, uint64_t op2, uint64_t Rt)
+{
+	if ((((uint64_t)((uint64_t)op2 == (uint64_t)2ULL) && (uint64_t)((uint64_t)Rt == (uint64_t)31ULL))))
+	{
+		_sys_jit(ctx,(uint64_t)exclusive_address,ir_operand::create_con(-1ULL, int64));
+		_sys_jit(ctx,(uint64_t)exclusive_value,ir_operand::create_con(-1ULL, int64));
+	}
 }
 
 void load_store_register_post_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t Rn, uint64_t Rt)
@@ -6857,8 +9620,8 @@ void load_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t s
 		ir_operand value = copy_new_raw_size(ctx, mem_jit(ctx,S,address), S);
 		if ((is_exclusive))
 		{
-			_sys_jit(ctx,exclusive_address,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, address, ir_operand::create_con(~63ULL, int64)));
-			_sys_jit(ctx,exclusive_value,copy_new_raw_size(ctx, value, int64));
+			_sys_jit(ctx,(uint64_t)exclusive_address,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, address, ir_operand::create_con(~63ULL, int64)));
+			_sys_jit(ctx,(uint64_t)exclusive_value,copy_new_raw_size(ctx, value, int64));
 		}
 		X_jit(ctx,Rt,copy_new_raw_size(ctx, value, int64));
 	}
@@ -6873,7 +9636,7 @@ void store_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t 
 		if ((is_exclusive))
 		{
 			ir_operand mask = ir_operand::create_con(~63ULL, int64);
-			ir_operand _exclusive_address = _sys_jit(ctx,exclusive_address);
+			ir_operand _exclusive_address = _sys_jit(ctx,(uint64_t)exclusive_address);
 			{
 			    ir_operand end = ir_operation_block::create_label(ctx->ir);
 			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
@@ -6890,7 +9653,7 @@ void store_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t 
 			
 				{
 					ir_operand to_swap = copy_new_raw_size(ctx, X_jit(ctx,Rt), S);
-					ir_operand expecting = copy_new_raw_size(ctx, _sys_jit(ctx,exclusive_value), S);
+					ir_operand expecting = copy_new_raw_size(ctx, _sys_jit(ctx,(uint64_t)exclusive_value), S);
 					ir_operand cas_success = copy_new_raw_size(ctx, compare_and_swap_jit(ctx,address,copy_new_raw_size(ctx, expecting, int64),copy_new_raw_size(ctx, to_swap, int64),datasize), S);
 					X_jit(ctx,Rs,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, cas_success, ir_operand::create_con(1ULL, S)), int64));
 				}
@@ -6905,642 +9668,60 @@ void store_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t 
 	}
 }
 
-void branch_register_jit(ssa_emit_context* ctx, uint64_t l, uint64_t Rn)
+ir_operand _compare_and_swap_jit(ssa_emit_context* ctx, ir_operand physical_address, ir_operand expecting, ir_operand to_swap, uint64_t size)
 {
-	branch_long_universal_jit(ctx,Rn,l);
+	return call_jit(ctx,physical_address,expecting,to_swap,ir_operand::create_con(size, int64),ir_operand::create_con(0ULL, int64),ir_operand::create_con(0ULL, int64),(uint64_t)compare_and_swap_interpreter_cpp);
 }
 
-void return_register_jit(ssa_emit_context* ctx, uint64_t Rn)
+ir_operand compare_and_swap_jit(ssa_emit_context* ctx, ir_operand address, ir_operand expecting, ir_operand to_swap, uint64_t size)
 {
-	branch_long_universal_jit(ctx,Rn,0ULL);
+	address = translate_address_jit(ctx,address);
+	return _compare_and_swap_jit(ctx,address,expecting,to_swap,size);
 }
 
-void test_bit_branch_jit(ssa_emit_context* ctx, uint64_t b5, uint64_t op, uint64_t b40, uint64_t imm14, uint64_t Rt)
+void mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address, ir_operand value)
 {
-	uint64_t bit_pos = ((uint64_t)b40 + (uint64_t)(((uint64_t)b5 << (uint64_t)5ULL)));
-	uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm14,14ULL) << (uint64_t)2ULL)));
-	uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
-	ir_operand src = X_jit(ctx,Rt);
-	ir_operand branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, src, ir_operand::create_con(bit_pos, int64)), ir_operand::create_con(1ULL, int64)), ir_operand::create_con(op, int64)), int8);
-	_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, branch_pass, int64));
+	address = translate_address_jit(ctx,address);
+	ssa_emit_context::store(ctx, address, value);
 }
 
-void compare_and_branch_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t imm19, uint64_t Rt)
+ir_operand mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address)
 {
-	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : 0;
+	address = translate_address_jit(ctx,address);
+	return ssa_emit_context::emit_ssa(ctx, ir_load, address, O);
+}
+
+ir_operand XSP_jit(ssa_emit_context* ctx, uint64_t reg_id)
+{
+	return _x_jit(ctx,reg_id);
+}
+
+void XSP_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
+{
+	_x_jit(ctx,reg_id,value);
+}
+
+ir_operand X_jit(ssa_emit_context* ctx, uint64_t reg_id)
+{
+	if ((((uint64_t)reg_id == (uint64_t)31ULL)))
 	{
-		uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm19,19ULL) << (uint64_t)2ULL)));
-		uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
-		ir_operand operand = copy_new_raw_size(ctx, X_jit(ctx,Rt), O);
-		ir_operand branch_pass;
-		if ((!op))
-		{
-			branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, operand, ir_operand::create_con(0ULL, O)), int8);
-		}
-		else
-		{
-			branch_pass = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_not_equal, operand, ir_operand::create_con(0ULL, O)), int8);
-		}
-		_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, branch_pass, int64));
-	}
-}
-
-void b_unconditional_jit(ssa_emit_context* ctx, uint64_t op, uint64_t imm26)
-{
-	uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm26,26ULL) << (uint64_t)2ULL)));
-	if ((op))
-	{
-		uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
-		X_jit(ctx,30ULL,ir_operand::create_con(next_location, int64));
-	}
-	_branch_short_jit(ctx,new_location);
-}
-
-void b_conditional_jit(ssa_emit_context* ctx, uint64_t imm19, uint64_t cond)
-{
-	uint64_t new_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)(((uint64_t)sign_extend_jit(ctx,imm19,19ULL) << (uint64_t)2ULL)));
-	uint64_t next_location = ((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL);
-	_branch_conditional_jit(ctx,new_location,next_location,copy_new_raw_size(ctx, condition_holds_jit(ctx,cond), int64));
-}
-
-void svc_jit(ssa_emit_context* ctx, uint64_t imm16)
-{
-	call_supervisor_jit(ctx,imm16);
-}
-
-uint64_t sign_extend_jit(ssa_emit_context* ctx, uint64_t source, uint64_t count)
-{
-	uint64_t max = 64ULL;
-	uint64_t shift = ((uint64_t)max - (uint64_t)count);
-	return ((uint64_t)(sign_extend((uint64_t)(((uint64_t)source << (uint64_t)shift))) >> sign_extend((uint64_t)shift)));
-}
-
-ir_operand a_shift_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t shift_type, uint64_t ammount)
-{
-	ir_operand result = copy_new_raw_size(ctx, X_jit(ctx,m), O);
-	if ((((uint64_t)shift_type == (uint64_t)0ULL)))
-	{
-		return ssa_emit_context::emit_ssa(ctx, ir_shift_left, result, ir_operand::create_con(ammount, O));
-	}
-	else if ((((uint64_t)shift_type == (uint64_t)1ULL)))
-	{
-		return ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, result, ir_operand::create_con(ammount, O));
-	}
-	else if ((((uint64_t)shift_type == (uint64_t)2ULL)))
-	{
-		return ssa_emit_context::emit_ssa(ctx, ir_shift_right_signed, result, ir_operand::create_con(ammount, O));
+		return ir_operand::create_con(0ULL, int64);
 	}
 	else
 	{
-		return ssa_emit_context::emit_ssa(ctx, ir_rotate_right, result, ir_operand::create_con(ammount, O));
+		return _x_jit(ctx,reg_id);
 	}
 }
 
-ir_operand a_extend_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t extend_type, uint64_t shift)
+void X_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
 {
-	ir_operand val = copy_new_raw_size(ctx, X_jit(ctx,m), O);
-	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
+	if ((((uint64_t)reg_id == (uint64_t)31ULL)))
 	{
-		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(255ULL, O));
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(65535ULL, O));
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(4294967295ULL, O));
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int8), O);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int16), O);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int32), O);
-	}
-	return ssa_emit_context::emit_ssa(ctx, ir_shift_left, val, ir_operand::create_con(shift, O));
-}
-
-ir_operand a_extend_reg_64_jit(ssa_emit_context* ctx, uint64_t m, uint64_t extend_type, uint64_t shift)
-{
-	ir_operand val = X_jit(ctx,m);
-	if ((((uint64_t)extend_type == (uint64_t)0ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(255ULL, int64));
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)1ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(65535ULL, int64));
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)2ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, val, ir_operand::create_con(4294967295ULL, int64));
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)4ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int8), int64);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)5ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int16), int64);
-	}
-	else if ((((uint64_t)extend_type == (uint64_t)6ULL)))
-	{
-		val = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, val, int32), int64);
-	}
-	return ssa_emit_context::emit_ssa(ctx, ir_shift_left, val, ir_operand::create_con(shift, int64));
-}
-
-ir_operand reverse_bytes_jit(ssa_emit_context* ctx,uint64_t O, ir_operand source, uint64_t byte_count)
-{
-	ir_operand result = ir_operand::create_con(0ULL, O);
-	for (uint64_t i = 0; i < (byte_count); i++)
-	{
-		ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, source, ir_operand::create_con((((uint64_t)i * (uint64_t)8ULL)), O)), ir_operand::create_con(255ULL, O));
-		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, result, ssa_emit_context::emit_ssa(ctx, ir_shift_left, working, ir_operand::create_con((((uint64_t)(((uint64_t)((uint64_t)byte_count - (uint64_t)i) - (uint64_t)1ULL)) * (uint64_t)8ULL)), O)));
-	}
-	return result;
-}
-
-uint64_t highest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t src, uint64_t size)
-{
-	for (uint64_t i = 0; i < (size); i++)
-	{
-		uint64_t bit_check = ((uint64_t)((uint64_t)size - (uint64_t)i) - (uint64_t)1ULL);
-		uint64_t bit = ((uint64_t)(((uint64_t)src >> (uint64_t)bit_check)) & (uint64_t)1ULL);
-		if ((bit))
-		{
-			return bit_check;
-		}
-	}
-	return -1ULL;
-}
-
-uint64_t ones_jit(ssa_emit_context* ctx, uint64_t size)
-{
-	if ((((uint64_t)size == (uint64_t)64ULL)))
-	{
-		return 18446744073709551615ULL;
-	}
-	return ((uint64_t)(((uint64_t)1ULL << (uint64_t)size)) - (uint64_t)1ULL);
-}
-
-uint64_t replicate_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t source_size, uint64_t count)
-{
-	uint64_t result = 0ULL;
-	for (uint64_t i = 0; i < (count); i++)
-	{
-		result = ((uint64_t)result | (uint64_t)(((uint64_t)(((uint64_t)source & (uint64_t)ones_jit(ctx,source_size))) << (uint64_t)(((uint64_t)i * (uint64_t)source_size)))));
-	}
-	return result;
-}
-
-uint64_t bits_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t top, uint64_t bottom)
-{
-	top = ((uint64_t)top + (uint64_t)1ULL);
-	uint64_t size = ((uint64_t)top - (uint64_t)bottom);
-	uint64_t mask = ones_jit(ctx,size);
-	return ((uint64_t)(((uint64_t)source >> (uint64_t)bottom)) & (uint64_t)mask);
-}
-
-uint64_t bit_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t bit)
-{
-	return ((uint64_t)(((uint64_t)source >> (uint64_t)bit)) & (uint64_t)1ULL);
-}
-
-uint64_t rotate_right_bits_jit(ssa_emit_context* ctx, uint64_t source, uint64_t ammount, uint64_t bit_count)
-{
-	source = ((uint64_t)source & (uint64_t)ones_jit(ctx,bit_count));
-	return (((uint64_t)(((uint64_t)source >> (uint64_t)ammount)) | (uint64_t)(((uint64_t)source << (uint64_t)(((uint64_t)bit_count - (uint64_t)ammount))))));
-}
-
-uint64_t decode_bitmask_tmask_jit(ssa_emit_context* ctx, uint64_t immN, uint64_t imms, uint64_t immr, uint64_t immediate, uint64_t M, uint64_t return_tmask)
-{
-	uint64_t levels;
-	uint64_t len = highest_bit_set_c_jit(ctx,((uint64_t)(((uint64_t)immN << (uint64_t)6ULL)) | (uint64_t)(((uint64_t)~imms & (uint64_t)ones_jit(ctx,6ULL)))),7ULL);
-	if ((((uint64_t)len < (uint64_t)1ULL)))
-	{
-		undefined_jit(ctx);
-	}
-	levels = ones_jit(ctx,len);
-	if ((((uint64_t)immediate && (uint64_t)((uint64_t)(((uint64_t)imms & (uint64_t)levels)) == (uint64_t)levels))))
-	{
-		undefined_jit(ctx);
-	}
-	uint64_t s = ((uint64_t)imms & (uint64_t)levels);
-	uint64_t r = ((uint64_t)immr & (uint64_t)levels);
-	uint64_t diff = ((uint64_t)s - (uint64_t)r);
-	uint64_t esize = ((uint64_t)1ULL << (uint64_t)len);
-	uint64_t d = bits_c_jit(ctx,diff,((uint64_t)len - (uint64_t)1ULL),0ULL);
-	uint64_t welem = ones_jit(ctx,((uint64_t)s + (uint64_t)1ULL));
-	uint64_t telem = ones_jit(ctx,((uint64_t)d + (uint64_t)1ULL));
-	if ((return_tmask))
-	{
-		return replicate_c_jit(ctx,telem,esize,((uint64_t)M / (uint64_t)esize));
+		return;
 	}
 	else
 	{
-		return replicate_c_jit(ctx,rotate_right_bits_jit(ctx,welem,r,esize),esize,((uint64_t)M / (uint64_t)esize));
-	}
-}
-
-uint64_t decode_add_subtract_imm_12_jit(ssa_emit_context* ctx, uint64_t source, uint64_t shift)
-{
-	return ((uint64_t)source << (uint64_t)(((uint64_t)shift * (uint64_t)12ULL)));
-}
-
-ir_operand add_subtract_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add)
-{
-	ir_operand d;
-	if ((is_add))
-	{
-		d = ssa_emit_context::emit_ssa(ctx, ir_add, n, m);
-	}
-	else
-	{
-		d = ssa_emit_context::emit_ssa(ctx, ir_subtract, n, m);
-	}
-	if ((set_flags))
-	{
-		_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, d, ir_operand::create_con(0ULL, O)), int64));
-		_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, ir_operand::create_con(0ULL, O)), int64));
-		if ((is_add))
-		{
-			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, d, n), int64));
-			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m))), ir_operand::create_con(0ULL, O)), int64));
-		}
-		else
-		{
-			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_unsigned, n, m), int64));
-			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m)), ir_operand::create_con(0ULL, O)), int64));
-		}
-	}
-	return d;
-}
-
-ir_operand add_subtract_carry_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add, ir_operand carry)
-{
-	ir_operand d;
-	if ((is_add))
-	{
-		d = ssa_emit_context::emit_ssa(ctx, ir_add, ssa_emit_context::emit_ssa(ctx, ir_add, n, m), carry);
-	}
-	else
-	{
-		d = ssa_emit_context::emit_ssa(ctx, ir_subtract, ssa_emit_context::emit_ssa(ctx, ir_subtract, n, m), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, carry, ir_operand::create_con(1ULL, O)));
-	}
-	if ((set_flags))
-	{
-		_sys_jit(ctx,0ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, d, ir_operand::create_con(0ULL, O)), int64));
-		_sys_jit(ctx,1ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, ir_operand::create_con(0ULL, O)), int64));
-		if ((is_add))
-		{
-			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, d, n), carry), ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, d, n)), int64));
-			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m))), ir_operand::create_con(0ULL, O)), int64));
-		}
-		else
-		{
-			_sys_jit(ctx,2ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, m), carry), ssa_emit_context::emit_ssa(ctx, ir_compare_greater_unsigned, n, m)), int64));
-			_sys_jit(ctx,3ULL,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, d, n), ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, n, m)), ir_operand::create_con(0ULL, O)), int64));
-		}
-	}
-	return d;
-}
-
-ir_operand condition_holds_jit(ssa_emit_context* ctx, uint64_t cond)
-{
-	ir_operand n = copy_new_raw_size(ctx, _sys_jit(ctx,0ULL), int8);
-	ir_operand z = copy_new_raw_size(ctx, _sys_jit(ctx,1ULL), int8);
-	ir_operand c = copy_new_raw_size(ctx, _sys_jit(ctx,2ULL), int8);
-	ir_operand v = copy_new_raw_size(ctx, _sys_jit(ctx,3ULL), int8);
-	uint64_t raw_condition = ((uint64_t)cond >> (uint64_t)1ULL);
-	ir_operand result;
-	if ((((uint64_t)raw_condition == (uint64_t)0ULL)))
-	{
-		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, z, ir_operand::create_con(1ULL, int8));
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)1ULL)))
-	{
-		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, c, ir_operand::create_con(1ULL, int8));
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)2ULL)))
-	{
-		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, ir_operand::create_con(1ULL, int8));
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)3ULL)))
-	{
-		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, v, ir_operand::create_con(1ULL, int8));
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)4ULL)))
-	{
-		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, c, ir_operand::create_con(1ULL, int8)), ssa_emit_context::emit_ssa(ctx, ir_compare_equal, z, ir_operand::create_con(0ULL, int8)));
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)5ULL)))
-	{
-		result = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, v);
-	}
-	else if ((((uint64_t)raw_condition == (uint64_t)6ULL)))
-	{
-		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, n, v), ssa_emit_context::emit_ssa(ctx, ir_compare_equal, z, ir_operand::create_con(0ULL, int8)));
-	}
-	else
-	{
-		result = ir_operand::create_con(1ULL, int8);
-	}
-	if ((((uint64_t)(((uint64_t)cond & (uint64_t)1ULL)) && (uint64_t)((uint64_t)cond != (uint64_t)15ULL))))
-	{
-		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, result, ir_operand::create_con(1ULL, int8));
-	}
-	return result;
-}
-
-void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link)
-{
-	ir_operand branch_location = X_jit(ctx,Rn);
-	if ((link))
-	{
-		ir_operand link_address = ir_operand::create_con(((uint64_t)_get_pc_jit(ctx) + (uint64_t)4ULL), int64);
-		X_jit(ctx,30ULL,link_address);
-	}
-	_branch_long_jit(ctx,branch_location);
-}
-
-ir_operand vector_shift_jit(ssa_emit_context* ctx,uint64_t O, ir_operand element, ir_operand shift, uint64_t bit_count, uint64_t is_unsigned)
-{
-	ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
-	if ((!is_unsigned))
-	{
-		element = copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx,ir_sign_extend,element, int64), O);
-	}
-	{
-	    ir_operand end = ir_operation_block::create_label(ctx->ir);
-	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
-	
-	    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(0ULL, O));
-	
-	    ir_operation_block::jump_if(ctx->ir,yes, condition);
-		{
-			ssa_emit_context::move(ctx,shift,ssa_emit_context::emit_ssa(ctx, ir_negate, shift));
-			{
-			    ir_operand end = ir_operation_block::create_label(ctx->ir);
-			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
-			
-			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(bit_count, O));
-			
-			    ir_operation_block::jump_if(ctx->ir,yes, condition);
-				{
-					if ((!is_unsigned))
-					{
-						ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_right_signed, element, shift));
-					}
-					else
-					{
-						ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, element, shift));
-					}
-				}
-			    
-			    ir_operation_block::jump(ctx->ir,end);
-			    ir_operation_block::mark_label(ctx->ir, yes);
-			
-				{
-					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
-					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, element, ir_operand::create_con((((uint64_t)bit_count - (uint64_t)1ULL)), O)), ir_operand::create_con(1ULL, O)), ir_operand::create_con(1ULL, O)), ir_operand::create_con(!is_unsigned, O));
-					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						{
-							ssa_emit_context::move(ctx,result,ir_operand::create_con(0ULL, O));
-						}
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
-					
-						{
-							ssa_emit_context::move(ctx,result,ir_operand::create_con(-1ULL, O));
-						}
-					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
-				}
-			
-			    ir_operation_block::mark_label(ctx->ir, end);
-			}
-		}
-	    
-	    ir_operation_block::jump(ctx->ir,end);
-	    ir_operation_block::mark_label(ctx->ir, yes);
-	
-		{
-			{
-			    ir_operand end = ir_operation_block::create_label(ctx->ir);
-			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
-			
-			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(bit_count, O));
-			
-			    ir_operation_block::jump_if(ctx->ir,yes, condition);
-				{
-					ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_left, element, shift));
-				}
-			    
-			    ir_operation_block::jump(ctx->ir,end);
-			    ir_operation_block::mark_label(ctx->ir, yes);
-			
-				{
-					ssa_emit_context::move(ctx,result,ir_operand::create_con(0ULL, O));
-				}
-			
-			    ir_operation_block::mark_label(ctx->ir, end);
-			}
-		}
-	
-	    ir_operation_block::mark_label(ctx->ir, end);
-	}
-	return result;
-}
-
-void convert_to_int_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t Rd, uint64_t Rn, uint64_t round, uint64_t is_unsigned, uint64_t to_vector)
-{
-	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	ir_operand result = FPToFixed_jit(ctx,operand,0ULL,is_unsigned,round,intsize,fltsize);
-	if ((to_vector))
-	{
-		V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
-	}
-	else
-	{
-		X_jit(ctx,Rd,result);
-	}
-}
-
-uint64_t lowest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t source)
-{
-	uint64_t size = 32ULL;
-	for (uint64_t i = 0; i < (size); i++)
-	{
-		uint64_t working_bit = ((uint64_t)(((uint64_t)source >> (uint64_t)i)) & (uint64_t)1ULL);
-		if ((working_bit))
-		{
-			return i;
-		}
-	}
-	return size;
-}
-
-void dup_element_jit(ssa_emit_context* ctx, uint64_t index, uint64_t esize, uint64_t elements, uint64_t n, uint64_t d)
-{
-	ir_operand operand = V_jit(ctx,n);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand element = ssa_emit_context::vector_extract(ctx,operand, index, esize);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
-	}
-	V_jit(ctx,d,result);
-}
-
-uint64_t get_flt_size_jit(ssa_emit_context* ctx, uint64_t ftype)
-{
-	if ((((uint64_t)ftype == (uint64_t)2ULL)))
-	{
-		return 64ULL;
-	}
-	else
-	{
-		return ((uint64_t)8ULL << (uint64_t)(((uint64_t)ftype ^ (uint64_t)2ULL)));
-	}
-}
-
-uint64_t vfp_expand_imm_jit(ssa_emit_context* ctx, uint64_t imm8, uint64_t N)
-{
-	uint64_t E;
-	if ((((uint64_t)N == (uint64_t)16ULL)))
-	{
-		E = 5ULL;
-	}
-	else if ((((uint64_t)N == (uint64_t)32ULL)))
-	{
-		E = 8ULL;
-	}
-	else
-	{
-		E = 11ULL;
-	}
-	uint64_t F = ((uint64_t)(((uint64_t)N - (uint64_t)E)) - (uint64_t)1ULL);
-	uint64_t sign = ((uint64_t)(((uint64_t)imm8 >> (uint64_t)7ULL)) & (uint64_t)1ULL);
-	uint64_t exp = ((uint64_t)~(bit_c_jit(ctx,imm8,6ULL)) & (uint64_t)1ULL);
-	exp = ((uint64_t)(((uint64_t)exp << (uint64_t)(((uint64_t)E - (uint64_t)3ULL)))) | (uint64_t)replicate_c_jit(ctx,bit_c_jit(ctx,imm8,6ULL),1ULL,((uint64_t)E - (uint64_t)3ULL)));
-	exp = ((uint64_t)(((uint64_t)exp << (uint64_t)2ULL)) | (uint64_t)bits_c_jit(ctx,imm8,5ULL,4ULL));
-	uint64_t frac = ((uint64_t)bits_c_jit(ctx,imm8,3ULL,0ULL) << (uint64_t)(((uint64_t)F - (uint64_t)4ULL)));
-	uint64_t result = sign;
-	result = ((uint64_t)(((uint64_t)result << (uint64_t)(((uint64_t)((uint64_t)1ULL + (uint64_t)(((uint64_t)E - (uint64_t)3ULL))) + (uint64_t)2ULL)))) | (uint64_t)exp);
-	result = ((uint64_t)(((uint64_t)result << (uint64_t)(((uint64_t)4ULL + (uint64_t)(((uint64_t)F - (uint64_t)4ULL)))))) | (uint64_t)frac);
-	return result;
-}
-
-uint64_t expand_imm_jit(ssa_emit_context* ctx, uint64_t op, uint64_t cmode, uint64_t imm8)
-{
-	uint64_t imm64 = 0ULL;
-	uint64_t cmode_test = bits_c_jit(ctx,cmode,3ULL,1ULL);
-	if ((((uint64_t)cmode_test == (uint64_t)0ULL)))
-	{
-		imm64 = replicate_c_jit(ctx,imm8,32ULL,2ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)1ULL)))
-	{
-		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)8ULL),32ULL,2ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)2ULL)))
-	{
-		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)16ULL),32ULL,2ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)3ULL)))
-	{
-		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)24ULL),32ULL,2ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)4ULL)))
-	{
-		imm64 = replicate_c_jit(ctx,imm8,16ULL,4ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)5ULL)))
-	{
-		imm64 = replicate_c_jit(ctx,((uint64_t)imm8 << (uint64_t)8ULL),16ULL,4ULL);
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)6ULL)))
-	{
-		if ((((uint64_t)(((uint64_t)cmode & (uint64_t)1ULL)) == (uint64_t)0ULL)))
-		{
-			imm64 = replicate_c_jit(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)8ULL)) | (uint64_t)ones_jit(ctx,8ULL)),32ULL,2ULL);
-		}
-		else
-		{
-			imm64 = replicate_c_jit(ctx,((uint64_t)(((uint64_t)imm8 << (uint64_t)16ULL)) | (uint64_t)ones_jit(ctx,16ULL)),32ULL,2ULL);
-		}
-	}
-	else if ((((uint64_t)cmode_test == (uint64_t)7ULL)))
-	{
-		if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
-		{
-			imm64 = replicate_c_jit(ctx,imm8,8ULL,8ULL);
-		}
-		else if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)0ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
-		{
-			for (uint64_t i = 0; i < (8ULL); i++)
-			{
-				uint64_t part = ((uint64_t)(((uint64_t)0ULL - (uint64_t)(((uint64_t)(((uint64_t)imm8 >> (uint64_t)i)) & (uint64_t)1ULL)))) & (uint64_t)255ULL);
-				imm64 = ((uint64_t)imm64 | (uint64_t)(((uint64_t)part << (uint64_t)(((uint64_t)i * (uint64_t)8ULL)))));
-			}
-		}
-		else if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)0ULL))))
-		{
-			uint64_t p0 = bit_c_jit(ctx,imm8,7ULL);
-			uint64_t p1 = ((uint64_t)(~(bit_c_jit(ctx,imm8,6ULL))) & (uint64_t)1ULL);
-			uint64_t p2 = replicate_c_jit(ctx,bit_c_jit(ctx,imm8,6ULL),1ULL,5ULL);
-			uint64_t p3 = bits_c_jit(ctx,imm8,5ULL,0ULL);
-			uint64_t p4 = 0ULL;
-			uint64_t working = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)19ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)19ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)19ULL + (uint64_t)6ULL) + (uint64_t)5ULL) + (uint64_t)1ULL)))));
-			imm64 = replicate_c_jit(ctx,working,32ULL,2ULL);
-		}
-		else if ((((uint64_t)((uint64_t)bit_c_jit(ctx,cmode,0ULL) == (uint64_t)1ULL) && (uint64_t)((uint64_t)op == (uint64_t)1ULL))))
-		{
-			uint64_t p0 = bit_c_jit(ctx,imm8,7ULL);
-			uint64_t p1 = ((uint64_t)(~(bit_c_jit(ctx,imm8,6ULL))) & (uint64_t)1ULL);
-			uint64_t p2 = replicate_c_jit(ctx,bit_c_jit(ctx,imm8,6ULL),1ULL,8ULL);
-			uint64_t p3 = bits_c_jit(ctx,imm8,5ULL,0ULL);
-			uint64_t p4 = 0ULL;
-			imm64 = ((uint64_t)((uint64_t)((uint64_t)((uint64_t)p4 | (uint64_t)(((uint64_t)p3 << (uint64_t)48ULL))) | (uint64_t)(((uint64_t)p2 << (uint64_t)(((uint64_t)48ULL + (uint64_t)6ULL))))) | (uint64_t)(((uint64_t)p1 << (uint64_t)(((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL))))) | (uint64_t)(((uint64_t)p0 << (uint64_t)(((uint64_t)((uint64_t)((uint64_t)48ULL + (uint64_t)6ULL) + (uint64_t)8ULL) + (uint64_t)1ULL)))));
-		}
-		else
-		{
-			undefined_jit(ctx);
-		}
-	}
-	else
-	{
-		undefined_jit(ctx);
-	}
-	return imm64;
-}
-
-void VPart_jit(ssa_emit_context* ctx, uint64_t n, uint64_t part, uint64_t width, ir_operand value)
-{
-	if ((((uint64_t)part == (uint64_t)0ULL)))
-	{
-		V_jit(ctx,n,copy_new_raw_size(ctx, value, int128));
-	}
-	else
-	{
-		ir_operand src = V_jit(ctx,n);
-		ssa_emit_context::vector_insert(ctx,src, 1ULL, 64ULL, value);
-		V_jit(ctx,n,src);
+		_x_jit(ctx,reg_id,value);
 	}
 }
 
@@ -7728,45 +9909,41 @@ void fmov_general_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64
 	}
 }
 
-void convert_to_float_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd, uint64_t from_vector)
-{
-	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	uint64_t I = intsize == 32ULL ? int32 : intsize == 64ULL ? int64 : 0;
-	{
-		uint64_t F = fltsize == 16ULL ? int16 : fltsize == 32ULL ? int32 : fltsize == 64ULL ? int64 : 0;
-		{
-			ir_operand result;
-			ir_operand operand;
-			if ((from_vector))
-			{
-				operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), I);
-			}
-			else
-			{
-				operand = copy_new_raw_size(ctx, X_jit(ctx,Rn), I);
-			}
-			if ((U))
-			{
-				result = ssa_emit_context::convert_to_float(ctx,operand,F,I, 0);
-			}
-			else
-			{
-				result = ssa_emit_context::convert_to_float(ctx,operand,F,I, 1);
-			}
-			V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
-		}
-	}
-}
-
 void convert_to_float_gp_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
 {
 	convert_to_float_jit(ctx,sf,ftype,U,Rn,Rd,0ULL);
 }
 
-void convert_to_float_vector_jit(ssa_emit_context* ctx, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
+void convert_to_float_vector_scalar_jit(ssa_emit_context* ctx, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
 {
 	convert_to_float_jit(ctx,sz,sz,U,Rn,Rd,1ULL);
+}
+
+void convert_to_float_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t F = esize == 16ULL ? int16 : esize == 32ULL ? int32 : esize == 64ULL ? int64 : 0;
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
+			ir_operand working;
+			if ((U))
+			{
+				working = copy_new_raw_size(ctx, ssa_emit_context::convert_to_float(ctx,element,F,int64, 0), int64);
+			}
+			else
+			{
+				working = copy_new_raw_size(ctx, ssa_emit_context::convert_to_float(ctx,element,F,int64, 1), int64);
+			}
+			ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+		}
+		V_jit(ctx,Rd,result);
+	}
 }
 
 void floating_point_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
@@ -7775,7 +9952,7 @@ void floating_point_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t R
 	ir_operand operand1 = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
 	ir_operand operand2 = copy_new_raw_size(ctx, V_jit(ctx,Rm), int64);
 	ir_operand result;
-	ir_operand fpcr_state = _sys_jit(ctx,fpcr);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
 	if ((((uint64_t)opcode == (uint64_t)0ULL)))
 	{
 		result = FPMul_jit(ctx,operand1,operand2,fpcr_state,fltsize);
@@ -7837,374 +10014,319 @@ void conversion_between_floating_point_and_fixed_point_jit(ssa_emit_context* ctx
 	else if ((((uint64_t)rmode == (uint64_t)3ULL)))
 	{
 		ir_operand source = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-		result = FPToFixed_jit(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)1ULL),FPRounding_ZERO,intsize,fltsize);
+		result = FPToFixed_jit(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)1ULL),(uint64_t)FPRounding_ZERO,intsize,fltsize);
 		X_jit(ctx,Rd,result);
 	}
 	else
 	{
-		undefined_with_jit(ctx,0ULL);
+		undefined_with_jit(ctx,100ULL);
 	}
 }
 
-void advanced_simd_three_same_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
+void shl_immedaite_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t immh, uint64_t immb, uint64_t Rn, uint64_t Rd)
 {
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)highest_bit_set_c_jit(ctx,immh,32ULL));
 	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
 	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t shift = ((uint64_t)(((uint64_t)(((uint64_t)immh << (uint64_t)3ULL)) | (uint64_t)immb)) - (uint64_t)esize);
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
+		element = ssa_emit_context::emit_ssa(ctx, ir_shift_left, element, ir_operand::create_con(shift, int64));
+		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void sshr_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t immh, uint64_t immb, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)highest_bit_set_c_jit(ctx,immh,32ULL));
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t shift = ((uint64_t)(((uint64_t)esize * (uint64_t)2ULL)) - (uint64_t)(((uint64_t)(((uint64_t)immh << (uint64_t)3ULL)) | (uint64_t)immb)));
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
 	uint64_t O = esize == 8ULL ? int8 : esize == 16ULL ? int16 : esize == 32ULL ? int32 : esize == 64ULL ? int64 : 0;
 	{
 		for (uint64_t e = 0; e < (elements); e++)
 		{
-			ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-			ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-			if ((((uint64_t)opcode == (uint64_t)0ULL)))
-			{
-				if ((!U))
-				{
-					element1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element1, O), int64);
-					element2 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element2, O), int64);
-				}
-				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, ssa_emit_context::emit_ssa(ctx, ir_add, element1, element2), ir_operand::create_con(1ULL, int64)));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)2ULL)))
-			{
-				if ((!U))
-				{
-					element1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element1, O), int64);
-					element2 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element2, O), int64);
-				}
-				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, ssa_emit_context::emit_ssa(ctx, ir_add, ssa_emit_context::emit_ssa(ctx, ir_add, element1, element2), ir_operand::create_con(1ULL, int64)), ir_operand::create_con(1ULL, int64)));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)4ULL)))
-			{
-				if ((!U))
-				{
-					element1 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element1, O), int64);
-					element2 = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element2, O), int64);
-				}
-				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, ssa_emit_context::emit_ssa(ctx, ir_subtract, element1, element2), ir_operand::create_con(1ULL, int64)));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)6ULL)))
-			{
-				ir_operand valid;
-				if ((U))
-				{
-					valid = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_unsigned, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
-				}
-				else
-				{
-					valid = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_signed, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
-				}
-				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, O), valid));
-			}
-			else if ((((uint64_t)opcode == (uint64_t)7ULL)))
-			{
-				ir_operand valid;
-				if ((U))
-				{
-					valid = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_unsigned, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
-				}
-				else
-				{
-					valid = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
-				}
-				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, O), valid));
-			}
-			else if ((((uint64_t)((uint64_t)opcode == (uint64_t)8ULL) && (uint64_t)((uint64_t)size == (uint64_t)2ULL))))
-			{
-				ir_operand element = copy_new_raw_size(ctx, element1, O);
-				ir_operand shift = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element2, int8), O);
-				element = copy_new_raw_size(ctx, vector_shift_jit(ctx,O,element,shift,esize,U), O);
-				ssa_emit_context::vector_insert(ctx,result, e, esize, element);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)12ULL)))
-			{
-				ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
-				if ((U))
-				{
-					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
-					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_unsigned, element1, element2);
-					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						{
-							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element2, O));
-						}
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
-					
-						{
-							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element1, O));
-						}
-					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
-				}
-				else
-				{
-					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
-					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_signed, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
-					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						{
-							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element2, O));
-						}
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
-					
-						{
-							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element1, O));
-						}
-					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
-				}
-				ssa_emit_context::vector_insert(ctx,result, e, esize, working);
-			}
-			else if ((((uint64_t)opcode == (uint64_t)13ULL)))
-			{
-				ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
-				if ((U))
-				{
-					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
-					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_less_unsigned, element1, element2);
-					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						{
-							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element2, O));
-						}
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
-					
-						{
-							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element1, O));
-						}
-					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
-				}
-				else
-				{
-					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
-					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, copy_new_raw_size(ctx, element1, O), copy_new_raw_size(ctx, element2, O));
-					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						{
-							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element2, O));
-						}
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
-					
-						{
-							ssa_emit_context::move(ctx,working,copy_new_raw_size(ctx, element1, O));
-						}
-					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
-				}
-				ssa_emit_context::vector_insert(ctx,result, e, esize, working);
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)1ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
-				}
-				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, element1, element2));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)(((uint64_t)(((uint64_t)size >> (uint64_t)1ULL)) == (uint64_t)0ULL))) && (uint64_t)((uint64_t)U == (uint64_t)0ULL))))
-			{
-				if ((((uint64_t)size & (uint64_t)1ULL)))
-				{
-					element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
-				}
-				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, element1, element2));
-			}
-			else if ((((uint64_t)((uint64_t)((uint64_t)opcode == (uint64_t)3ULL) && (uint64_t)((uint64_t)size == (uint64_t)0ULL)) && (uint64_t)((uint64_t)U == (uint64_t)1ULL))))
-			{
-				ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, element1, element2));
-			}
-			else
-			{
-				undefined_with_jit(ctx,0ULL);
-			}
+			ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
+			element = shift_right_check_jit(ctx,ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element, O), int64),ir_operand::create_con(shift, int64),esize,0ULL);
+			ssa_emit_context::vector_insert(ctx,result, e, esize, element);
 		}
 		V_jit(ctx,Rd,result);
 	}
 }
 
-void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd)
+void shll_shll2_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t immh, uint64_t immb, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)highest_bit_set_c_jit(ctx,bits_c_jit(ctx,immh,2ULL,0ULL),32ULL));
+	uint64_t datasize = 64ULL;
+	uint64_t part = Q;
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t shift = ((uint64_t)(((uint64_t)(((uint64_t)immh << (uint64_t)3ULL)) | (uint64_t)immb)) - (uint64_t)esize);
+	ir_operand operand = VPart_jit(ctx,Rn,part,datasize);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand working_vector = ssa_emit_context::vector_zero(ctx);
+	ssa_emit_context::vector_insert(ctx,working_vector, 0ULL, datasize, operand);
+	uint64_t O = esize == 8ULL ? int8 : esize == 16ULL ? int16 : esize == 32ULL ? int32 : esize == 64ULL ? int64 : 0;
+	{
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			ir_operand element = ssa_emit_context::vector_extract(ctx,working_vector, e, esize);
+			if ((!U))
+			{
+				element = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element, O), int64);
+			}
+			element = ssa_emit_context::emit_ssa(ctx, ir_shift_left, element, ir_operand::create_con(shift, int64));
+			ssa_emit_context::vector_insert(ctx,result, e, (((uint64_t)2ULL * (uint64_t)esize)), element);
+		}
+		V_jit(ctx,Rd,result);
+	}
+}
+
+void rev64_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t csize = 64ULL;
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t containers = ((uint64_t)datasize / (uint64_t)csize);
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t c = 0; c < (containers); c++)
+	{
+		ir_operand container = ssa_emit_context::vector_extract(ctx,operand, c, csize);
+		ssa_emit_context::vector_insert(ctx,result, c, csize, reverse_jit(ctx,copy_new_raw_size(ctx, container, int128),esize,csize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void neg_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
+{
+	ir_operand operand = V_jit(ctx,Rn);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_negate, ssa_emit_context::vector_extract(ctx,operand, e, esize)));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void not_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rn, uint64_t Rd)
+{
+	ir_operand operand = V_jit(ctx,Rn);
+	uint64_t esize = 8ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, ssa_emit_context::vector_extract(ctx,operand, e, esize)));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void abs_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
+{
+	ir_operand operand = V_jit(ctx,Rn);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t O = esize == 8ULL ? int8 : esize == 16ULL ? int16 : esize == 32ULL ? int32 : esize == 64ULL ? int64 : 0;
+		{
+			ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_move, copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,operand, e, esize), O));
+			{
+			    ir_operand end = ir_operation_block::create_label(ctx->ir);
+			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+			
+			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, working, ir_operand::create_con(0ULL, O));
+			
+			    ir_operation_block::jump_if(ctx->ir,yes, condition);
+				/* TODO if statements without a no should not have this*/
+			    
+			    ir_operation_block::jump(ctx->ir,end);
+			    ir_operation_block::mark_label(ctx->ir, yes);
+			
+				{
+					ssa_emit_context::move(ctx,working,ssa_emit_context::emit_ssa(ctx, ir_negate, working));
+				}
+			
+			    ir_operation_block::mark_label(ctx->ir, end);
+			}
+			ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+		}
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void mul_vector_index_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi;
+	if ((((uint64_t)size == (uint64_t)1ULL)))
+	{
+		index = H;
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)index << (uint64_t)1ULL)));
+		index = ((uint64_t)M | (uint64_t)(((uint64_t)index << (uint64_t)1ULL)));
+		rm_hi = 0ULL;
+	}
+	else if ((((uint64_t)size == (uint64_t)2ULL)))
+	{
+		index = H;
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)index << (uint64_t)1ULL)));
+		rm_hi = M;
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, index, esize);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand product = ssa_emit_context::emit_ssa(ctx, ir_multiply, element1, element2);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, product);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void mul_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
 	ir_operand operand1 = V_jit(ctx,Rn);
 	ir_operand operand2 = V_jit(ctx,Rm);
-	uint64_t O = fltsize == 32ULL ? int32 : fltsize == 64ULL ? int64 : 0;
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_multiply, element1, element2);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void ext_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t imm4, uint64_t Rn, uint64_t Rd)
+{
+	ir_operand lo = V_jit(ctx,Rn);
+	ir_operand hi = V_jit(ctx,Rm);
+	uint64_t vector_size = ((uint64_t)8ULL << (uint64_t)Q);
+	uint64_t start = imm4;
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (vector_size); e++)
+	{
+		ir_operand working = copy_new_raw_size(ctx, get_from_concacted_vector_jit(ctx,hi,lo,((uint64_t)start + (uint64_t)e),vector_size,8ULL), int8);
+		ssa_emit_context::vector_insert(ctx,result, e, 8ULL, working);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void compare_above_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t O = esize == 8ULL ? int8 : esize == 16ULL ? int16 : esize == 32ULL ? int32 : esize == 64ULL ? int64 : 0;
+		{
+			ir_operand element1 = copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,operand1, e, esize), O);
+			ir_operand element2 = copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,operand2, e, esize), O);
+			ir_operand working;
+			if ((U))
+			{
+				working = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_unsigned, element1, element2);
+			}
+			else
+			{
+				working = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_signed, element1, element2);
+			}
+			ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, O), working));
+		}
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void shl_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element = ssa_emit_context::emit_ssa(ctx, ir_move, ssa_emit_context::vector_extract(ctx,operand1, e, esize));
+		ir_operand shift = ssa_emit_context::emit_ssa(ctx, ir_move, ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,operand2, e, esize), int8), int64));
+		if ((!U))
+		{
+			uint64_t O = esize == 8ULL ? int8 : esize == 16ULL ? int16 : esize == 32ULL ? int32 : esize == 64ULL ? int64 : 0;
+			{
+				element = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, element, O), int64);
+			}
+		}
 		{
 		    ir_operand end = ir_operation_block::create_label(ctx->ir);
 		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
 		
-		    ir_operand condition = condition_holds_jit(ctx,cond);
+		    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(0ULL, int64));
 		
 		    ir_operation_block::jump_if(ctx->ir,yes, condition);
 			{
-				ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, operand2, O));
+				ssa_emit_context::move(ctx,shift,ssa_emit_context::emit_ssa(ctx, ir_negate, shift));
+				ssa_emit_context::move(ctx,element,shift_right_check_jit(ctx,element,shift,esize,U));
 			}
 		    
 		    ir_operation_block::jump(ctx->ir,end);
 		    ir_operation_block::mark_label(ctx->ir, yes);
 		
 			{
-				ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, operand1, O));
+				ssa_emit_context::move(ctx,element,shift_left_check_jit(ctx,element,shift,esize));
 			}
 		
 		    ir_operation_block::mark_label(ctx->ir, end);
 		}
-		V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
+		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
 	}
+	V_jit(ctx,Rd,result);
 }
 
-void fmov_scalar_immediate_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
+void add_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	ir_operand imm = ir_operand::create_con(vfp_expand_imm_jit(ctx,imm8,fltsize), int64);
-	V_jit(ctx,Rd,copy_new_raw_size(ctx, imm, int128));
-}
-
-void fcvt_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t opc, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t srcsize = get_flt_size_jit(ctx,ftype);
-	uint64_t dstsize = get_flt_size_jit(ctx,opc);
-	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	V_jit(ctx,Rd,copy_new_raw_size(ctx, FPConvert_jit(ctx,operand,dstsize,srcsize), int128));
-}
-
-void floating_point_data_processing_one_source_jit(ssa_emit_context* ctx, uint64_t M, uint64_t S, uint64_t ftype, uint64_t opcode, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	ir_operand result = ir_operand::create_con(0ULL, int64);
-	ir_operand fpcr_state = _sys_jit(ctx,fpcr);
-	if ((((uint64_t)opcode == (uint64_t)1ULL)))
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		result = FPAbs_jit(ctx,operand,fpcr_state,fltsize);
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_add, element1, element2));
 	}
-	else if ((((uint64_t)opcode == (uint64_t)2ULL)))
-	{
-		result = FPNeg_jit(ctx,operand,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)3ULL)))
-	{
-		result = FPSqrt_jit(ctx,operand,fpcr_state,fltsize);
-	}
-	else
-	{
-		undefined_with_jit(ctx,0ULL);
-	}
-	ir_operand vector = ssa_emit_context::vector_zero(ctx);
-	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
-	V_jit(ctx,Rd,vector);
-}
-
-void fcmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc)
-{
-	uint64_t datasize = get_flt_size_jit(ctx,ftype);
-	uint64_t cmp_with_zero = ((uint64_t)opc == (uint64_t)1ULL);
-	ir_operand operand1 = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	ir_operand operand2;
-	ir_operand fpcr_state = _sys_jit(ctx,fpcr);
-	if ((cmp_with_zero))
-	{
-		operand2 = ir_operand::create_con(0ULL, int64);
-	}
-	else
-	{
-		operand2 = copy_new_raw_size(ctx, V_jit(ctx,Rm), int64);
-	}
-	ir_operand nzcv = FPCompare_jit(ctx,operand1,operand2,fpcr_state,datasize);
-	_sys_jit(ctx,nzcv_n,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, nzcv, ir_operand::create_con(3ULL, int64)), ir_operand::create_con(1ULL, int64)));
-	_sys_jit(ctx,nzcv_z,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, nzcv, ir_operand::create_con(2ULL, int64)), ir_operand::create_con(1ULL, int64)));
-	_sys_jit(ctx,nzcv_c,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, nzcv, ir_operand::create_con(1ULL, int64)), ir_operand::create_con(1ULL, int64)));
-	_sys_jit(ctx,nzcv_v,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, nzcv, ir_operand::create_con(0ULL, int64)), ir_operand::create_con(1ULL, int64)));
-}
-
-void fccmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t nzcv)
-{
-	uint64_t datasize = get_flt_size_jit(ctx,ftype);
-	ir_operand operand1 = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	ir_operand operand2 = copy_new_raw_size(ctx, V_jit(ctx,Rm), int64);
-	ir_operand fpcr_state = _sys_jit(ctx,fpcr);
-	{
-	    ir_operand end = ir_operation_block::create_label(ctx->ir);
-	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
-	
-	    ir_operand condition = condition_holds_jit(ctx,cond);
-	
-	    ir_operation_block::jump_if(ctx->ir,yes, condition);
-		{
-			_sys_jit(ctx,nzcv_n,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL), int64));
-			_sys_jit(ctx,nzcv_z,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL), int64));
-			_sys_jit(ctx,nzcv_c,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL), int64));
-			_sys_jit(ctx,nzcv_v,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL), int64));
-		}
-	    
-	    ir_operation_block::jump(ctx->ir,end);
-	    ir_operation_block::mark_label(ctx->ir, yes);
-	
-		{
-			ir_operand success_nzcv = FPCompare_jit(ctx,operand1,operand2,fpcr_state,datasize);
-			_sys_jit(ctx,nzcv_n,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(3ULL, int64)), ir_operand::create_con(1ULL, int64)));
-			_sys_jit(ctx,nzcv_z,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(2ULL, int64)), ir_operand::create_con(1ULL, int64)));
-			_sys_jit(ctx,nzcv_c,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(1ULL, int64)), ir_operand::create_con(1ULL, int64)));
-			_sys_jit(ctx,nzcv_v,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(0ULL, int64)), ir_operand::create_con(1ULL, int64)));
-		}
-	
-	    ir_operation_block::mark_label(ctx->ir, end);
-	}
-}
-
-void fcvtz_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,FPRounding_ZERO,U,0ULL);
-}
-
-void fcvtn_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,FPRounding_TIEEVEN,U,0ULL);
-}
-
-void fcvta_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,FPRounding_TIEAWAY,U,0ULL);
-}
-
-void fcvtm_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,FPRounding_NEGINF,U,0ULL);
-}
-
-void fcvtp_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,FPRounding_POSINF,U,0ULL);
+	V_jit(ctx,Rd,result);
 }
 
 void addlv_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t size, uint64_t Rn, uint64_t Rd)
@@ -8271,131 +10393,724 @@ void cnt_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint
 	V_jit(ctx,Rd,result);
 }
 
-ir_operand compare_and_swap_jit(ssa_emit_context* ctx, ir_operand address, ir_operand expecting, ir_operand to_swap, uint64_t size)
+void orr_orn_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t invert, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	address = translate_address_jit(ctx,address);
-	return _compare_and_swap_jit(ctx,address,expecting,to_swap,size);
-}
-
-void mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address, ir_operand value)
-{
-	address = translate_address_jit(ctx,address);
-	ssa_emit_context::store(ctx, address, value);
-}
-
-ir_operand mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address)
-{
-	address = translate_address_jit(ctx,address);
-	return ssa_emit_context::emit_ssa(ctx, ir_load, address, O);
-}
-
-ir_operand XSP_jit(ssa_emit_context* ctx, uint64_t reg_id)
-{
-	return _x_jit(ctx,reg_id);
-}
-
-void XSP_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
-{
-	_x_jit(ctx,reg_id,value);
-}
-
-ir_operand X_jit(ssa_emit_context* ctx, uint64_t reg_id)
-{
-	if ((((uint64_t)reg_id == (uint64_t)31ULL)))
+	uint64_t esize = 64ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		return ir_operand::create_con(0ULL, int64);
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		if ((invert))
+		{
+			element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
+		}
+		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, element1, element2));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void bsl_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = 64ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rm);
+	ir_operand operand2 = V_jit(ctx,Rd);
+	ir_operand operand3 = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ir_operand element3 = ssa_emit_context::vector_extract(ctx,operand3, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, element1, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, element1, element3), element2)));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void and_bic_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t invert, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = 64ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		if ((invert))
+		{
+			element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
+		}
+		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, element1, element2));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void eor_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = 64ULL;
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, element1, element2));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void xnt_xnt2_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = 64ULL;
+	uint64_t part = Q;
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand mask = ir_operand::create_con(-1ULL, int64);
+	if ((((uint64_t)esize != (uint64_t)64ULL)))
+	{
+		mask = ir_operand::create_con(((uint64_t)(((uint64_t)1ULL << (uint64_t)esize)) - (uint64_t)1ULL), int64);
+	}
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, (((uint64_t)2ULL * (uint64_t)esize)));
+		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, element, mask));
+	}
+	VPart_jit(ctx,Rd,part,datasize,copy_new_raw_size(ctx, result, int64));
+}
+
+void zip_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rm, uint64_t op, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t part = op;
+	uint64_t pairs = ((uint64_t)elements / (uint64_t)2ULL);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t base = ((uint64_t)part * (uint64_t)pairs);
+	for (uint64_t p = 0; p < (pairs); p++)
+	{
+		ssa_emit_context::vector_insert(ctx,result, (((uint64_t)((uint64_t)2ULL * (uint64_t)p) + (uint64_t)0ULL)), esize, ssa_emit_context::vector_extract(ctx,operand1, (((uint64_t)base + (uint64_t)p)), esize));
+		ssa_emit_context::vector_insert(ctx,result, (((uint64_t)((uint64_t)2ULL * (uint64_t)p) + (uint64_t)1ULL)), esize, ssa_emit_context::vector_extract(ctx,operand2, (((uint64_t)base + (uint64_t)p)), esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void tbl_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t len, uint64_t Rn, uint64_t Rd)
+{
+	store_context_jit(ctx);
+	ir_operand vector_context = get_vector_context_jit(ctx);
+	call_jit(ctx,vector_context,ir_operand::create_con(Rd, int64),ir_operand::create_con(Rn, int64),ir_operand::create_con(len, int64),ir_operand::create_con(Rm, int64),ir_operand::create_con(Q, int64),(uint64_t)table_lookup_fallback);
+	load_context_jit(ctx);
+}
+
+void ld1r_no_offset_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	ld1_jit(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,6ULL,0ULL,size,Rn,Rt);
+}
+
+void ld1r_post_index_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	ld1_jit(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,6ULL,0ULL,size,Rn,Rt);
+}
+
+void ld1_single_structure_no_offset_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	ld1_jit(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt);
+}
+
+void ld1_single_structure_post_index_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	ld1_jit(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt);
+}
+
+void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	uint64_t O = fltsize == 32ULL ? int32 : fltsize == 64ULL ? int64 : 0;
+	{
+		ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, O));
+		{
+		    ir_operand end = ir_operation_block::create_label(ctx->ir);
+		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		
+		    ir_operand condition = condition_holds_jit(ctx,cond);
+		
+		    ir_operation_block::jump_if(ctx->ir,yes, condition);
+			{
+				ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, operand2, O));
+			}
+		    
+		    ir_operation_block::jump(ctx->ir,end);
+		    ir_operation_block::mark_label(ctx->ir, yes);
+		
+			{
+				ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, operand1, O));
+			}
+		
+		    ir_operation_block::mark_label(ctx->ir, end);
+		}
+		V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
+	}
+}
+
+void fcmeq_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ir_operand working;
+		working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareEQ_jit(ctx,element1,element2,fpcr_state,esize));
+		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fcmg_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ir_operand working;
+		if ((U))
+		{
+			working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGE_jit(ctx,element1,element2,fpcr_state,esize));
+		}
+		else
+		{
+			working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGT_jit(ctx,element1,element2,fpcr_state,esize));
+		}
+		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fcmeq_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ir_operand::create_con(0ULL, int64);
+		ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareEQ_jit(ctx,element1,element2,fpcr_state,esize));
+		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fcmg_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ir_operand::create_con(0ULL, int64);
+		ir_operand working;
+		if ((U))
+		{
+			working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGE_jit(ctx,element1,element2,fpcr_state,esize));
+		}
+		else
+		{
+			working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGT_jit(ctx,element1,element2,fpcr_state,esize));
+		}
+		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fmov_scalar_immediate_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	ir_operand imm = ir_operand::create_con(vfp_expand_imm_jit(ctx,imm8,fltsize), int64);
+	V_jit(ctx,Rd,copy_new_raw_size(ctx, imm, int128));
+}
+
+void fcvt_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t opc, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t srcsize = get_flt_size_jit(ctx,ftype);
+	uint64_t dstsize = get_flt_size_jit(ctx,opc);
+	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	V_jit(ctx,Rd,copy_new_raw_size(ctx, FPConvert_jit(ctx,operand,dstsize,srcsize), int128));
+}
+
+void fabs_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	ir_operand result = ir_operand::create_con(0ULL, int64);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	result = FPAbs_jit(ctx,operand,fpcr_state,fltsize);
+	ir_operand vector = ssa_emit_context::vector_zero(ctx);
+	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
+	V_jit(ctx,Rd,vector);
+}
+
+void fneg_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	ir_operand result = ir_operand::create_con(0ULL, int64);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	result = FPNeg_jit(ctx,operand,fpcr_state,fltsize);
+	ir_operand vector = ssa_emit_context::vector_zero(ctx);
+	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
+	V_jit(ctx,Rd,vector);
+}
+
+void fsqrt_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	ir_operand result = ir_operand::create_con(0ULL, int64);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	result = FPSqrt_jit(ctx,operand,fpcr_state,fltsize);
+	ir_operand vector = ssa_emit_context::vector_zero(ctx);
+	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
+	V_jit(ctx,Rd,vector);
+}
+
+void fcmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc)
+{
+	uint64_t datasize = get_flt_size_jit(ctx,ftype);
+	uint64_t cmp_with_zero = ((uint64_t)opc == (uint64_t)1ULL);
+	ir_operand operand1 = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	ir_operand operand2;
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	if ((cmp_with_zero))
+	{
+		operand2 = ir_operand::create_con(0ULL, int64);
 	}
 	else
 	{
-		return _x_jit(ctx,reg_id);
+		operand2 = copy_new_raw_size(ctx, V_jit(ctx,Rm), int64);
+	}
+	ir_operand nzcv = FPCompare_jit(ctx,operand1,operand2,fpcr_state,datasize);
+	_sys_jit(ctx,(uint64_t)nzcv_n,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, nzcv, ir_operand::create_con(3ULL, int64)), ir_operand::create_con(1ULL, int64)));
+	_sys_jit(ctx,(uint64_t)nzcv_z,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, nzcv, ir_operand::create_con(2ULL, int64)), ir_operand::create_con(1ULL, int64)));
+	_sys_jit(ctx,(uint64_t)nzcv_c,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, nzcv, ir_operand::create_con(1ULL, int64)), ir_operand::create_con(1ULL, int64)));
+	_sys_jit(ctx,(uint64_t)nzcv_v,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, nzcv, ir_operand::create_con(0ULL, int64)), ir_operand::create_con(1ULL, int64)));
+}
+
+void fccmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t nzcv)
+{
+	uint64_t datasize = get_flt_size_jit(ctx,ftype);
+	ir_operand operand1 = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	ir_operand operand2 = copy_new_raw_size(ctx, V_jit(ctx,Rm), int64);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	{
+	    ir_operand end = ir_operation_block::create_label(ctx->ir);
+	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+	
+	    ir_operand condition = condition_holds_jit(ctx,cond);
+	
+	    ir_operation_block::jump_if(ctx->ir,yes, condition);
+		{
+			_sys_jit(ctx,(uint64_t)nzcv_n,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL), int64));
+			_sys_jit(ctx,(uint64_t)nzcv_z,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL), int64));
+			_sys_jit(ctx,(uint64_t)nzcv_c,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL), int64));
+			_sys_jit(ctx,(uint64_t)nzcv_v,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL), int64));
+		}
+	    
+	    ir_operation_block::jump(ctx->ir,end);
+	    ir_operation_block::mark_label(ctx->ir, yes);
+	
+		{
+			ir_operand success_nzcv = FPCompare_jit(ctx,operand1,operand2,fpcr_state,datasize);
+			_sys_jit(ctx,(uint64_t)nzcv_n,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(3ULL, int64)), ir_operand::create_con(1ULL, int64)));
+			_sys_jit(ctx,(uint64_t)nzcv_z,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(2ULL, int64)), ir_operand::create_con(1ULL, int64)));
+			_sys_jit(ctx,(uint64_t)nzcv_c,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(1ULL, int64)), ir_operand::create_con(1ULL, int64)));
+			_sys_jit(ctx,(uint64_t)nzcv_v,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(0ULL, int64)), ir_operand::create_con(1ULL, int64)));
+		}
+	
+	    ir_operation_block::mark_label(ctx->ir, end);
 	}
 }
 
-void X_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
+void fcvtz_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
 {
-	if ((((uint64_t)reg_id == (uint64_t)31ULL)))
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_ZERO,U,0ULL);
+}
+
+void fcvtn_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEEVEN,U,0ULL);
+}
+
+void fcvta_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEAWAY,U,0ULL);
+}
+
+void fcvtm_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_NEGINF,U,0ULL);
+}
+
+void fadd_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
 	{
-		return;
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPAdd_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fmul_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPMul_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fsub_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPSub_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fdiv_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPDiv_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fmul_accumulate_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t neg, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand operand3 = V_jit(ctx,Rd);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ir_operand element3 = ssa_emit_context::vector_extract(ctx,operand3, e, esize);
+		if ((neg))
+		{
+			element1 = FPNeg_jit(ctx,element1,fpcr_state,esize);
+		}
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPMulAdd_jit(ctx,element3,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void faddp_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	ir_operand lo = V_jit(ctx,Rn);
+	ir_operand hi = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = get_from_concacted_vector_jit(ctx,hi,lo,((uint64_t)2ULL * (uint64_t)e),((uint64_t)datasize / (uint64_t)esize),esize);
+		ir_operand element2 = get_from_concacted_vector_jit(ctx,hi,lo,((uint64_t)(((uint64_t)2ULL * (uint64_t)e)) + (uint64_t)1ULL),((uint64_t)datasize / (uint64_t)esize),esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPAdd_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void frsqrte_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand result = FPRSqrtEstimate_jit(ctx,operand,fpcr_state,esize);
+	if ((((uint64_t)esize == (uint64_t)32ULL)))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, result, ir_operand::create_con(4294967295ULL, int64));
+	}
+	V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
+}
+
+void frsqrte_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
+		element = FPRSqrtEstimate_jit(ctx,element,fpcr_state,esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void frsqrts_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPRSqrtStepFused_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fmul_scalar_by_element_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
 	}
 	else
 	{
-		_x_jit(ctx,reg_id,value);
+		undefined_jit(ctx);
 	}
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand product = FPMul_jit(ctx,copy_new_raw_size(ctx, operand1, int64),ssa_emit_context::vector_extract(ctx,operand2, index, esize),fpcr_state,esize);
+	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, product);
+	V_jit(ctx,Rd,result);
 }
 
-void msr_register_jit(ssa_emit_context* ctx, uint64_t imm15, uint64_t Rt)
+void fmul_vector_by_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
 {
-	ir_operand operand = X_jit(ctx,Rt);
-	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
 	{
-		_sys_jit(ctx,fpcr,operand);
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
 	}
-	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
 	{
-		_sys_jit(ctx,fpsr,operand);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
-	{
-		_sys_jit(ctx,thread_local_1,operand);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
-	{
-		_sys_jit(ctx,thread_local_0,operand);
+		index = H;
 	}
 	else
 	{
-		undefined_with_jit(ctx,imm15);
+		undefined_jit(ctx);
 	}
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, index, esize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPMul_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
 }
 
-void mrs_register_jit(ssa_emit_context* ctx, uint64_t imm15, uint64_t Rt)
+void fmul_accumulate_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
 {
-	ir_operand operand;
-	if ((((uint64_t)imm15 == (uint64_t)23072ULL)))
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
 	{
-		operand = _sys_jit(ctx,fpcr);
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
 	}
-	else if ((((uint64_t)imm15 == (uint64_t)23073ULL)))
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
 	{
-		operand = _sys_jit(ctx,fpsr);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)24194ULL)))
-	{
-		operand = _sys_jit(ctx,thread_local_1);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)24195ULL)))
-	{
-		operand = _sys_jit(ctx,thread_local_0);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)24321ULL)))
-	{
-		operand = call_counter_jit(ctx);
-	}
-	else if ((((uint64_t)imm15 == (uint64_t)22529ULL)))
-	{
-		operand = ir_operand::create_con(2219098116ULL, int64);
+		index = H;
 	}
 	else
 	{
-		undefined_with_jit(ctx,imm15);
+		undefined_jit(ctx);
 	}
-	X_jit(ctx,Rt,operand);
-}
-
-void hints_jit(ssa_emit_context* ctx, uint64_t imm7)
-{
-}
-
-void sys_jit(ssa_emit_context* ctx, uint64_t L, uint64_t imm19)
-{
-}
-
-void barriers_jit(ssa_emit_context* ctx, uint64_t CRm, uint64_t op2, uint64_t Rt)
-{
-	if ((((uint64_t)((uint64_t)op2 == (uint64_t)2ULL) && (uint64_t)((uint64_t)Rt == (uint64_t)31ULL))))
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	ir_operand operand3 = V_jit(ctx,Rd);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand element1 = copy_new_raw_size(ctx, operand1, int64);
+	if ((neg))
 	{
-		_sys_jit(ctx,exclusive_address,ir_operand::create_con(-1ULL, int64));
-		_sys_jit(ctx,exclusive_value,ir_operand::create_con(-1ULL, int64));
+		element1 = FPNeg_jit(ctx,element1,fpcr_state,esize);
 	}
+	ir_operand product_accumalant = FPMulAdd_jit(ctx,copy_new_raw_size(ctx, operand3, int64),element1,ssa_emit_context::vector_extract(ctx,operand2, index, esize),fpcr_state,esize);
+	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, product_accumalant);
+	V_jit(ctx,Rd,result);
+}
+
+void fmul_accumulate_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	ir_operand operand3 = V_jit(ctx,Rd);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, index, esize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element3 = ssa_emit_context::vector_extract(ctx,operand3, e, esize);
+		if ((neg))
+		{
+			element1 = FPNeg_jit(ctx,element1,fpcr_state,esize);
+		}
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPMulAdd_jit(ctx,element3,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void frint_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd, uint64_t rounding)
+{
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = get_flt_size_jit(ctx,ftype);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand working = FPRoundInt_jit(ctx,copy_new_raw_size(ctx, operand1, int64),fpcr_state,rounding,esize);
+	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, working);
+	V_jit(ctx,Rd,result);
+}
+
+void frintp_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	frint_jit(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_POSINF);
+}
+
+void frintm_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	frint_jit(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_NEGINF);
+}
+
+void fcvtp_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_POSINF,U,0ULL);
 }
 

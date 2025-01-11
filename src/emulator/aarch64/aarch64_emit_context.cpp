@@ -28,10 +28,10 @@ void aarch64_emit_context::init_context(aarch64_emit_context* ctx)
         guest_register_store::create_register(&ctx->registers, offsets.q_offset + (i * 16), int128);
     }
 
-    guest_register_store::create_register(&ctx->registers, offsets.n_offset, int8);
-    guest_register_store::create_register(&ctx->registers, offsets.z_offset, int8);
-    guest_register_store::create_register(&ctx->registers, offsets.c_offset, int8);
-    guest_register_store::create_register(&ctx->registers, offsets.v_offset, int8);
+    guest_register_store::create_register(&ctx->registers, offsets.n_offset, int32);
+    guest_register_store::create_register(&ctx->registers, offsets.z_offset, int32);
+    guest_register_store::create_register(&ctx->registers, offsets.c_offset, int32);
+    guest_register_store::create_register(&ctx->registers, offsets.v_offset, int32);
 
     guest_register_store::create_register(&ctx->registers, offsets.fpcr_offset, int64);
     guest_register_store::create_register(&ctx->registers, offsets.fpsr_offset, int64);
@@ -59,11 +59,14 @@ void aarch64_emit_context::emit_store_context(aarch64_emit_context* ctx)
     ctx->context_movement.push_back(ir_operation_block::emits(ir, ir_guest_store_context, ctx->context_pointer));
 }
 
-void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new_location)
+void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new_location, bool store_context)
 {   
     ctx->branch_state = branch_type::long_branch;
 
-    emit_store_context(ctx);
+    if (store_context)
+    {
+        emit_store_context(ctx);
+    }
 
     ir_operation_block::emits(ctx->raw_ir, ir_close_and_return, new_location);
 }

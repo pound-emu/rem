@@ -210,7 +210,7 @@ static std::string instruction_names[] = {
 	"ir_assert_false",
 	"ir_assert_true",
 
-	//X86
+	//"x86
 	"x86_cqo",
 	"x86_cdq",
 	"x86_cwd",
@@ -225,9 +225,9 @@ static std::string instruction_names[] = {
 	"x86_addsd",
 	"x86_addss",
 	"x86_divpd",
-	"x86_divps",	
+	"x86_divps",
 	"x86_divsd",
-	"x86_divss",	
+	"x86_divss",
 	"x86_maxsd",
 	"x86_maxss",
 	"x86_minsd",

@@ -8,9 +8,10 @@
 #include <assert.h>
 #include <iostream>
 #include <exception>
+#include <string.h>
 
 typedef bool            boolean;
-typedef double          real;
+typedef long double     real;
 typedef int64_t         integer; 
 
 #define bits(N) meta_number
@@ -30,7 +31,7 @@ static T convert(S src)
 static uint32_t float_as_uint32 (float a)
 {
     uint32_t r;
-    memcpy (&r, &a, sizeof r);
+    memcpy(&r, &a, sizeof r);
     return r;
 }
 
@@ -152,6 +153,23 @@ struct meta_number
         value = (value & ~mask) | ((source << bit) & mask);
     }
 
+    static meta_number concat_impl(meta_number left, meta_number right)
+    {
+        meta_number result = meta_number(((left.value & left.create_mask()) << right.size) | (right.value & right.create_mask()), left.size + right.size);
+
+        if (result.size > 64)
+        {
+            throw 0;
+        }
+
+        return result;
+    }
+
+    meta_number operator | (meta_number other)
+    {
+        return meta_number::concat_impl(*this, other);
+    }
+
     operator uint64_t()
     {
         return value;
@@ -192,14 +210,7 @@ struct bit
 
 static meta_number concat(meta_number left, meta_number right)
 {
-    meta_number result = meta_number(((left.value & left.create_mask()) << right.size) | (right.value & right.create_mask()), left.size + right.size);
-
-    if (result.size > 64)
-    {
-        throw 0;
-    }
-
-    return result;
+    return meta_number::concat_impl(left, right);
 }
 
 static meta_number concat(meta_number a, meta_number b, meta_number c)
@@ -252,7 +263,8 @@ enum FPRounding
 
 enum extensions
 {
-    FEAT_AFP
+    FEAT_AFP,
+    FEAT_RPRES
 };
 
 struct FPCR_Type
@@ -782,11 +794,6 @@ static std::tuple<real, integer> NormalizeReal(real x)
     return {mantissa, exponent};
 }
 
-static meta_number RoundDown(real x)
-{
-    return meta_number(floor(x));
-}
-
 static real Max(real l, real r)
 {
     if (l >= r)
@@ -871,6 +878,241 @@ static void FPProcessDenorm(FPType fptype, integer N, FPCR_Type fpcr)
     boolean altfp = IsFeatureImplemented(FEAT_AFP) && !UsingAArch32() && fpcr.AH() == 1;
     if (altfp && N != 16 && fptype == FPType_Denormal)
         FPProcessException(FPExc_InputDenorm, fpcr);
+}
+
+static boolean FPCompareEQ(bits(N) op1, bits(N) op2, FPCR_Type fpcr)
+{
+    int N = op1.size;
+
+    assert_in(N, {16,32,64});
+    auto [type1,sign1,value1] = FPUnpack(op1, fpcr);
+    auto [type2,sign2,value2] = FPUnpack(op2, fpcr);
+
+    boolean result;
+    if (in(type1, {FPType_SNaN, FPType_QNaN}) || in(type2, {FPType_SNaN, FPType_QNaN}))
+    {
+        result = FALSE;
+        if (type1 == FPType_SNaN || type2 == FPType_SNaN)
+            FPProcessException(FPExc_InvalidOp, fpcr);
+    }
+    else
+    {
+        // All non-NaN cases can be evaluated on the values produced by FPUnpack()
+        result = (value1 == value2);
+        FPProcessDenorms(type1, type2, N, fpcr);
+    }
+
+    return result;
+}
+
+static boolean FPCompareGE(bits(N) op1, bits(N) op2, FPCR_Type fpcr)
+{
+    int N = op1.size;
+
+    assert_in(N, {16,32,64});
+    auto [type1,sign1,value1] = FPUnpack(op1, fpcr);
+    auto [type2,sign2,value2] = FPUnpack(op2, fpcr);
+
+    boolean result;
+    if (in(type1, {FPType_SNaN, FPType_QNaN}) || in(type2, {FPType_SNaN, FPType_QNaN}))
+    {
+        result = FALSE;
+        if (type1 == FPType_SNaN || type2 == FPType_SNaN)
+            FPProcessException(FPExc_InvalidOp, fpcr);
+    }
+    else
+    {
+        // All non-NaN cases can be evaluated on the values produced by FPUnpack()
+        result = (value1 >= value2);
+        FPProcessDenorms(type1, type2, N, fpcr);
+    }
+
+    return result;
+}
+
+static boolean FPCompareGT(bits(N) op1, bits(N) op2, FPCR_Type fpcr)
+{
+    int N = op1.size;
+
+    assert_in(N, {16,32,64});
+    auto [type1,sign1,value1] = FPUnpack(op1, fpcr);
+    auto [type2,sign2,value2] = FPUnpack(op2, fpcr);
+
+    boolean result;
+    if (in(type1, {FPType_SNaN, FPType_QNaN}) || in(type2, {FPType_SNaN, FPType_QNaN}))
+    {
+        result = FALSE;
+        if (type1 == FPType_SNaN || type2 == FPType_SNaN)
+            FPProcessException(FPExc_InvalidOp, fpcr);
+    }
+    else
+    {
+        // All non-NaN cases can be evaluated on the values produced by FPUnpack()
+        result = (value1 > value2);
+        FPProcessDenorms(type1, type2, N, fpcr);
+    }
+
+    return result;
+}
+
+static std::tuple<boolean, bits(N)> FPProcessNaNs3(FPType type1, FPType type2, FPType type3,bits(N) op1, bits(N) op2, bits(N) op3,FPCR_Type fpcr, boolean fpexc)
+{
+    int N = op1.size;
+
+    assert_in(N, {16,32,64});
+    bits(N) result;
+    boolean op1_nan = in(type1,{FPType_SNaN, FPType_QNaN});
+    boolean op2_nan = in(type2,{FPType_SNaN, FPType_QNaN});
+    boolean op3_nan = in(type3,{FPType_SNaN, FPType_QNaN});
+
+    boolean altfp = IsFeatureImplemented(FEAT_AFP) && !UsingAArch32() && fpcr.AH() == 1;
+    FPType type_nan;
+    if (altfp)
+    {
+        if (type1 == FPType_SNaN || type2 == FPType_SNaN || type3 == FPType_SNaN)
+            type_nan = FPType_SNaN;
+        else
+            type_nan = FPType_QNaN;
+    }
+
+    boolean done;
+    if (altfp && op1_nan && op2_nan && op3_nan)
+    {
+        // <n> register NaN selected
+        done = TRUE;  result = FPProcessNaN(type_nan, op2, fpcr, fpexc);
+    }
+    else if (altfp && op2_nan && (op1_nan || op3_nan))
+    {
+        // <n> register NaN selected
+        done = TRUE;  result = FPProcessNaN(type_nan, op2, fpcr, fpexc);
+    }
+    else if (altfp && op3_nan && op1_nan)
+    {
+        // <m> register NaN selected
+        done = TRUE;  result = FPProcessNaN(type_nan, op3, fpcr, fpexc);
+    }
+    else if (type1 == FPType_SNaN)
+    {
+        done = TRUE;  result = FPProcessNaN(type1, op1, fpcr, fpexc);
+    }
+    else if (type2 == FPType_SNaN)
+    {
+        done = TRUE;  result = FPProcessNaN(type2, op2, fpcr, fpexc);
+    }
+    else if (type3 == FPType_SNaN)
+    {
+        done = TRUE;  result = FPProcessNaN(type3, op3, fpcr, fpexc);
+    }
+    else if (type1 == FPType_QNaN)
+    {
+        done = TRUE;  result = FPProcessNaN(type1, op1, fpcr, fpexc);
+    }
+    else if (type2 == FPType_QNaN)
+    {
+        done = TRUE;  result = FPProcessNaN(type2, op2, fpcr, fpexc);
+    }
+    else if (type3 == FPType_QNaN)
+    {
+        done = TRUE;  result = FPProcessNaN(type3, op3, fpcr, fpexc);
+    }
+    else
+    {
+        done = FALSE;  result = Zeros(N);  // Dont care result
+    }
+
+    return {done, result};
+}
+
+static void FPProcessDenorms3(FPType type1, FPType type2, FPType type3, integer N, FPCR_Type fpcr)
+{
+    boolean altfp = IsFeatureImplemented(FEAT_AFP) && !UsingAArch32() && fpcr.AH() == 1;
+    if (altfp && N != 16 && (type1 == FPType_Denormal || type2 == FPType_Denormal || type3 == FPType_Denormal))
+    {
+        FPProcessException(FPExc_InputDenorm, fpcr);
+    }
+}
+
+static bits(N) FPMulAdd(bits(N) addend, bits(N) op1, bits(N) op2, FPCR_Type fpcr, boolean fpexc)
+{
+    int N = op1.size;
+
+    assert_in(N, {16,32,64});
+
+    auto [typeA,signA,valueA] = FPUnpack(addend, fpcr, fpexc);
+    auto [type1,sign1,value1] = FPUnpack(op1, fpcr, fpexc);
+    auto [type2,sign2,value2] = FPUnpack(op2, fpcr, fpexc);
+    auto rounding = FPRoundingMode(fpcr);
+    auto inf1 = (type1 == FPType_Infinity); auto zero1 = (type1 == FPType_Zero);
+    auto inf2 = (type2 == FPType_Infinity); auto zero2 = (type2 == FPType_Zero);
+
+    auto [done,result] = FPProcessNaNs3(typeA, type1, type2, addend, op1, op2, fpcr, fpexc);
+
+    if (!(IsFeatureImplemented(FEAT_AFP) && !UsingAArch32() && fpcr.AH() == 1))
+    {
+        if (typeA == FPType_QNaN && ((inf1 && zero2) || (zero1 && inf2)))
+        {
+            result = FPDefaultNaN(fpcr, N);
+            if (fpexc) FPProcessException(FPExc_InvalidOp, fpcr);
+        }
+    }
+
+    if (!done)
+    {
+        auto infA = (typeA == FPType_Infinity); auto zeroA = (typeA == FPType_Zero);
+
+        // Determine sign and type product will have if it does not cause an
+        // Invalid Operation.
+        auto signP = sign1 ^ sign2;
+        auto infP  = inf1 || inf2;
+        auto zeroP = zero1 || zero2;
+
+        // Non SNaN-generated Invalid Operation cases are multiplies of zero
+        // by infinity and additions of opposite-signed infinities.
+        auto invalidop = (inf1 && zero2) || (zero1 && inf2) || (infA && infP && signA != signP);
+
+        if (invalidop)
+        {
+            result = FPDefaultNaN(fpcr, N);
+            if (fpexc) FPProcessException(FPExc_InvalidOp, fpcr);
+        }
+        // Other cases involving infinities produce an infinity of the same sign.
+        else if ((infA && signA == 0) || (infP && signP == 0))
+        {
+            result = FPInfinity(0, N);
+        }
+        else if ((infA && signA == 1) || (infP && signP == 1))
+        {
+            result = FPInfinity(1, N);
+        }
+
+        // Cases where the result is exactly zero and its sign is not determined by the
+        // rounding mode are additions of same-signed zeros.
+        else if (zeroA && zeroP && signA == signP)
+        {
+            result = FPZero(signA, N);
+
+        // Otherwise calculate numerical result and round it.
+        }
+        else
+        {
+            real result_value = valueA + (value1 * value2);
+            if (result_value == 0.0)  // Sign of exact zero result depends on rounding mode
+            {
+                auto result_sign = rounding == FPRounding_NEGINF ? 1 : 0;
+                result = FPZero(result_sign, N);
+            }
+            else
+            {
+                result = FPRound(result_value, fpcr, rounding, fpexc, N);
+            }
+        }
+
+        if (!invalidop && fpexc)
+        {
+            FPProcessDenorms3(typeA, type1, type2, N, fpcr);
+        }
+    }
+    return result;
 }
 
 static bits(N) FPAdd(bits(N) op1, bits(N) op2, FPCR_Type fpcr, boolean fpexc)
@@ -1101,11 +1343,15 @@ static bits(N) FPMin(bits(N) op1, bits(N) op2, FPCR_Type fpcr_in, boolean altfp,
         FPRounding rounding;
         if ( value1 < value2 )
         {
-            (fptype,sign,value) = (type1,sign1,value1);
+            fptype = type1;
+            sign = sign1;
+            value = value1;
         }
         else
         {
-            (fptype,sign,value) = (type2,sign2,value2);
+            fptype = type2;
+            sign = sign2;
+            value = value2;
         }
         if ( fptype == FPType_Infinity )
         {
@@ -1164,11 +1410,15 @@ static bits(N) FPMax(bits(N) op1, bits(N) op2, FPCR_Type fpcr_in, boolean altfp,
         real value;
         if (value1 > value2)
         {
-            (fptype,sign,value) = (type1,sign1,value1);
+            fptype = type1;
+            sign = sign1;
+            value = value1;
         }
         else
         {
-            (fptype,sign,value) = (type2,sign2,value2);
+            fptype = type2;
+            sign = sign2;
+            value = value2;
         }
         if (fptype == FPType_Infinity)
         {
@@ -1474,6 +1724,84 @@ static bits(M) FPToFixed(bits(N) op, integer fbits, boolean is_unsigned, FPCR_Ty
     return {result, M};
 }
 
+static bits(N) FPRoundInt(bits(N) op, FPCR_Type fpcr, FPRounding rounding, boolean exact)
+{
+    int N = op.size;
+
+    assert(rounding != FPRounding_ODD);
+    assert_in(N,{16,32,64});
+
+    // When alternative floating-point support is TRUE, do not generate
+    // Input Denormal floating-point exceptions.
+    auto altfp = IsFeatureImplemented(FEAT_AFP) && !UsingAArch32() && fpcr.AH() == '1';
+    auto fpexc = !altfp;
+
+    // Unpack using FPCR to determine if subnormals are flushed-to-zero.
+    auto [fptype,sign,value] = FPUnpack(op, fpcr, fpexc);
+
+    bits(N) result;
+    if (fptype == FPType_SNaN || fptype == FPType_QNaN)
+    {
+        result = FPProcessNaN(fptype, op, fpcr);
+    }
+    else if (fptype == FPType_Infinity)
+    {
+        result = FPInfinity(sign, N);
+    }
+    else if (fptype == FPType_Zero)
+    {
+        result = FPZero(sign, N);
+    }
+    else
+    {
+        // Extract integer component.
+        auto int_result = floor(value);
+        auto error = value - int_result;
+
+        // Determine whether supplied rounding mode requires an increment.
+        boolean round_up;
+        switch (rounding)
+        {
+            case FPRounding_TIEEVEN:
+                round_up = (error > 0.5 || (error == 0.5 && !is_even(int_result)));
+            break;
+            case FPRounding_POSINF:
+                round_up = (error != 0.0);
+            break;
+            case FPRounding_NEGINF:
+                round_up = FALSE;
+            break;
+            case FPRounding_ZERO:
+                round_up = (error != 0.0 && int_result < 0);
+            break;
+            case FPRounding_TIEAWAY:
+                round_up = (error > 0.5 || (error == 0.5 && int_result >= 0));
+            break;
+        }
+
+        if (round_up) int_result = int_result + 1;
+
+        // Convert integer value into an equivalent real value.
+        auto real_result = int_result;
+
+        // Re-encode as a floating-point value, result is always exact.
+        if (real_result == 0.0)
+        {
+            result = FPZero(sign, N);
+        }
+        else
+        {
+            result = FPRound(real_result, fpcr, FPRounding_ZERO, N);
+        }
+
+        // Generate inexact exceptions.
+        if (error != 0.0 && exact)
+            FPProcessException(FPExc_Inexact, fpcr);
+    }
+
+    return result;
+}
+
 static bits(N) FPRoundBF(real op, FPCR_Type fpcr, FPRounding rounding, boolean fpexc, integer N)
 {
     assert(N == 32);
@@ -1617,14 +1945,148 @@ static bits(4) FPCompare(bits(N) op1, bits(N) op2, boolean signal_nans, FPCR_Typ
     return result;
 }
 
-static uint64_t FPCompare_I(uint64_t op1, uint64_t op2, boolean signal_nans, uint64_t fpcr, uint64_t N)
+static bits(N) FPRSqrtEstimate(bits(N) operand, FPCR_Type fpcr_in)
 {
-    return FPCompare({op1, N}, {op2, N}, signal_nans, {fpcr});
+    int N = operand.size;
+
+    assert_in(N,{16,32,64});
+    FPCR_Type fpcr = fpcr_in;
+
+    // When using alternative floating-point behavior, do not generate
+    // floating-point exceptions and flush denormal input to zero.
+    boolean altfp = IsFeatureImplemented(FEAT_AFP) && !UsingAArch32() && fpcr.AH() == 1;
+    boolean fpexc = !altfp;
+    if (altfp) 
+    {
+        fpcr.FIZ(1);
+        fpcr.FZ(1); 
+    }
+
+    auto [fptype,sign,value] = FPUnpack(operand, fpcr, fpexc);
+
+    bits(N) result;
+    if (fptype == FPType_SNaN || fptype == FPType_QNaN)
+    {
+        result = FPProcessNaN(fptype, operand, fpcr, fpexc);
+    }
+    else if (fptype == FPType_Zero)
+    {
+        result = FPInfinity(sign, N);
+        if (fpexc) 
+            FPProcessException(FPExc_DivideByZero, fpcr);
+    }
+    else if (sign == 1)
+    {
+        result = FPDefaultNaN(fpcr, N);
+        if (fpexc) FPProcessException(FPExc_InvalidOp, fpcr);
+    }
+    else if (fptype == FPType_Infinity)
+    {
+        result = FPZero(0, N);
+    }
+    else
+    {
+        result = FPRound(1.0 / sqrt(value),fpcr, N);
+    }
+
+    return result;
+}
+
+static bits(N) FPOnePointFive(bit sign, integer N)
+{
+    assert_in(N,{16,32,64});
+    integer E = (N == 16 ? 5 : N == 32 ? 8 : 11);
+    integer F = N - (E + 1);
+    auto exp  = meta_number(0b0, 1)|Ones(E-1);
+    auto frac = meta_number(0b1, 1)|Zeros(F-1);
+    auto result = sign | exp | frac;
+
+    return result;
+}
+
+static bits(N) FPRSqrtStepFused(bits(N) op1_in, bits(N) op2, FPCR_Type fpcr_in)
+{
+    int N = op1_in.size;
+
+    assert_in(N,{16, 32, 64});
+    FPCR_Type fpcr = fpcr_in;
+    //bits(N) result;
+    bits(N) op1 = op1_in;
+    //boolean done;
+    op1 = FPNeg(op1, fpcr);
+    boolean altfp = IsFeatureImplemented(FEAT_AFP) && fpcr.AH() == 0b10;
+    boolean fpexc = !altfp;                    // Generate no floating-point exceptions
+    //if (altfp) fpcr.<FIZ,FZ>(0b11)                 // Flush denormal input and output to zero
+    if (altfp) fpcr.RMode(0b00);                    // Use RNE rounding mode
+
+    auto [type1,sign1,value1] = FPUnpack(op1, fpcr, fpexc);
+    auto [type2,sign2,value2] = FPUnpack(op2, fpcr, fpexc);
+    auto [done,result] = FPProcessNaNs(type1, type2, op1, op2, fpcr, fpexc);
+    FPRounding rounding = FPRoundingMode(fpcr);
+
+    if (!done)
+    {
+        auto inf1 = (type1 == FPType_Infinity);
+        auto inf2 = (type2 == FPType_Infinity);
+        auto zero1 = (type1 == FPType_Zero);
+        auto zero2 = (type2 == FPType_Zero);
+
+        if ((inf1 && zero2) || (zero1 && inf2))
+        {
+            result = FPOnePointFive(0b0, N);
+        }
+        else if (inf1 || inf2)
+        {
+            result = FPInfinity(sign1 ^ sign2, N);
+        }
+        else
+        {
+            // Fully fused multiply-add and halve
+            real result_value = (3.0 + (value1 * value2)) / 2.0;
+            if (result_value == 0.0)
+            {
+                // Sign of exact zero result depends on rounding mode
+                bit sign = (rounding == FPRounding_NEGINF) ? 0b1 : 0b0;
+                result = FPZero(sign, N);
+            }
+            else
+            {
+                result = FPRound(result_value, fpcr, rounding, fpexc, N);
+            }
+        }
+    }
+
+    return result;
+}
+
+static uint64_t FPCompareEQ_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
+{
+    return FPCompareEQ({op1, N}, {op2, N}, {fpcr});
+}
+
+static uint64_t FPCompareGE_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
+{
+    return FPCompareGE({op1, N}, {op2, N}, {fpcr});
+}
+
+static uint64_t FPCompareGT_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
+{
+    return FPCompareGT({op1, N}, {op2, N}, {fpcr});
+}
+
+static uint64_t FPCompare_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
+{
+    return FPCompare({op1, N}, {op2, N}, 0, {fpcr});
 }
 
 static uint64_t FPAbs_I(uint64_t op, uint64_t fpcr, uint64_t N)
 {
     return FPAbs({op, N}, {fpcr});
+}
+
+static uint64_t FPRSqrtEstimate_I(uint64_t op, uint64_t fpcr, uint64_t N)
+{
+    return FPRSqrtEstimate({op, N}, {fpcr});
 }
 
 static uint64_t FPNeg_I(uint64_t op, uint64_t fpcr, uint64_t N)
@@ -1667,9 +2129,19 @@ static uint64_t FPAdd_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
     return FPAdd({op1, N}, {op2, N}, {fpcr}, 0);
 }
 
+static uint64_t FPRSqrtStepFused_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
+{
+    return FPRSqrtStepFused({op1, N}, {op2, N}, {fpcr});
+}
+
 static uint64_t FPMul_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
 {
     return FPMul({op1, N}, {op2, N}, {fpcr});
+}
+
+static uint64_t FPMulAdd_I(uint64_t op3,uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
+{
+    return FPMulAdd({op3, N},{op1, N}, {op2, N},{fpcr},0);
 }
 
 static uint64_t FPDiv_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
@@ -1690,6 +2162,11 @@ static uint64_t FPToFixed_I(uint64_t op, integer fbits, boolean is_unsigned, FPR
 static uint64_t FPConvert_I(uint64_t op, uint64_t fpcr, int rounding, int M, int N)
 {
     return FPConvert({op, N}, {fpcr}, (FPRounding)rounding, M);
+}
+
+static uint64_t FPRoundInt_I(uint64_t op, uint64_t fpcr, int rounding, int N)
+{
+    return FPRoundInt({op, N}, {fpcr}, (FPRounding)rounding, false);
 }
 
 #endif

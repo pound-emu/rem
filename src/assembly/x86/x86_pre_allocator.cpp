@@ -475,7 +475,12 @@ static void emit_external_call(x86_pre_allocator_context* result, ir_operation* 
 				throw_error();
 			}
 
-			emit_move(result, locks[abi_des], operation->sources[i]);
+			ir_operand source = operation->sources[i];
+			ir_operand abi_location = locks[abi_des];
+
+			abi_location = ir_operand::copy_new_raw_size(abi_location, source.meta_data);
+
+			emit_move(result, abi_location,source);
 		}
 
 		ir_operation_block::emitds(result->ir, ir_instructions::ir_external_call,  RAX(int64), function);

@@ -20,24 +20,6 @@ ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address)
     return result;
 }
 
-ir_operand _compare_and_swap_jit(ssa_emit_context* ctx, ir_operand physical_address, ir_operand expecting, ir_operand to_swap, uint64_t size)
-{
-    switch (size)
-    {
-        case 8:     size = int8;    break;
-        case 16:    size = int16;   break;
-        case 32:    size = int32;   break;
-        case 64:    size = int64;   break;
-        default:    throw_error();
-    }
-
-    ir_operand result = ssa_emit_context::create_local(ctx, size);
-
-    ir_operation_block::emitds(ctx->ir,ir_instructions::ir_compare_and_swap, result, physical_address, expecting, to_swap);
-
-    return result;
-}
-
 //Registers 
 
 ir_operand _x_jit(ssa_emit_context* ctx, uint64_t reg_id)
@@ -141,6 +123,30 @@ void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t condition_pass, uin
     ir_operation_block::mark_label(ctx->ir, end);
 }
 
+ir_operand get_vector_context_jit(ssa_emit_context* ctx)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    guest_process* process = actx->process;
+
+    return ssa_emit_context::emit_ssa(ctx, ir_add, actx->context_pointer, ir_operand::create_con(process->guest_context_offset_data.q_offset));
+}
+
+void store_context_jit(ssa_emit_context* ctx)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    guest_process* process = actx->process;
+
+    aarch64_emit_context::emit_store_context(actx);
+}
+
+void load_context_jit(ssa_emit_context* ctx)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    guest_process* process = actx->process;
+
+    aarch64_emit_context::emit_load_context(actx);
+}
+
 void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc)
 {
     aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
@@ -201,152 +207,11 @@ uint64_t x86_enable_avx_jit(ssa_emit_context* ctx)
     return true;
 }
 
-ir_operand FPAdd_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+ir_operand call_jit(ssa_emit_context* ctx, ir_operand a0, ir_operand a1, ir_operand a2, ir_operand a3, ir_operand a4, ir_operand a5, uint64_t function)
 {
-    ir_operand function = ir_operand::create_con((uint64_t)&FPAdd_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function,  operand1, operand2, FPCR, ir_operand::create_con(N));
+    ir_operand result = ssa_emit_context::create_local(ctx,int64);
 
-    return result;
-}
-
-ir_operand FPSub_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPSub_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand1, operand2, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPMul_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPMul_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand1, operand2, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPDiv_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPDiv_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand1, operand2, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPMax_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPMax_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand1, operand2, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPMin_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPMin_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand1, operand2, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPMaxNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPMaxNum_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand1, operand2, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPMinNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPMinNum_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand1, operand2, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPSqrt_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPSqrt_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPNeg_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPNeg_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPAbs_jit(ssa_emit_context* ctx, ir_operand operand, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPAbs_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, operand, FPCR, ir_operand::create_con(N));
-
-    return result;
-}
-
-ir_operand FPConvert_jit(ssa_emit_context* ctx, ir_operand source, uint64_t to, uint64_t from)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPConvert_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, source, ir_operand::create_con(0), ir_operand::create_con(0),ir_operand::create_con(to), ir_operand::create_con(from));
-
-    return result;
-}
-
-ir_operand FixedToFP_jit(ssa_emit_context* ctx, ir_operand source, uint64_t fracbits, uint64_t is_unsigned, uint64_t to, uint64_t from)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FixedToFP_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, source, ir_operand::create_con(fracbits), ir_operand::create_con(is_unsigned), ir_operand::create_con(to),ir_operand::create_con(from));
-
-    return result;
-}
-
-ir_operand FPToFixed_jit(ssa_emit_context* ctx, ir_operand source, uint64_t fracbits, uint64_t is_unsigned, uint64_t round, uint64_t to, uint64_t from)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPToFixed_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function, source, ir_operand::create_con(fracbits), ir_operand::create_con(is_unsigned), ir_operand::create_con(round), ir_operand::create_con(to),ir_operand::create_con(from));
-
-    return result;
-}
-
-ir_operand FPCompare_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
-{
-    ir_operand function = ir_operand::create_con((uint64_t)&FPCompare_I);
-    ir_operand result = ssa_emit_context::create_local(ctx, int64);
-    
-    ir_operation_block::emitds(ctx->ir, ir_external_call, result, function,  operand1, operand2, ir_operand::create_con(0), FPCR, ir_operand::create_con(N));
+    ir_operation_block::emitds(ctx->ir, ir_external_call, result, ir_operand::create_con(function), a0, a1, a2, a3, a4, a5);
 
     return result;
 }

@@ -6,8 +6,6 @@
 #include "debugging.h"
 #include "tools/numbers.h"
 
-std::mutex global_lock;
-
 //Memory
 
 uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address)
@@ -15,42 +13,6 @@ uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address)
     guest_process* process = ctx->process_context;
 
     return (uint64_t)process->guest_memory_context.translate_address(process->guest_memory_context.base, address);
-}
-
-template<typename T>
-T compare_and_swap_impl(uint64_t address_src, T expecting, T to_swap)
-{
-    T* address = (T*)address_src;
-
-    if (*address == expecting)
-    {
-        *address = to_swap;
-
-        return true;
-    }
-
-    return false;
-}
-
-uint64_t _compare_and_swap_interpreter(interpreter_data* ctx, uint64_t physical_address, uint64_t expecting, uint64_t to_swap, uint64_t size)
-{
-    global_lock.lock();
-
-    bool result;
-
-    switch (size)
-    {
-        case 8:     result = compare_and_swap_impl<uint8_t>(physical_address, expecting, to_swap); break;
-        case 16:    result = compare_and_swap_impl<uint16_t>(physical_address, expecting, to_swap); break;
-        case 32:    result = compare_and_swap_impl<uint32_t>(physical_address, expecting, to_swap); break;
-        case 64:    result = compare_and_swap_impl<uint64_t>(physical_address, expecting, to_swap); break;
-        case 128:   result = compare_and_swap_impl<uint128_t>(physical_address, expecting, to_swap); break;
-        default:    throw_error();
-    }
-
-    global_lock.unlock();
-
-    return result;
 }
 
 //Registers 
@@ -163,6 +125,18 @@ void _branch_conditional_interpreter(interpreter_data* ctx, uint64_t yes, uint64
     }
 }
 
+uint64_t get_vector_context_interpreter(interpreter_data* ctx)
+{
+    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+
+	void* data_pointer = (char*)ctx->register_data + offsets->q_offset;
+
+	return (uint64_t)data_pointer;
+}
+
+void store_context_interpreter(interpreter_data* ctx){};
+void load_context_interpreter(interpreter_data* ctx){};
+
 //Misc
 
 uint64_t _get_pc_interpreter(interpreter_data* ctx)
@@ -206,195 +180,7 @@ uint64_t call_counter_interpreter(interpreter_data* ctx)
     return ((uint64_t(*)())process->counter_function)();
 }
 
-uint64_t FPCompare_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+uint64_t call_interpreter(interpreter_data* ctx, uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5, uint64_t function)
 {
-	return FPCompare(
-	{
-		operand1,
-		N
-	},
-	{
-		operand2,
-		N
-	},
-	0, {FPCR});
-}
-
-uint64_t FPAdd_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
-{
-	return FPAdd(
-	{
-		operand1,
-		N
-	},
-	{
-		operand2,
-		N
-	},
-	{
-		FPCR
-	}, 0);
-}
-
-uint64_t FPSub_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
-{
-	return FPSub(
-	{
-		operand1,
-		N
-	},
-	{
-		operand2,
-		N
-	},
-	{
-		FPCR
-	}, 0);
-}
-
-uint64_t FPMul_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
-{
-	return FPMul(
-	{
-		operand1,
-		N
-	},
-	{
-		operand2,
-		N
-	},
-	{
-		FPCR
-	});
-}
-
-uint64_t FPDiv_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
-{
-	return FPDiv(
-	{
-		operand1,
-		N
-	},
-	{
-		operand2,
-		N
-	},
-	{
-		FPCR
-	});
-}
-
-uint64_t FPMax_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
-{
-	return FPMax(
-	{
-		operand1,
-		N
-	},
-	{
-		operand2,
-		N
-	},
-	{
-		FPCR
-	}, 0, 0);
-}
-
-uint64_t FPMin_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
-{
-	return FPMin(
-	{
-		operand1,
-		N
-	},
-	{
-		operand2,
-		N
-	},
-	{
-		FPCR
-	}, 0, 0);
-}
-
-uint64_t FPMaxNum_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
-{
-	return FPMaxNum(
-	{
-		operand1,
-		N
-	},
-	{
-		operand2,
-		N
-	},
-	{
-		FPCR
-	}, 0);
-}
-
-uint64_t FPMinNum_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
-{
-	return FPMinNum(
-	{
-		operand1,
-		N
-	},
-	{
-		operand2,
-		N
-	},
-	{
-		FPCR
-	}, 0);
-}
-
-uint64_t FPSqrt_interpreter(interpreter_data * ctx, uint64_t operand1, uint64_t FPCR, uint64_t N)
-{
-	return FPSqrt(
-	{
-		operand1,
-		N
-	},
-	{
-		FPCR
-	});
-}
-
-uint64_t FPConvert_interpreter(interpreter_data* ctx, uint64_t source, uint64_t to, uint64_t from)
-{
-	return FPConvert({source, from}, {0},(FPRounding)0, to);
-}
-
-uint64_t FPNeg_interpreter(interpreter_data * ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
-{
-	return FPNeg(
-	{
-		operand,
-		N
-	},
-	{
-		FPCR
-	});
-}
-
-uint64_t FPAbs_interpreter(interpreter_data * ctx, uint64_t operand, uint64_t FPCR, uint64_t N)
-{
-	return FPAbs(
-	{
-		operand,
-		N
-	},
-	{
-		FPCR
-	});
-}
-
-uint64_t FixedToFP_interpreter(interpreter_data* ctx, uint64_t source, uint64_t fracbits, uint64_t is_unsigned, uint64_t to, uint64_t from)
-{
-	return FixedToFP({source, from}, fracbits, is_unsigned, {0}, to);
-}
-
-uint64_t FPToFixed_interpreter(interpreter_data* ctx, uint64_t source, uint64_t fracbits, uint64_t is_unsigned, uint64_t round, uint64_t to, uint64_t from)
-{
-	return FPToFixed({source, from}, fracbits, is_unsigned, {0},(FPRounding)round,to);
+	return ((uint64_t(*)(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t))function)(a0, a1, a2, a3, a4, a5);
 }

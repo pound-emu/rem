@@ -186,6 +186,8 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 
 			int size = ir_operand::get_raw_size(&working_operation.destinations[0]);
 
+			c.lock();
+
 			switch (size)
 			{
 				case int8: 	c.cmpxchg(c.ptr[_address], create_operand<Xbyak::Reg8>(working_operation.sources[2])); break;

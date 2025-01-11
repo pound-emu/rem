@@ -113,7 +113,7 @@ guest_function guest_process::translate_function(translate_request_data* data)
                         
                         aarch64_emit_context::emit_load_context(&aarch64_emit);
 
-                        aarch64_emit_context::branch_long(&aarch64_emit, new_address);
+                        aarch64_emit_context::branch_long(&aarch64_emit, new_address, false);
                     }   
                     else
                     {
@@ -145,6 +145,8 @@ guest_function guest_process::translate_function(translate_request_data* data)
     }
     
     aarch64_emit_context::emit_context_movement(&aarch64_emit);
+
+    //ir_operation_block::log(raw_ir);
 
     void* code = jit_context::compile_code(process->host_jit_context, raw_ir,(compiler_flags)0);
 
@@ -185,9 +187,18 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         if (table == nullptr)
         {
-            std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
+            if (process->undefined_instruction != nullptr)
+            {
+                interpreter.current_pc = ((uint64_t(*)(void*, uint64_t))process->undefined_instruction)(arm_context,interpreter.current_pc);
 
-            throw_error();
+                continue;
+            }
+            else
+            {
+                std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
+
+                throw_error();
+            }
         }
 
         interpreter.branch_type = branch_type::no_branch;
