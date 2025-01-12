@@ -222,3 +222,14 @@ ir_operand call_jit(ssa_emit_context* ctx, ir_operand a0, ir_operand a1, ir_oper
 
     return result;
 }
+
+//Optimization
+uint64_t use_fast_float_jit(ssa_emit_context* ctx)
+{
+    return 1;
+}
+
+uint64_t use_x86_sse(ssa_emit_context* ctx)
+{
+    return 1;
+}

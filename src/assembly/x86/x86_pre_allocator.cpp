@@ -77,6 +77,16 @@ static ir_operand register_or_constant(x86_pre_allocator_context* context, ir_op
 	return register_or_constant(context, &source, force_copy);
 }
 
+static ir_operand vector_from_register(x86_pre_allocator_context* context, ir_operand source)
+{
+	source = register_or_constant(context, source);
+	ir_operand result = create_scrap_operand(context, int128);
+	
+	ir_operation_block::emitds(context->ir, x86_movq_to_vec, result, source);
+
+	return result;
+}
+
 static void emit_throw_exception(x86_pre_allocator_context* context)
 {
 	ir_operand zero = register_or_constant(context, ir_operand::create_con(0));
@@ -179,6 +189,70 @@ static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, uint64_t instruc
 	 
 	//mov destination scrap
 	emit_move(result, working_destination, working_scrap);
+}
+
+static void emit_floating_point_compare(x86_pre_allocator_context* result, uint64_t instruction, ir_operand destination, ir_operand source_0, ir_operand source_1)
+{
+	assert_same_size({ destination, source_0, source_1 });
+
+	ir_operand working_destination = destination;
+
+	ir_operand working_vector_0 = vector_from_register(result, source_0);
+	ir_operand working_vector_1 = vector_from_register(result, source_1);
+
+	ir_operation_block::emitds(result->ir, instruction, working_destination, working_vector_0, working_vector_1);
+}
+
+static void emit_floating_point_binary(x86_pre_allocator_context* result, uint64_t instruction, ir_operand destination, ir_operand source_0, ir_operand source_1)
+{
+	assert_same_size({ destination, source_0, source_1 });
+
+	ir_operand working_destination = destination;
+	ir_operand working_source_0 = register_or_constant(result, &source_0);
+	ir_operand working_source_1 = register_or_constant(result, &source_1);
+
+	ir_operand working_vector_0 = vector_from_register(result, working_source_0);
+	ir_operand working_vector_1 = vector_from_register(result, working_source_1);
+
+	int working_instruction;
+
+	switch (instruction)
+	{
+		case ir_floating_point_add: 		working_instruction = ir_operand::get_raw_size(&destination) == int64 ? x86_addsd : x86_addss; break;
+		case ir_floating_point_subtract: 	working_instruction = ir_operand::get_raw_size(&destination) == int64 ? x86_subsd : x86_subss; break;
+		case ir_floating_point_multiply: 	working_instruction = ir_operand::get_raw_size(&destination) == int64 ? x86_mulsd : x86_mulss; break;
+		case ir_floating_point_divide: 		working_instruction = ir_operand::get_raw_size(&destination) == int64 ? x86_divsd : x86_divss; break;
+		case ir_floating_point_select_min:	working_instruction = ir_operand::get_raw_size(&destination) == int64 ? x86_minsd : x86_minss; break;
+		case ir_floating_point_select_max:	working_instruction = ir_operand::get_raw_size(&destination) == int64 ? x86_maxsd : x86_maxss; break;
+
+		default: throw_error();
+	}
+
+	ir_operation_block::emitds(result->ir, working_instruction, working_vector_0, working_vector_0, working_vector_1);
+
+	ir_operation_block::emitds(result->ir, x86_movq_to_gp, working_destination, working_vector_0);
+}
+
+static void emit_floating_point_unary(x86_pre_allocator_context* result, uint64_t instruction, ir_operand destination, ir_operand source_0)
+{
+	assert_same_size({ destination, source_0 });
+
+	ir_operand working_destination = destination;
+	ir_operand working_source_0 = register_or_constant(result, &source_0);
+
+	ir_operand working_vector_0 = vector_from_register(result, working_source_0);
+
+	int working_instruction;
+
+	switch (instruction)
+	{
+		case ir_floating_point_square_root:	working_instruction = ir_operand::get_raw_size(&destination) == int64 ? x86_sqrtsd : x86_sqrtss; break;
+		default: throw_error();
+	}
+
+	ir_operation_block::emitds(result->ir, working_instruction, working_vector_0, working_vector_0);
+
+	ir_operation_block::emitds(result->ir, x86_movq_to_gp, working_destination, working_vector_0);
 }
 
 static void emit_compare(x86_pre_allocator_context* result, uint64_t instruction, ir_operand destination, ir_operand source_0, ir_operand source_1)
@@ -635,6 +709,31 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 			emit_d_n_f_d_n_m(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0], operation->sources[1]);
 		};  break;
 
+		case ir_floating_point_add:
+		case ir_floating_point_subtract:
+		case ir_floating_point_multiply:
+		case ir_floating_point_divide:
+		case ir_floating_point_select_min:
+		case ir_floating_point_select_max:
+		{
+			assert_operand_count(operation, 1, 2);
+			assert_is_register(operation->destinations[0]);
+			
+			emit_floating_point_binary(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0], operation->sources[1]);
+		}; break;
+
+		case ir_floating_point_compare_equal:
+		case ir_floating_point_compare_less:
+		case ir_floating_point_compare_not_equal:
+		case ir_floating_point_compare_greater:
+		case ir_floating_point_compare_greater_equal:
+		{
+			assert_operand_count(operation, 1, 2);
+			assert_is_register(operation->destinations[0]);
+			
+			emit_floating_point_compare(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0], operation->sources[1]);
+		}; break;
+
 		case ir_multiply_hi_signed:
 		case ir_multiply_hi_unsigned:
 		case ir_divide_unsigned:
@@ -713,6 +812,14 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 
 			emit_d_f_d_n(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0]);
 
+		}; break;
+
+		case ir_floating_point_square_root:
+		{
+			assert_operand_count(operation, 1, 1);
+			assert_is_register(operation->destinations[0]);
+
+			emit_floating_point_unary(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0]);
 		}; break;
 
 		case ir_sign_extend:

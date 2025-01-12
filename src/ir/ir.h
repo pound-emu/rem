@@ -38,6 +38,17 @@ enum ir_instructions : uint64_t
 	ir_shift_right_signed,
 	ir_shift_right_unsigned,
 	ir_subtract,
+	ir_floating_point_add,
+	ir_floating_point_subtract,
+	ir_floating_point_multiply,
+	ir_floating_point_divide,
+	ir_floating_point_select_min,
+	ir_floating_point_select_max,
+	ir_floating_point_compare_equal,
+	ir_floating_point_compare_not_equal,
+	ir_floating_point_compare_less,
+	ir_floating_point_compare_greater,
+	ir_floating_point_compare_greater_equal,
 
 	ir_binary_end,
 
@@ -52,6 +63,7 @@ enum ir_instructions : uint64_t
 	ir_logical_not,
 	ir_convert_to_float_signed,
 	ir_convert_to_float_unsigned,
+	ir_floating_point_square_root,
 
 	ir_unary_end,
 
@@ -122,6 +134,11 @@ enum ir_instructions : uint64_t
 	x86_subps,
 	x86_subsd,
 	x86_subss,
+
+	x86_sqrtss,
+	x86_sqrtsd,	
+	x86_sqrtps,
+	x86_sqrtpd,
 
 	//Emulator Helpers
 	ir_guest_store_context,

@@ -103,8 +103,10 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 {
 	arena_allocator* allocator = source_ir->allocator;
 
-	*result_code = arena_allocator::allocate_recursive(allocator, ONE_MB);
-	Xbyak::CodeGenerator c(ONE_MB, *result_code);
+	int buffer_size = ONE_MB * 5;
+
+	*result_code = arena_allocator::allocate_recursive(allocator, buffer_size);
+	Xbyak::CodeGenerator c(buffer_size, *result_code);
 
 	c.setDefaultJmpNEAR(true);
 
@@ -112,6 +114,11 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 	{
 		ir_operation	working_operation = i->data;
 		ir_instructions instruction = (ir_instructions)working_operation.instruction;
+
+		if (c.getSize() > buffer_size - 1024)
+		{
+			throw_error();
+		}
 
 		switch (instruction)
 		{
@@ -138,7 +145,6 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		case ir_external_call:
 		{
 			auto function_to_call = create_operand(working_operation.sources[0]);
-			
 			int caller_size = 120;
 
 			c.sub(c.rsp, caller_size);
@@ -754,6 +760,50 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		case x86_subps: assert_valid_binary_float_operation(&working_operation); c.subps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_subsd: assert_valid_binary_float_operation(&working_operation); c.subsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_subss: assert_valid_binary_float_operation(&working_operation); c.subss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+
+		case x86_sqrtss:	c.sqrtss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;
+		case x86_sqrtsd:	c.sqrtsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;
+
+		case ir_floating_point_compare_equal:
+		case ir_floating_point_compare_less:
+		case ir_floating_point_compare_not_equal:
+		case ir_floating_point_compare_greater:
+		case ir_floating_point_compare_greater_equal:
+		{
+			ir_operand destination = working_operation.destinations[0];
+			ir_operand source_0 = working_operation.sources[0];
+			ir_operand source_1 = working_operation.sources[1];
+
+			assert(!ir_operand::is_vector(&destination));
+			assert(ir_operand::is_vector(&source_0));
+			assert(ir_operand::is_vector(&source_1));
+
+			switch (ir_operand::get_raw_size(&destination))
+			{
+				case int32:
+				{
+					c.comiss(create_operand<Xbyak::Xmm>(source_0), create_operand<Xbyak::Xmm>(source_1)); 
+				}; break;
+
+				case int64:
+				{
+					c.comisd(create_operand<Xbyak::Xmm>(source_0), create_operand<Xbyak::Xmm>(source_1)); 
+				}; break;
+				default: throw_error();
+			}
+
+			switch (instruction)
+			{
+				case ir_floating_point_compare_equal: 			c.sete(create_operand<Xbyak::Reg8>(destination)); break;
+				case ir_floating_point_compare_not_equal: 		c.setne(create_operand<Xbyak::Reg8>(destination)); break;
+				case ir_floating_point_compare_less:			c.setb(create_operand<Xbyak::Reg8>(destination)); break;
+				case ir_floating_point_compare_greater:			c.seta(create_operand<Xbyak::Reg8>(destination)); break;
+				case ir_floating_point_compare_greater_equal:	c.setae(create_operand<Xbyak::Reg8>(destination)); break;
+				default: throw_error();
+			}
+
+			c.and_(create_operand<Xbyak::Reg64>(destination), 1);
+		}; break;
 
 		default:
 		{

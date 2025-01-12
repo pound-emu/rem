@@ -231,6 +231,16 @@ static meta_number NOT(meta_number source)
     return source;
 }
 
+enum ReduceOp 
+{
+    ReduceOp_FMINNUM, 
+    ReduceOp_FMAXNUM,
+    ReduceOp_FMIN, 
+    ReduceOp_FMAX,
+    ReduceOp_FADD, 
+    ReduceOp_ADD
+};
+
 enum FPType 
 {   
     FPType_Zero,
@@ -1733,7 +1743,7 @@ static bits(N) FPRoundInt(bits(N) op, FPCR_Type fpcr, FPRounding rounding, boole
 
     // When alternative floating-point support is TRUE, do not generate
     // Input Denormal floating-point exceptions.
-    auto altfp = IsFeatureImplemented(FEAT_AFP) && !UsingAArch32() && fpcr.AH() == '1';
+    auto altfp = IsFeatureImplemented(FEAT_AFP) && !UsingAArch32() && fpcr.AH() == 1;
     auto fpexc = !altfp;
 
     // Unpack using FPCR to determine if subnormals are flushed-to-zero.
@@ -1992,6 +2002,46 @@ static bits(N) FPRSqrtEstimate(bits(N) operand, FPCR_Type fpcr_in)
     return result;
 }
 
+static bits(N) FPRecipEstimate(bits(N) operand, FPCR_Type fpcr_in)
+{
+    int N = operand.size;
+
+    assert_in(N, {16,32,64});
+    FPCR_Type fpcr = fpcr_in;
+    bits(N) result;
+    boolean overflow_to_inf;
+    // When using alternative floating-point behavior, do not generate
+    // floating-point exceptions, flush denormal input and output to zero,
+    // and use RNE rounding mode.
+    boolean altfp = IsFeatureImplemented(FEAT_AFP) && !UsingAArch32() && fpcr.AH() == 1;
+    boolean fpexc = !altfp;
+    //if altfp then fpcr.<FIZ,FZ> = 11;
+    //if altfp then fpcr.RMode    = 00;
+
+    auto [fptype,sign,value] = FPUnpack(operand, fpcr, fpexc);
+
+    FPRounding rounding = FPRoundingMode(fpcr);
+    if (fptype == FPType_SNaN || fptype == FPType_QNaN)
+    {
+        result = FPProcessNaN(fptype, operand, fpcr, fpexc);
+    }
+    else if (fptype == FPType_Infinity)
+    {
+        result = FPZero(sign, N);
+    }
+    else if (fptype == FPType_Zero)
+    {
+        result = FPInfinity(sign, N);
+        if (fpexc) FPProcessException(FPExc_DivideByZero, fpcr);
+    }
+    else 
+    {
+        result = FPRound(1.0 / value,fpcr, N);
+    }
+
+    return result;
+}
+
 static bits(N) FPOnePointFive(bit sign, integer N)
 {
     assert_in(N,{16,32,64});
@@ -2000,6 +2050,73 @@ static bits(N) FPOnePointFive(bit sign, integer N)
     auto exp  = meta_number(0b0, 1)|Ones(E-1);
     auto frac = meta_number(0b1, 1)|Zeros(F-1);
     auto result = sign | exp | frac;
+
+    return result;
+}
+
+static bits(N) FPTwo(bit sign, integer N)
+{
+    assert_in(N,{16,32,64});
+    integer E = (N == 16 ? 5 : N == 32 ? 8 : 11);
+    integer F = N - (E + 1);
+    auto exp = meta_number(1,1) | Zeros(E-1);
+    auto frac = Zeros(F);
+    auto result = sign | exp | frac;
+    return result;
+}
+
+static bits(N) FPRecipStepFused(bits(N) op1_in, bits(N) op2, FPCR_Type fpcr_in)
+{
+    int N = op1_in.size;
+
+    assert_in(N , {16, 32, 64});
+    FPCR_Type fpcr = fpcr_in;
+    bits(N) op1 = op1_in;
+    //bits(N) result;
+    //boolean done;
+    op1 = FPNeg(op1, fpcr);
+
+    boolean altfp = IsFeatureImplemented(FEAT_AFP) && fpcr.AH() == 1;
+    boolean fpexc = !altfp;                    // Generate no floating-point exceptions
+    //if altfp then fpcr.<FIZ,FZ> = 11;                 // Flush denormal input and output to zero
+    //if altfp then fpcr.RMode    = 00;                 // Use RNE rounding mode
+
+    auto [type1,sign1,value1] = FPUnpack(op1, fpcr, fpexc);
+    auto [type2,sign2,value2] = FPUnpack(op2, fpcr, fpexc);
+    auto [done,result] = FPProcessNaNs(type1, type2, op1, op2, fpcr, fpexc);
+    FPRounding rounding = FPRoundingMode(fpcr);
+
+    if (!done)
+    {
+        auto inf1  = (type1 == FPType_Infinity);
+        auto inf2  = (type2 == FPType_Infinity);
+        auto zero1 = (type1 == FPType_Zero);
+        auto zero2 = (type2 == FPType_Zero);
+
+        if ((inf1 && zero2) || (zero1 && inf2))
+        {
+            result = FPTwo(0, N);
+        }
+        else if (inf1 || inf2)
+        {
+            result = FPInfinity(sign1 ^ sign2, N);
+        }
+        else
+        {
+            // Fully fused multiply-add
+            auto result_value = 2.0 + (value1 * value2);
+            if (result_value == 0.0)
+            {
+                // Sign of exact zero result depends on rounding mode
+                auto sign = rounding == FPRounding_NEGINF ? 1 : 0;
+                result = FPZero(sign, N);
+            }
+            else
+            {
+                result = FPRound(result_value, fpcr, rounding, fpexc, N);
+            }
+        }
+    }
 
     return result;
 }
@@ -2089,6 +2206,11 @@ static uint64_t FPRSqrtEstimate_I(uint64_t op, uint64_t fpcr, uint64_t N)
     return FPRSqrtEstimate({op, N}, {fpcr});
 }
 
+static uint64_t FPRecipEstimate_I(uint64_t op, uint64_t fpcr, uint64_t N)
+{
+    return FPRecipEstimate({op, N}, {fpcr});
+}
+
 static uint64_t FPNeg_I(uint64_t op, uint64_t fpcr, uint64_t N)
 {
     return FPNeg({op, N}, {fpcr});
@@ -2132,6 +2254,11 @@ static uint64_t FPAdd_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
 static uint64_t FPRSqrtStepFused_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
 {
     return FPRSqrtStepFused({op1, N}, {op2, N}, {fpcr});
+}
+
+static uint64_t FPRecipStepFused_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)
+{
+    return FPRecipStepFused({op1, N}, {op2, N}, {fpcr});
 }
 
 static uint64_t FPMul_I(uint64_t op1, uint64_t op2, uint64_t fpcr, uint64_t N)

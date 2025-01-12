@@ -184,3 +184,14 @@ uint64_t call_interpreter(interpreter_data* ctx, uint64_t a0, uint64_t a1, uint6
 {
 	return ((uint64_t(*)(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t))function)(a0, a1, a2, a3, a4, a5);
 }
+
+//Optimize
+uint64_t use_fast_float_interpreter(interpreter_data* ctx)
+{
+    return false;
+}
+
+uint64_t use_x86_sse(interpreter_data* ctx)
+{
+    return false;
+}
