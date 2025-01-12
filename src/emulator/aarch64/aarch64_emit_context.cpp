@@ -7,6 +7,7 @@ void aarch64_emit_context::create(guest_process* process, aarch64_emit_context* 
     result->ssa = ssa;
     result->raw_ir = ssa->ir;
     result->process = process;
+    result->translate_functions = false;
 
     guest_register_store::create(&result->registers, ssa, process->guest_context_offset_data.context_size);
 }

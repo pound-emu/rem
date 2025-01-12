@@ -57,6 +57,8 @@ static void init_p_lock(basic_register_allocator_context* context, ir_operand re
 		assert(host->guest_offset == -1);
 
 		host->lock_data = lock_mode::force_lock;
+		host->guest_offset = -1;
+		host->working_mode = register_mode::none;
 	}
 }
 
@@ -335,13 +337,13 @@ void basic_register_allocator_context::run_pass(basic_register_allocator_context
 			allocate_registers(result_register_allocator, new_sources, stack_max, working_operation.sources.data, working_operation.sources.count, register_mode::read);
 			allocate_registers(result_register_allocator, new_destinations, stack_max, working_operation.destinations.data, working_operation.destinations.count, register_mode::write);
 
-			if (ir_operation_block::is_label(instruction))
+			if (ir_operation_block::is_label(instruction) || instruction == ir_external_call)
 			{
 				unlock_all_basic(result_register_allocator);
 
 				unload_all(result_register_allocator);
 			}
-
+			
 			ir_operation_block::emit_with(result_ir, instruction, new_destinations, working_operation.destinations.count, new_sources, working_operation.sources.count);
 
 		}; break;

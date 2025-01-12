@@ -2,7 +2,7 @@
 #include "string.h"
 #include "tools/big_number.h"
 
-static void append_table(guest_process* process, std::string encoding, void* emit, void* interperate, std::string name)
+static void append_table(guest_process* process, std::string encoding, void* emit, void* interperate, void* decoder_helper,std::string name)
 {
 	uint32_t instruction = 0;
 	uint32_t mask = 0;
@@ -24,7 +24,7 @@ static void append_table(guest_process* process, std::string encoding, void* emi
 		}
 	}
 
-	fixed_length_decoder<uint32_t>::insert_entry(&process->decoder, instruction, mask, emit, interperate, name);
+	fixed_length_decoder<uint32_t>::insert_entry(&process->decoder, instruction, mask, emit, interperate, decoder_helper, name);
 }
 
 template <typename T>
@@ -1186,6 +1186,12 @@ static void call_shl_immedaite_interpreter(interpreter_data* ctx, uint32_t instr
 	shl_immedaite_interpreter(ctx, Q, immh, immb, Rn, Rd);
 }
 
+static bool help_decode_shl_immedaite(uint32_t instruction)
+{
+	if (((instruction >> 19) & 15) == 0) return false;
+	return true;
+}
+
 static void emit_shl_immedaite_jit(ssa_emit_context* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
@@ -1204,6 +1210,12 @@ static void call_sshr_vector_interpreter(interpreter_data* ctx, uint32_t instruc
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
 	sshr_vector_interpreter(ctx, Q, immh, immb, Rn, Rd);
+}
+
+static bool help_decode_sshr_vector(uint32_t instruction)
+{
+	if (((instruction >> 19) & 15) == 0) return false;
+	return true;
 }
 
 static void emit_sshr_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
@@ -1225,6 +1237,12 @@ static void call_shll_shll2_interpreter(interpreter_data* ctx, uint32_t instruct
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
 	shll_shll2_interpreter(ctx, Q, U, immh, immb, Rn, Rd);
+}
+
+static bool help_decode_shll_shll2(uint32_t instruction)
+{
+	if (((instruction >> 19) & 15) == 0) return false;
+	return true;
 }
 
 static void emit_shll_shll2_jit(ssa_emit_context* ctx, uint32_t instruction)
@@ -1661,6 +1679,12 @@ static void call_ld1_single_structure_no_offset_interpreter(interpreter_data* ct
 	ld1_single_structure_no_offset_interpreter(ctx, Q, opcode, S, size, Rn, Rt);
 }
 
+static bool help_decode_ld1_single_structure_no_offset(uint32_t instruction)
+{
+	if (((instruction >> 14) & 3) == 3) return false;
+	return true;
+}
+
 static void emit_ld1_single_structure_no_offset_jit(ssa_emit_context* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
@@ -1684,6 +1708,12 @@ static void call_ld1_single_structure_post_index_interpreter(interpreter_data* c
 	ld1_single_structure_post_index_interpreter(ctx, Q, Rm, opcode, S, size, Rn, Rt);
 }
 
+static bool help_decode_ld1_single_structure_post_index(uint32_t instruction)
+{
+	if (((instruction >> 14) & 3) == 3) return false;
+	return true;
+}
+
 static void emit_ld1_single_structure_post_index_jit(ssa_emit_context* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
@@ -1696,66 +1726,88 @@ static void emit_ld1_single_structure_post_index_jit(ssa_emit_context* ctx, uint
 	ld1_single_structure_post_index_jit(ctx, Q, Rm, opcode, S, size, Rn, Rt);
 }
 
-static void call_floating_point_conditional_select_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rm = (instruction >> 16) & 31;
-	int cond = (instruction >> 12) & 15;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	floating_point_conditional_select_interpreter(ctx, ftype, Rm, cond, Rn, Rd);
-}
-
-static void emit_floating_point_conditional_select_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rm = (instruction >> 16) & 31;
-	int cond = (instruction >> 12) & 15;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	floating_point_conditional_select_jit(ctx, ftype, Rm, cond, Rn, Rd);
-}
-
-static void call_fcmeq_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+static void call_st2_multiple_structures_no_offset_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
+	int size = (instruction >> 10) & 3;
 	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcmeq_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+	int Rt = (instruction >> 0) & 31;
+	st2_multiple_structures_no_offset_interpreter(ctx, Q, size, Rn, Rt);
 }
 
-static void emit_fcmeq_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+static void emit_st2_multiple_structures_no_offset_jit(ssa_emit_context* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
+	int size = (instruction >> 10) & 3;
 	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcmeq_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+	int Rt = (instruction >> 0) & 31;
+	st2_multiple_structures_no_offset_jit(ctx, Q, size, Rn, Rt);
 }
 
-static void call_fcmg_vector_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+static void call_st2_multiple_structures_post_index_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
-	int U = (instruction >> 29) & 1;
-	int sz = (instruction >> 22) & 1;
 	int Rm = (instruction >> 16) & 31;
+	int size = (instruction >> 10) & 3;
 	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcmg_vector_register_interpreter(ctx, Q, U, sz, Rm, Rn, Rd);
+	int Rt = (instruction >> 0) & 31;
+	st2_multiple_structures_post_index_interpreter(ctx, Q, Rm, size, Rn, Rt);
 }
 
-static void emit_fcmg_vector_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+static void emit_st2_multiple_structures_post_index_jit(ssa_emit_context* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
-	int U = (instruction >> 29) & 1;
-	int sz = (instruction >> 22) & 1;
 	int Rm = (instruction >> 16) & 31;
+	int size = (instruction >> 10) & 3;
 	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcmg_vector_register_jit(ctx, Q, U, sz, Rm, Rn, Rd);
+	int Rt = (instruction >> 0) & 31;
+	st2_multiple_structures_post_index_jit(ctx, Q, Rm, size, Rn, Rt);
+}
+
+static void call_st1_single_structure_no_offset_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int opcode = (instruction >> 14) & 3;
+	int S = (instruction >> 12) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	st1_single_structure_no_offset_interpreter(ctx, Q, opcode, S, size, Rn, Rt);
+}
+
+static void emit_st1_single_structure_no_offset_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int opcode = (instruction >> 14) & 3;
+	int S = (instruction >> 12) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	st1_single_structure_no_offset_jit(ctx, Q, opcode, S, size, Rn, Rt);
+}
+
+static void call_st1_single_structure_post_index_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int opcode = (instruction >> 14) & 3;
+	int S = (instruction >> 12) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	st1_single_structure_post_index_interpreter(ctx, Q, Rm, opcode, S, size, Rn, Rt);
+}
+
+static void emit_st1_single_structure_post_index_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int opcode = (instruction >> 14) & 3;
+	int S = (instruction >> 12) & 1;
+	int size = (instruction >> 10) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rt = (instruction >> 0) & 31;
+	st1_single_structure_post_index_jit(ctx, Q, Rm, opcode, S, size, Rn, Rt);
 }
 
 static void call_fcmeq_vector_zero_interpreter(interpreter_data* ctx, uint32_t instruction)
@@ -1776,24 +1828,120 @@ static void emit_fcmeq_vector_zero_jit(ssa_emit_context* ctx, uint32_t instructi
 	fcmeq_vector_zero_jit(ctx, Q, sz, Rn, Rd);
 }
 
-static void call_fcmg_vector_zero_interpreter(interpreter_data* ctx, uint32_t instruction)
+static void call_fcmgt_vector_zero_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
-	int U = (instruction >> 29) & 1;
 	int sz = (instruction >> 22) & 1;
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
-	fcmg_vector_zero_interpreter(ctx, Q, U, sz, Rn, Rd);
+	fcmgt_vector_zero_interpreter(ctx, Q, sz, Rn, Rd);
 }
 
-static void emit_fcmg_vector_zero_jit(ssa_emit_context* ctx, uint32_t instruction)
+static void emit_fcmgt_vector_zero_jit(ssa_emit_context* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
-	int U = (instruction >> 29) & 1;
 	int sz = (instruction >> 22) & 1;
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
-	fcmg_vector_zero_jit(ctx, Q, U, sz, Rn, Rd);
+	fcmgt_vector_zero_jit(ctx, Q, sz, Rn, Rd);
+}
+
+static void call_fcmge_vector_zero_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmge_vector_zero_interpreter(ctx, Q, sz, Rn, Rd);
+}
+
+static void emit_fcmge_vector_zero_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmge_vector_zero_jit(ctx, Q, sz, Rn, Rd);
+}
+
+static void call_fcmeq_vector_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmeq_vector_register_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fcmeq_vector_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmeq_vector_register_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fcmgt_vector_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmgt_vector_register_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fcmgt_vector_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmgt_vector_register_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fcmge_vector_register_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmge_vector_register_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fcmge_vector_register_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcmge_vector_register_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_floating_point_conditional_select_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int cond = (instruction >> 12) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	floating_point_conditional_select_interpreter(ctx, ftype, Rm, cond, Rn, Rd);
+}
+
+static void emit_floating_point_conditional_select_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int cond = (instruction >> 12) & 15;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	floating_point_conditional_select_jit(ctx, ftype, Rm, cond, Rn, Rd);
 }
 
 static void call_fmov_scalar_immediate_interpreter(interpreter_data* ctx, uint32_t instruction)
@@ -1876,6 +2024,24 @@ static void emit_fsqrt_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
 	fsqrt_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
+static void call_fsqrt_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsqrt_vector_interpreter(ctx, Q, sz, Rn, Rd);
+}
+
+static void emit_fsqrt_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsqrt_vector_jit(ctx, Q, sz, Rn, Rd);
 }
 
 static void call_fcmp_interpreter(interpreter_data* ctx, uint32_t instruction)
@@ -2330,119 +2496,126 @@ static void emit_fcvtp_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instru
 
 void init_aarch64_decoder(guest_process* process)
 {
-	append_table(process, "---100010-----------------------", (void*)emit_add_subtract_imm12_jit, (void*)call_add_subtract_imm12_interpreter, "add_subtract_imm12");
-	append_table(process, "---01011--0---------------------", (void*)emit_add_subtract_shifted_jit, (void*)call_add_subtract_shifted_interpreter, "add_subtract_shifted");
-	append_table(process, "---01011001---------------------", (void*)emit_add_subtract_extended_jit, (void*)call_add_subtract_extended_interpreter, "add_subtract_extended");
-	append_table(process, "---11010000-----000000----------", (void*)emit_add_subtract_carry_jit, (void*)call_add_subtract_carry_interpreter, "add_subtract_carry");
-	append_table(process, "-0011010110-----0010------------", (void*)emit_shift_variable_jit, (void*)call_shift_variable_interpreter, "shift_variable");
-	append_table(process, "10011011-01---------------------", (void*)emit_multiply_with_32_jit, (void*)call_multiply_with_32_interpreter, "multiply_with_32");
-	append_table(process, "10011011-10------11111----------", (void*)emit_multiply_hi_jit, (void*)call_multiply_hi_interpreter, "multiply_hi");
-	append_table(process, "-0011011000---------------------", (void*)emit_multiply_additive_jit, (void*)call_multiply_additive_interpreter, "multiply_additive");
-	append_table(process, "-0011010110-----00001-----------", (void*)emit_divide_jit, (void*)call_divide_interpreter, "divide");
-	append_table(process, "-101101011000000000000----------", (void*)emit_rbit_jit, (void*)call_rbit_interpreter, "rbit");
-	append_table(process, "-101101011000000000001----------", (void*)emit_rev16_jit, (void*)call_rev16_interpreter, "rev16");
-	append_table(process, "-10110101100000000001-----------", (void*)emit_reverse_jit, (void*)call_reverse_interpreter, "reverse");
-	append_table(process, "-10110101100000000010-----------", (void*)emit_count_leading_jit, (void*)call_count_leading_interpreter, "count_leading");
-	append_table(process, "-00100111-0---------------------", (void*)emit_extr_jit, (void*)call_extr_interpreter, "extr");
-	append_table(process, "---100110-----------------------", (void*)emit_bitfield_jit, (void*)call_bitfield_interpreter, "bitfield");
-	append_table(process, "---100100-----------------------", (void*)emit_logical_immediate_jit, (void*)call_logical_immediate_interpreter, "logical_immediate");
-	append_table(process, "---01010------------------------", (void*)emit_logical_shifted_jit, (void*)call_logical_shifted_interpreter, "logical_shifted");
-	append_table(process, "---11010100---------0-----------", (void*)emit_conditional_select_jit, (void*)call_conditional_select_interpreter, "conditional_select");
-	append_table(process, "--111010010----------0-----0----", (void*)emit_conditional_compare_jit, (void*)call_conditional_compare_interpreter, "conditional_compare");
-	append_table(process, "---100101-----------------------", (void*)emit_move_wide_immediate_jit, (void*)call_move_wide_immediate_interpreter, "move_wide_immediate");
-	append_table(process, "---10000------------------------", (void*)emit_pc_rel_addressing_jit, (void*)call_pc_rel_addressing_interpreter, "pc_rel_addressing");
-	append_table(process, "1101011000-11111000000-----00000", (void*)emit_branch_register_jit, (void*)call_branch_register_interpreter, "branch_register");
-	append_table(process, "1101011001011111000000-----00000", (void*)emit_return_register_jit, (void*)call_return_register_interpreter, "return_register");
-	append_table(process, "-011011-------------------------", (void*)emit_test_bit_branch_jit, (void*)call_test_bit_branch_interpreter, "test_bit_branch");
-	append_table(process, "-011010-------------------------", (void*)emit_compare_and_branch_jit, (void*)call_compare_and_branch_interpreter, "compare_and_branch");
-	append_table(process, "-00101--------------------------", (void*)emit_b_unconditional_jit, (void*)call_b_unconditional_interpreter, "b_unconditional");
-	append_table(process, "01010100-------------------0----", (void*)emit_b_conditional_jit, (void*)call_b_conditional_interpreter, "b_conditional");
-	append_table(process, "11010100000----------------00001", (void*)emit_svc_jit, (void*)call_svc_interpreter, "svc");
-	append_table(process, "110101010001--------------------", (void*)emit_msr_register_jit, (void*)call_msr_register_interpreter, "msr_register");
-	append_table(process, "110101010011--------------------", (void*)emit_mrs_register_jit, (void*)call_mrs_register_interpreter, "mrs_register");
-	append_table(process, "11010101000000110010-------11111", (void*)emit_hints_jit, (void*)call_hints_interpreter, "hints");
-	append_table(process, "1101010100-01-------------------", (void*)emit_sys_jit, (void*)call_sys_interpreter, "sys");
-	append_table(process, "11010101000000110011------------", (void*)emit_barriers_jit, (void*)call_barriers_interpreter, "barriers");
-	append_table(process, "--111-00--0---------01----------", (void*)emit_load_store_register_post_jit, (void*)call_load_store_register_post_interpreter, "load_store_register_post");
-	append_table(process, "--111-00--0---------11----------", (void*)emit_load_store_register_pre_jit, (void*)call_load_store_register_pre_interpreter, "load_store_register_pre");
-	append_table(process, "--111-00--0---------00----------", (void*)emit_load_store_register_unscaled_jit, (void*)call_load_store_register_unscaled_interpreter, "load_store_register_unscaled");
-	append_table(process, "--101-010-----------------------", (void*)emit_load_store_register_pair_imm_offset_jit, (void*)call_load_store_register_pair_imm_offset_interpreter, "load_store_register_pair_imm_offset");
-	append_table(process, "--101-001-----------------------", (void*)emit_load_store_register_pair_imm_post_jit, (void*)call_load_store_register_pair_imm_post_interpreter, "load_store_register_pair_imm_post");
-	append_table(process, "--101-011-----------------------", (void*)emit_load_store_register_pair_imm_pre_jit, (void*)call_load_store_register_pair_imm_pre_interpreter, "load_store_register_pair_imm_pre");
-	append_table(process, "--111-01------------------------", (void*)emit_load_store_register_imm_unsigned_jit, (void*)call_load_store_register_imm_unsigned_interpreter, "load_store_register_imm_unsigned");
-	append_table(process, "--111-00--1---------10----------", (void*)emit_load_store_register_offset_jit, (void*)call_load_store_register_offset_interpreter, "load_store_register_offset");
-	append_table(process, "--001000--0------11111----------", (void*)emit_load_store_exclusive_ordered_jit, (void*)call_load_store_exclusive_ordered_interpreter, "load_store_exclusive_ordered");
-	append_table(process, "0-001110000-----000011----------", (void*)emit_dup_general_jit, (void*)call_dup_general_interpreter, "dup_general");
-	append_table(process, "01011110000-----000001----------", (void*)emit_dup_element_scalar_jit, (void*)call_dup_element_scalar_interpreter, "dup_element_scalar");
-	append_table(process, "0-001110000-----000001----------", (void*)emit_dup_element_vector_jit, (void*)call_dup_element_vector_interpreter, "dup_element_vector");
-	append_table(process, "0-001110000-----001-11----------", (void*)emit_move_to_gp_jit, (void*)call_move_to_gp_interpreter, "move_to_gp");
-	append_table(process, "01001110000-----000111----------", (void*)emit_ins_general_jit, (void*)call_ins_general_interpreter, "ins_general");
-	append_table(process, "01101110000-----0----1----------", (void*)emit_ins_element_jit, (void*)call_ins_element_interpreter, "ins_element");
-	append_table(process, "0--0111100000-------01----------", (void*)emit_movi_immediate_jit, (void*)call_movi_immediate_interpreter, "movi_immediate");
-	append_table(process, "-0011110--10-11-000000----------", (void*)emit_fmov_general_jit, (void*)call_fmov_general_interpreter, "fmov_general");
-	append_table(process, "-0011110--10001-000000----------", (void*)emit_convert_to_float_gp_jit, (void*)call_convert_to_float_gp_interpreter, "convert_to_float_gp");
-	append_table(process, "01-111100-100001110110----------", (void*)emit_convert_to_float_vector_scalar_jit, (void*)call_convert_to_float_vector_scalar_interpreter, "convert_to_float_vector_scalar");
-	append_table(process, "0--011100-100001110110----------", (void*)emit_convert_to_float_vector_jit, (void*)call_convert_to_float_vector_interpreter, "convert_to_float_vector");
-	append_table(process, "00011110--1---------10----------", (void*)emit_floating_point_scalar_jit, (void*)call_floating_point_scalar_interpreter, "floating_point_scalar");
-	append_table(process, "-0-11110--0---------------------", (void*)emit_conversion_between_floating_point_and_fixed_point_jit, (void*)call_conversion_between_floating_point_and_fixed_point_interpreter, "conversion_between_floating_point_and_fixed_point");
-	append_table(process, "0-0011110-------010101----------", (void*)emit_shl_immedaite_jit, (void*)call_shl_immedaite_interpreter, "shl_immedaite");
-	append_table(process, "0-0011110-------000001----------", (void*)emit_sshr_vector_jit, (void*)call_sshr_vector_interpreter, "sshr_vector");
-	append_table(process, "0--011110-------101001----------", (void*)emit_shll_shll2_jit, (void*)call_shll_shll2_interpreter, "shll_shll2");
-	append_table(process, "0-001110--100000000010----------", (void*)emit_rev64_vector_jit, (void*)call_rev64_vector_interpreter, "rev64_vector");
-	append_table(process, "0-101110--100000101110----------", (void*)emit_neg_vector_jit, (void*)call_neg_vector_interpreter, "neg_vector");
-	append_table(process, "0-10111000100000010110----------", (void*)emit_not_vector_jit, (void*)call_not_vector_interpreter, "not_vector");
-	append_table(process, "0-001110--100000101110----------", (void*)emit_abs_vector_jit, (void*)call_abs_vector_interpreter, "abs_vector");
-	append_table(process, "0-001111--------1000-0----------", (void*)emit_mul_vector_index_jit, (void*)call_mul_vector_index_interpreter, "mul_vector_index");
-	append_table(process, "0-001110--1-----100111----------", (void*)emit_mul_vector_jit, (void*)call_mul_vector_interpreter, "mul_vector");
-	append_table(process, "0-101110000-----0----0----------", (void*)emit_ext_jit, (void*)call_ext_interpreter, "ext");
-	append_table(process, "0--01110--1-----001101----------", (void*)emit_compare_above_jit, (void*)call_compare_above_interpreter, "compare_above");
-	append_table(process, "0--01110--1-----010001----------", (void*)emit_shl_vector_jit, (void*)call_shl_vector_interpreter, "shl_vector");
-	append_table(process, "0-001110--1-----100001----------", (void*)emit_add_vector_jit, (void*)call_add_vector_interpreter, "add_vector");
-	append_table(process, "0--01110--110000001110----------", (void*)emit_addlv_jit, (void*)call_addlv_interpreter, "addlv");
-	append_table(process, "0-001110--100000010110----------", (void*)emit_cnt_jit, (void*)call_cnt_interpreter, "cnt");
-	append_table(process, "0-0011101-1-----000111----------", (void*)emit_orr_orn_vector_jit, (void*)call_orr_orn_vector_interpreter, "orr_orn_vector");
-	append_table(process, "0-101110011-----000111----------", (void*)emit_bsl_vector_jit, (void*)call_bsl_vector_interpreter, "bsl_vector");
-	append_table(process, "0-0011100-1-----000111----------", (void*)emit_and_bic_vector_jit, (void*)call_and_bic_vector_interpreter, "and_bic_vector");
-	append_table(process, "0-101110001-----000111----------", (void*)emit_eor_vector_jit, (void*)call_eor_vector_interpreter, "eor_vector");
-	append_table(process, "0-001110--100001001010----------", (void*)emit_xnt_xnt2_jit, (void*)call_xnt_xnt2_interpreter, "xnt_xnt2");
-	append_table(process, "0-001110--0-----0-1110----------", (void*)emit_zip_jit, (void*)call_zip_interpreter, "zip");
-	append_table(process, "0-001110000-----0--000----------", (void*)emit_tbl_jit, (void*)call_tbl_interpreter, "tbl");
-	append_table(process, "0-001101010000001100------------", (void*)emit_ld1r_no_offset_jit, (void*)call_ld1r_no_offset_interpreter, "ld1r_no_offset");
-	append_table(process, "0-001101110-----1100------------", (void*)emit_ld1r_post_index_jit, (void*)call_ld1r_post_index_interpreter, "ld1r_post_index");
-	append_table(process, "0-00110101000000--0-------------", (void*)emit_ld1_single_structure_no_offset_jit, (void*)call_ld1_single_structure_no_offset_interpreter, "ld1_single_structure_no_offset");
-	append_table(process, "0-001101110-------0-------------", (void*)emit_ld1_single_structure_post_index_jit, (void*)call_ld1_single_structure_post_index_interpreter, "ld1_single_structure_post_index");
-	append_table(process, "00011110--1---------11----------", (void*)emit_floating_point_conditional_select_jit, (void*)call_floating_point_conditional_select_interpreter, "floating_point_conditional_select");
-	append_table(process, "0-0011100-1-----111001----------", (void*)emit_fcmeq_vector_jit, (void*)call_fcmeq_vector_interpreter, "fcmeq_vector");
-	append_table(process, "0--011100-1-----111001----------", (void*)emit_fcmg_vector_register_jit, (void*)call_fcmg_vector_register_interpreter, "fcmg_vector_register");
-	append_table(process, "0-0011101-100000110110----------", (void*)emit_fcmeq_vector_zero_jit, (void*)call_fcmeq_vector_zero_interpreter, "fcmeq_vector_zero");
-	append_table(process, "0--011101-100000110010----------", (void*)emit_fcmg_vector_zero_jit, (void*)call_fcmg_vector_zero_interpreter, "fcmg_vector_zero");
-	append_table(process, "00011110--1--------10000000-----", (void*)emit_fmov_scalar_immediate_jit, (void*)call_fmov_scalar_immediate_interpreter, "fmov_scalar_immediate");
-	append_table(process, "00011110--10001--10000----------", (void*)emit_fcvt_jit, (void*)call_fcvt_interpreter, "fcvt");
-	append_table(process, "00011110--100000110000----------", (void*)emit_fabs_scalar_jit, (void*)call_fabs_scalar_interpreter, "fabs_scalar");
-	append_table(process, "00011110--100001010000----------", (void*)emit_fneg_scalar_jit, (void*)call_fneg_scalar_interpreter, "fneg_scalar");
-	append_table(process, "00011110--100001110000----------", (void*)emit_fsqrt_scalar_jit, (void*)call_fsqrt_scalar_interpreter, "fsqrt_scalar");
-	append_table(process, "00011110--1-----001000-----0-000", (void*)emit_fcmp_jit, (void*)call_fcmp_interpreter, "fcmp");
-	append_table(process, "00011110--1---------01-----0----", (void*)emit_fccmp_jit, (void*)call_fccmp_interpreter, "fccmp");
-	append_table(process, "-0011110--11100-000000----------", (void*)emit_fcvtz_scalar_integer_jit, (void*)call_fcvtz_scalar_integer_interpreter, "fcvtz_scalar_integer");
-	append_table(process, "-0011110--10000-000000----------", (void*)emit_fcvtn_scalar_integer_jit, (void*)call_fcvtn_scalar_integer_interpreter, "fcvtn_scalar_integer");
-	append_table(process, "-0011110--10010-000000----------", (void*)emit_fcvta_scalar_integer_jit, (void*)call_fcvta_scalar_integer_interpreter, "fcvta_scalar_integer");
-	append_table(process, "-0011110--11000-000000----------", (void*)emit_fcvtm_scalar_integer_jit, (void*)call_fcvtm_scalar_integer_interpreter, "fcvtm_scalar_integer");
-	append_table(process, "0-0011100-1-----110101----------", (void*)emit_fadd_vector_jit, (void*)call_fadd_vector_interpreter, "fadd_vector");
-	append_table(process, "0-1011100-1-----110111----------", (void*)emit_fmul_vector_jit, (void*)call_fmul_vector_interpreter, "fmul_vector");
-	append_table(process, "0-0011101-1-----110101----------", (void*)emit_fsub_vector_jit, (void*)call_fsub_vector_interpreter, "fsub_vector");
-	append_table(process, "0-1011100-1-----111111----------", (void*)emit_fdiv_vector_jit, (void*)call_fdiv_vector_interpreter, "fdiv_vector");
-	append_table(process, "0-001110--1-----110011----------", (void*)emit_fmul_accumulate_vector_jit, (void*)call_fmul_accumulate_vector_interpreter, "fmul_accumulate_vector");
-	append_table(process, "0-1011100-1-----110101----------", (void*)emit_faddp_vector_jit, (void*)call_faddp_vector_interpreter, "faddp_vector");
-	append_table(process, "011111101-100001110110----------", (void*)emit_frsqrte_scalar_jit, (void*)call_frsqrte_scalar_interpreter, "frsqrte_scalar");
-	append_table(process, "0-1011101-100001110110----------", (void*)emit_frsqrte_vector_jit, (void*)call_frsqrte_vector_interpreter, "frsqrte_vector");
-	append_table(process, "0-0011101-1-----111111----------", (void*)emit_frsqrts_vector_jit, (void*)call_frsqrts_vector_interpreter, "frsqrts_vector");
-	append_table(process, "010111111-------1001-0----------", (void*)emit_fmul_scalar_by_element_jit, (void*)call_fmul_scalar_by_element_interpreter, "fmul_scalar_by_element");
-	append_table(process, "0-0011111-------1001-0----------", (void*)emit_fmul_vector_by_element_jit, (void*)call_fmul_vector_by_element_interpreter, "fmul_vector_by_element");
-	append_table(process, "010111111-------0-01-0----------", (void*)emit_fmul_accumulate_scalar_jit, (void*)call_fmul_accumulate_scalar_interpreter, "fmul_accumulate_scalar");
-	append_table(process, "0-0011111-------0-01-0----------", (void*)emit_fmul_accumulate_element_jit, (void*)call_fmul_accumulate_element_interpreter, "fmul_accumulate_element");
-	append_table(process, "00011110--100100110000----------", (void*)emit_frintp_scalar_jit, (void*)call_frintp_scalar_interpreter, "frintp_scalar");
-	append_table(process, "00011110--100101010000----------", (void*)emit_frintm_scalar_jit, (void*)call_frintm_scalar_interpreter, "frintm_scalar");
-	append_table(process, "-0011110--10100-000000----------", (void*)emit_fcvtp_scalar_integer_jit, (void*)call_fcvtp_scalar_integer_interpreter, "fcvtp_scalar_integer");
+	append_table(process, "---100010-----------------------", (void*)emit_add_subtract_imm12_jit, (void*)call_add_subtract_imm12_interpreter,nullptr, "add_subtract_imm12");
+	append_table(process, "---01011--0---------------------", (void*)emit_add_subtract_shifted_jit, (void*)call_add_subtract_shifted_interpreter,nullptr, "add_subtract_shifted");
+	append_table(process, "---01011001---------------------", (void*)emit_add_subtract_extended_jit, (void*)call_add_subtract_extended_interpreter,nullptr, "add_subtract_extended");
+	append_table(process, "---11010000-----000000----------", (void*)emit_add_subtract_carry_jit, (void*)call_add_subtract_carry_interpreter,nullptr, "add_subtract_carry");
+	append_table(process, "-0011010110-----0010------------", (void*)emit_shift_variable_jit, (void*)call_shift_variable_interpreter,nullptr, "shift_variable");
+	append_table(process, "10011011-01---------------------", (void*)emit_multiply_with_32_jit, (void*)call_multiply_with_32_interpreter,nullptr, "multiply_with_32");
+	append_table(process, "10011011-10------11111----------", (void*)emit_multiply_hi_jit, (void*)call_multiply_hi_interpreter,nullptr, "multiply_hi");
+	append_table(process, "-0011011000---------------------", (void*)emit_multiply_additive_jit, (void*)call_multiply_additive_interpreter,nullptr, "multiply_additive");
+	append_table(process, "-0011010110-----00001-----------", (void*)emit_divide_jit, (void*)call_divide_interpreter,nullptr, "divide");
+	append_table(process, "-101101011000000000000----------", (void*)emit_rbit_jit, (void*)call_rbit_interpreter,nullptr, "rbit");
+	append_table(process, "-101101011000000000001----------", (void*)emit_rev16_jit, (void*)call_rev16_interpreter,nullptr, "rev16");
+	append_table(process, "-10110101100000000001-----------", (void*)emit_reverse_jit, (void*)call_reverse_interpreter,nullptr, "reverse");
+	append_table(process, "-10110101100000000010-----------", (void*)emit_count_leading_jit, (void*)call_count_leading_interpreter,nullptr, "count_leading");
+	append_table(process, "-00100111-0---------------------", (void*)emit_extr_jit, (void*)call_extr_interpreter,nullptr, "extr");
+	append_table(process, "---100110-----------------------", (void*)emit_bitfield_jit, (void*)call_bitfield_interpreter,nullptr, "bitfield");
+	append_table(process, "---100100-----------------------", (void*)emit_logical_immediate_jit, (void*)call_logical_immediate_interpreter,nullptr, "logical_immediate");
+	append_table(process, "---01010------------------------", (void*)emit_logical_shifted_jit, (void*)call_logical_shifted_interpreter,nullptr, "logical_shifted");
+	append_table(process, "---11010100---------0-----------", (void*)emit_conditional_select_jit, (void*)call_conditional_select_interpreter,nullptr, "conditional_select");
+	append_table(process, "--111010010----------0-----0----", (void*)emit_conditional_compare_jit, (void*)call_conditional_compare_interpreter,nullptr, "conditional_compare");
+	append_table(process, "---100101-----------------------", (void*)emit_move_wide_immediate_jit, (void*)call_move_wide_immediate_interpreter,nullptr, "move_wide_immediate");
+	append_table(process, "---10000------------------------", (void*)emit_pc_rel_addressing_jit, (void*)call_pc_rel_addressing_interpreter,nullptr, "pc_rel_addressing");
+	append_table(process, "1101011000-11111000000-----00000", (void*)emit_branch_register_jit, (void*)call_branch_register_interpreter,nullptr, "branch_register");
+	append_table(process, "1101011001011111000000-----00000", (void*)emit_return_register_jit, (void*)call_return_register_interpreter,nullptr, "return_register");
+	append_table(process, "-011011-------------------------", (void*)emit_test_bit_branch_jit, (void*)call_test_bit_branch_interpreter,nullptr, "test_bit_branch");
+	append_table(process, "-011010-------------------------", (void*)emit_compare_and_branch_jit, (void*)call_compare_and_branch_interpreter,nullptr, "compare_and_branch");
+	append_table(process, "-00101--------------------------", (void*)emit_b_unconditional_jit, (void*)call_b_unconditional_interpreter,nullptr, "b_unconditional");
+	append_table(process, "01010100-------------------0----", (void*)emit_b_conditional_jit, (void*)call_b_conditional_interpreter,nullptr, "b_conditional");
+	append_table(process, "11010100000----------------00001", (void*)emit_svc_jit, (void*)call_svc_interpreter,nullptr, "svc");
+	append_table(process, "110101010001--------------------", (void*)emit_msr_register_jit, (void*)call_msr_register_interpreter,nullptr, "msr_register");
+	append_table(process, "110101010011--------------------", (void*)emit_mrs_register_jit, (void*)call_mrs_register_interpreter,nullptr, "mrs_register");
+	append_table(process, "11010101000000110010-------11111", (void*)emit_hints_jit, (void*)call_hints_interpreter,nullptr, "hints");
+	append_table(process, "1101010100-01-------------------", (void*)emit_sys_jit, (void*)call_sys_interpreter,nullptr, "sys");
+	append_table(process, "11010101000000110011------------", (void*)emit_barriers_jit, (void*)call_barriers_interpreter,nullptr, "barriers");
+	append_table(process, "--111-00--0---------01----------", (void*)emit_load_store_register_post_jit, (void*)call_load_store_register_post_interpreter,nullptr, "load_store_register_post");
+	append_table(process, "--111-00--0---------11----------", (void*)emit_load_store_register_pre_jit, (void*)call_load_store_register_pre_interpreter,nullptr, "load_store_register_pre");
+	append_table(process, "--111-00--0---------00----------", (void*)emit_load_store_register_unscaled_jit, (void*)call_load_store_register_unscaled_interpreter,nullptr, "load_store_register_unscaled");
+	append_table(process, "--101-010-----------------------", (void*)emit_load_store_register_pair_imm_offset_jit, (void*)call_load_store_register_pair_imm_offset_interpreter,nullptr, "load_store_register_pair_imm_offset");
+	append_table(process, "--101-001-----------------------", (void*)emit_load_store_register_pair_imm_post_jit, (void*)call_load_store_register_pair_imm_post_interpreter,nullptr, "load_store_register_pair_imm_post");
+	append_table(process, "--101-011-----------------------", (void*)emit_load_store_register_pair_imm_pre_jit, (void*)call_load_store_register_pair_imm_pre_interpreter,nullptr, "load_store_register_pair_imm_pre");
+	append_table(process, "--111-01------------------------", (void*)emit_load_store_register_imm_unsigned_jit, (void*)call_load_store_register_imm_unsigned_interpreter,nullptr, "load_store_register_imm_unsigned");
+	append_table(process, "--111-00--1---------10----------", (void*)emit_load_store_register_offset_jit, (void*)call_load_store_register_offset_interpreter,nullptr, "load_store_register_offset");
+	append_table(process, "--001000--0------11111----------", (void*)emit_load_store_exclusive_ordered_jit, (void*)call_load_store_exclusive_ordered_interpreter,nullptr, "load_store_exclusive_ordered");
+	append_table(process, "0-001110000-----000011----------", (void*)emit_dup_general_jit, (void*)call_dup_general_interpreter,nullptr, "dup_general");
+	append_table(process, "01011110000-----000001----------", (void*)emit_dup_element_scalar_jit, (void*)call_dup_element_scalar_interpreter,nullptr, "dup_element_scalar");
+	append_table(process, "0-001110000-----000001----------", (void*)emit_dup_element_vector_jit, (void*)call_dup_element_vector_interpreter,nullptr, "dup_element_vector");
+	append_table(process, "0-001110000-----001-11----------", (void*)emit_move_to_gp_jit, (void*)call_move_to_gp_interpreter,nullptr, "move_to_gp");
+	append_table(process, "01001110000-----000111----------", (void*)emit_ins_general_jit, (void*)call_ins_general_interpreter,nullptr, "ins_general");
+	append_table(process, "01101110000-----0----1----------", (void*)emit_ins_element_jit, (void*)call_ins_element_interpreter,nullptr, "ins_element");
+	append_table(process, "0--0111100000-------01----------", (void*)emit_movi_immediate_jit, (void*)call_movi_immediate_interpreter,nullptr, "movi_immediate");
+	append_table(process, "-0011110--10-11-000000----------", (void*)emit_fmov_general_jit, (void*)call_fmov_general_interpreter,nullptr, "fmov_general");
+	append_table(process, "-0011110--10001-000000----------", (void*)emit_convert_to_float_gp_jit, (void*)call_convert_to_float_gp_interpreter,nullptr, "convert_to_float_gp");
+	append_table(process, "01-111100-100001110110----------", (void*)emit_convert_to_float_vector_scalar_jit, (void*)call_convert_to_float_vector_scalar_interpreter,nullptr, "convert_to_float_vector_scalar");
+	append_table(process, "0--011100-100001110110----------", (void*)emit_convert_to_float_vector_jit, (void*)call_convert_to_float_vector_interpreter,nullptr, "convert_to_float_vector");
+	append_table(process, "00011110--1---------10----------", (void*)emit_floating_point_scalar_jit, (void*)call_floating_point_scalar_interpreter,nullptr, "floating_point_scalar");
+	append_table(process, "-0-11110--0---------------------", (void*)emit_conversion_between_floating_point_and_fixed_point_jit, (void*)call_conversion_between_floating_point_and_fixed_point_interpreter,nullptr, "conversion_between_floating_point_and_fixed_point");
+	append_table(process, "0-0011110-------010101----------", (void*)emit_shl_immedaite_jit, (void*)call_shl_immedaite_interpreter,(void*)help_decode_shl_immedaite, "shl_immedaite");
+	append_table(process, "0-0011110-------000001----------", (void*)emit_sshr_vector_jit, (void*)call_sshr_vector_interpreter,(void*)help_decode_sshr_vector, "sshr_vector");
+	append_table(process, "0--011110-------101001----------", (void*)emit_shll_shll2_jit, (void*)call_shll_shll2_interpreter,(void*)help_decode_shll_shll2, "shll_shll2");
+	append_table(process, "0-001110--100000000010----------", (void*)emit_rev64_vector_jit, (void*)call_rev64_vector_interpreter,nullptr, "rev64_vector");
+	append_table(process, "0-101110--100000101110----------", (void*)emit_neg_vector_jit, (void*)call_neg_vector_interpreter,nullptr, "neg_vector");
+	append_table(process, "0-10111000100000010110----------", (void*)emit_not_vector_jit, (void*)call_not_vector_interpreter,nullptr, "not_vector");
+	append_table(process, "0-001110--100000101110----------", (void*)emit_abs_vector_jit, (void*)call_abs_vector_interpreter,nullptr, "abs_vector");
+	append_table(process, "0-001111--------1000-0----------", (void*)emit_mul_vector_index_jit, (void*)call_mul_vector_index_interpreter,nullptr, "mul_vector_index");
+	append_table(process, "0-001110--1-----100111----------", (void*)emit_mul_vector_jit, (void*)call_mul_vector_interpreter,nullptr, "mul_vector");
+	append_table(process, "0-101110000-----0----0----------", (void*)emit_ext_jit, (void*)call_ext_interpreter,nullptr, "ext");
+	append_table(process, "0--01110--1-----001101----------", (void*)emit_compare_above_jit, (void*)call_compare_above_interpreter,nullptr, "compare_above");
+	append_table(process, "0--01110--1-----010001----------", (void*)emit_shl_vector_jit, (void*)call_shl_vector_interpreter,nullptr, "shl_vector");
+	append_table(process, "0-001110--1-----100001----------", (void*)emit_add_vector_jit, (void*)call_add_vector_interpreter,nullptr, "add_vector");
+	append_table(process, "0--01110--110000001110----------", (void*)emit_addlv_jit, (void*)call_addlv_interpreter,nullptr, "addlv");
+	append_table(process, "0-001110--100000010110----------", (void*)emit_cnt_jit, (void*)call_cnt_interpreter,nullptr, "cnt");
+	append_table(process, "0-0011101-1-----000111----------", (void*)emit_orr_orn_vector_jit, (void*)call_orr_orn_vector_interpreter,nullptr, "orr_orn_vector");
+	append_table(process, "0-101110011-----000111----------", (void*)emit_bsl_vector_jit, (void*)call_bsl_vector_interpreter,nullptr, "bsl_vector");
+	append_table(process, "0-0011100-1-----000111----------", (void*)emit_and_bic_vector_jit, (void*)call_and_bic_vector_interpreter,nullptr, "and_bic_vector");
+	append_table(process, "0-101110001-----000111----------", (void*)emit_eor_vector_jit, (void*)call_eor_vector_interpreter,nullptr, "eor_vector");
+	append_table(process, "0-001110--100001001010----------", (void*)emit_xnt_xnt2_jit, (void*)call_xnt_xnt2_interpreter,nullptr, "xnt_xnt2");
+	append_table(process, "0-001110--0-----0-1110----------", (void*)emit_zip_jit, (void*)call_zip_interpreter,nullptr, "zip");
+	append_table(process, "0-001110000-----0--000----------", (void*)emit_tbl_jit, (void*)call_tbl_interpreter,nullptr, "tbl");
+	append_table(process, "0-001101010000001100------------", (void*)emit_ld1r_no_offset_jit, (void*)call_ld1r_no_offset_interpreter,nullptr, "ld1r_no_offset");
+	append_table(process, "0-001101110-----1100------------", (void*)emit_ld1r_post_index_jit, (void*)call_ld1r_post_index_interpreter,nullptr, "ld1r_post_index");
+	append_table(process, "0-00110101000000--0-------------", (void*)emit_ld1_single_structure_no_offset_jit, (void*)call_ld1_single_structure_no_offset_interpreter,(void*)help_decode_ld1_single_structure_no_offset, "ld1_single_structure_no_offset");
+	append_table(process, "0-001101110-------0-------------", (void*)emit_ld1_single_structure_post_index_jit, (void*)call_ld1_single_structure_post_index_interpreter,(void*)help_decode_ld1_single_structure_post_index, "ld1_single_structure_post_index");
+	append_table(process, "0-001100000000001000------------", (void*)emit_st2_multiple_structures_no_offset_jit, (void*)call_st2_multiple_structures_no_offset_interpreter,nullptr, "st2_multiple_structures_no_offset");
+	append_table(process, "0-001100100-----1000------------", (void*)emit_st2_multiple_structures_post_index_jit, (void*)call_st2_multiple_structures_post_index_interpreter,nullptr, "st2_multiple_structures_post_index");
+	append_table(process, "0-00110100000000--0-------------", (void*)emit_st1_single_structure_no_offset_jit, (void*)call_st1_single_structure_no_offset_interpreter,nullptr, "st1_single_structure_no_offset");
+	append_table(process, "0-001101100-------0-------------", (void*)emit_st1_single_structure_post_index_jit, (void*)call_st1_single_structure_post_index_interpreter,nullptr, "st1_single_structure_post_index");
+	append_table(process, "0-0011101-100000110110----------", (void*)emit_fcmeq_vector_zero_jit, (void*)call_fcmeq_vector_zero_interpreter,nullptr, "fcmeq_vector_zero");
+	append_table(process, "0-0011101-100000110010----------", (void*)emit_fcmgt_vector_zero_jit, (void*)call_fcmgt_vector_zero_interpreter,nullptr, "fcmgt_vector_zero");
+	append_table(process, "0-1011101-100000110010----------", (void*)emit_fcmge_vector_zero_jit, (void*)call_fcmge_vector_zero_interpreter,nullptr, "fcmge_vector_zero");
+	append_table(process, "0-0011100-1-----111001----------", (void*)emit_fcmeq_vector_register_jit, (void*)call_fcmeq_vector_register_interpreter,nullptr, "fcmeq_vector_register");
+	append_table(process, "0-1011101-1-----111001----------", (void*)emit_fcmgt_vector_register_jit, (void*)call_fcmgt_vector_register_interpreter,nullptr, "fcmgt_vector_register");
+	append_table(process, "0-1011100-1-----111001----------", (void*)emit_fcmge_vector_register_jit, (void*)call_fcmge_vector_register_interpreter,nullptr, "fcmge_vector_register");
+	append_table(process, "00011110--1---------11----------", (void*)emit_floating_point_conditional_select_jit, (void*)call_floating_point_conditional_select_interpreter,nullptr, "floating_point_conditional_select");
+	append_table(process, "00011110--1--------10000000-----", (void*)emit_fmov_scalar_immediate_jit, (void*)call_fmov_scalar_immediate_interpreter,nullptr, "fmov_scalar_immediate");
+	append_table(process, "00011110--10001--10000----------", (void*)emit_fcvt_jit, (void*)call_fcvt_interpreter,nullptr, "fcvt");
+	append_table(process, "00011110--100000110000----------", (void*)emit_fabs_scalar_jit, (void*)call_fabs_scalar_interpreter,nullptr, "fabs_scalar");
+	append_table(process, "00011110--100001010000----------", (void*)emit_fneg_scalar_jit, (void*)call_fneg_scalar_interpreter,nullptr, "fneg_scalar");
+	append_table(process, "00011110--100001110000----------", (void*)emit_fsqrt_scalar_jit, (void*)call_fsqrt_scalar_interpreter,nullptr, "fsqrt_scalar");
+	append_table(process, "0-1011101-100001111110----------", (void*)emit_fsqrt_vector_jit, (void*)call_fsqrt_vector_interpreter,nullptr, "fsqrt_vector");
+	append_table(process, "00011110--1-----001000-----0-000", (void*)emit_fcmp_jit, (void*)call_fcmp_interpreter,nullptr, "fcmp");
+	append_table(process, "00011110--1---------01-----0----", (void*)emit_fccmp_jit, (void*)call_fccmp_interpreter,nullptr, "fccmp");
+	append_table(process, "-0011110--11100-000000----------", (void*)emit_fcvtz_scalar_integer_jit, (void*)call_fcvtz_scalar_integer_interpreter,nullptr, "fcvtz_scalar_integer");
+	append_table(process, "-0011110--10000-000000----------", (void*)emit_fcvtn_scalar_integer_jit, (void*)call_fcvtn_scalar_integer_interpreter,nullptr, "fcvtn_scalar_integer");
+	append_table(process, "-0011110--10010-000000----------", (void*)emit_fcvta_scalar_integer_jit, (void*)call_fcvta_scalar_integer_interpreter,nullptr, "fcvta_scalar_integer");
+	append_table(process, "-0011110--11000-000000----------", (void*)emit_fcvtm_scalar_integer_jit, (void*)call_fcvtm_scalar_integer_interpreter,nullptr, "fcvtm_scalar_integer");
+	append_table(process, "0-0011100-1-----110101----------", (void*)emit_fadd_vector_jit, (void*)call_fadd_vector_interpreter,nullptr, "fadd_vector");
+	append_table(process, "0-1011100-1-----110111----------", (void*)emit_fmul_vector_jit, (void*)call_fmul_vector_interpreter,nullptr, "fmul_vector");
+	append_table(process, "0-0011101-1-----110101----------", (void*)emit_fsub_vector_jit, (void*)call_fsub_vector_interpreter,nullptr, "fsub_vector");
+	append_table(process, "0-1011100-1-----111111----------", (void*)emit_fdiv_vector_jit, (void*)call_fdiv_vector_interpreter,nullptr, "fdiv_vector");
+	append_table(process, "0-001110--1-----110011----------", (void*)emit_fmul_accumulate_vector_jit, (void*)call_fmul_accumulate_vector_interpreter,nullptr, "fmul_accumulate_vector");
+	append_table(process, "0-1011100-1-----110101----------", (void*)emit_faddp_vector_jit, (void*)call_faddp_vector_interpreter,nullptr, "faddp_vector");
+	append_table(process, "011111101-100001110110----------", (void*)emit_frsqrte_scalar_jit, (void*)call_frsqrte_scalar_interpreter,nullptr, "frsqrte_scalar");
+	append_table(process, "0-1011101-100001110110----------", (void*)emit_frsqrte_vector_jit, (void*)call_frsqrte_vector_interpreter,nullptr, "frsqrte_vector");
+	append_table(process, "0-0011101-1-----111111----------", (void*)emit_frsqrts_vector_jit, (void*)call_frsqrts_vector_interpreter,nullptr, "frsqrts_vector");
+	append_table(process, "010111111-------1001-0----------", (void*)emit_fmul_scalar_by_element_jit, (void*)call_fmul_scalar_by_element_interpreter,nullptr, "fmul_scalar_by_element");
+	append_table(process, "0-0011111-------1001-0----------", (void*)emit_fmul_vector_by_element_jit, (void*)call_fmul_vector_by_element_interpreter,nullptr, "fmul_vector_by_element");
+	append_table(process, "010111111-------0-01-0----------", (void*)emit_fmul_accumulate_scalar_jit, (void*)call_fmul_accumulate_scalar_interpreter,nullptr, "fmul_accumulate_scalar");
+	append_table(process, "0-0011111-------0-01-0----------", (void*)emit_fmul_accumulate_element_jit, (void*)call_fmul_accumulate_element_interpreter,nullptr, "fmul_accumulate_element");
+	append_table(process, "00011110--100100110000----------", (void*)emit_frintp_scalar_jit, (void*)call_frintp_scalar_interpreter,nullptr, "frintp_scalar");
+	append_table(process, "00011110--100101010000----------", (void*)emit_frintm_scalar_jit, (void*)call_frintm_scalar_interpreter,nullptr, "frintm_scalar");
+	append_table(process, "-0011110--10100-000000----------", (void*)emit_fcvtp_scalar_integer_jit, (void*)call_fcvtp_scalar_integer_interpreter,nullptr, "fcvtp_scalar_integer");
 }
 
 uint64_t sign_extend_interpreter(interpreter_data* ctx, uint64_t source, uint64_t count)
@@ -3168,7 +3341,162 @@ uint128_t replicate_vector_interpreter(interpreter_data* ctx, uint128_t source, 
 	return result;
 }
 
-void ld1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t R, uint64_t Rm, uint64_t o2, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+void st_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t opcode, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t ebytes = ((uint64_t)esize / (uint64_t)8ULL);
+	uint64_t rpt = 1ULL;
+	uint64_t selem = 2ULL;
+	uint64_t address = XSP_interpreter(ctx,Rn);
+	uint64_t offs = 0ULL;
+	uint64_t t = Rt;
+	uint64_t m = Rm;
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 8ULL)
+	{
+		for (uint64_t r = 0; r < (rpt); r++)
+		{
+			for (uint64_t e = 0; e < (elements); e++)
+			{
+				uint64_t tt = ((uint64_t)(((uint64_t)t + (uint64_t)r)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,tt);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint8_t>(ctx,eaddr,(uint8_t)uint128_t::extract(rval, e, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					tt = ((uint64_t)(((uint64_t)tt + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 16ULL)
+	{
+		for (uint64_t r = 0; r < (rpt); r++)
+		{
+			for (uint64_t e = 0; e < (elements); e++)
+			{
+				uint64_t tt = ((uint64_t)(((uint64_t)t + (uint64_t)r)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,tt);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint16_t>(ctx,eaddr,(uint16_t)uint128_t::extract(rval, e, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					tt = ((uint64_t)(((uint64_t)tt + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 32ULL)
+	{
+		for (uint64_t r = 0; r < (rpt); r++)
+		{
+			for (uint64_t e = 0; e < (elements); e++)
+			{
+				uint64_t tt = ((uint64_t)(((uint64_t)t + (uint64_t)r)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,tt);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint32_t>(ctx,eaddr,(uint32_t)uint128_t::extract(rval, e, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					tt = ((uint64_t)(((uint64_t)tt + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 64ULL)
+	{
+		for (uint64_t r = 0; r < (rpt); r++)
+		{
+			for (uint64_t e = 0; e < (elements); e++)
+			{
+				uint64_t tt = ((uint64_t)(((uint64_t)t + (uint64_t)r)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,tt);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint64_t>(ctx,eaddr,(uint64_t)uint128_t::extract(rval, e, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					tt = ((uint64_t)(((uint64_t)tt + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	if ((((uint64_t)ebytes * (uint64_t)8ULL)) == 128ULL)
+	{
+		for (uint64_t r = 0; r < (rpt); r++)
+		{
+			for (uint64_t e = 0; e < (elements); e++)
+			{
+				uint64_t tt = ((uint64_t)(((uint64_t)t + (uint64_t)r)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,tt);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint128_t>(ctx,eaddr,(uint128_t)uint128_t::extract(rval, e, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					tt = ((uint64_t)(((uint64_t)tt + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+		}
+		if ((wback))
+		{
+			uint64_t _offs = offs;
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_interpreter(ctx,Rm);
+			}
+			address = ((uint64_t)address + (uint64_t)_offs);
+			XSP_interpreter(ctx,Rn,address);
+		}
+	}
+	
+}
+
+void memory_1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t R, uint64_t Rm, uint64_t o2, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t is_load)
 {
 	uint64_t scale = bits_c_interpreter(ctx,opcode,2ULL,1ULL);
 	uint64_t selem = ((uint64_t)(((uint64_t)(((uint64_t)bit_c_interpreter(ctx,opcode,0ULL) << (uint64_t)1ULL)) | (uint64_t)R)) + (uint64_t)1ULL);
@@ -3224,14 +3552,28 @@ void ld1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t
 		}
 		else
 		{
-			for (uint64_t s = 0; s < (selem); s++)
+			if ((is_load))
 			{
-				uint128_t rval = V_interpreter(ctx,t);
-				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
-				uint128_t::insert(&rval, index, esize, mem_interpreter<uint8_t>(ctx,eaddr));
-				V_interpreter(ctx,t,rval);
-				offs = ((uint64_t)offs + (uint64_t)ebytes);
-				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					uint128_t::insert(&rval, index, esize, mem_interpreter<uint8_t>(ctx,eaddr));
+					V_interpreter(ctx,t,rval);
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+			else
+			{
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint8_t>(ctx,eaddr,(uint8_t)uint128_t::extract(rval, index, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
 			}
 		}
 		if ((wback))
@@ -3261,14 +3603,28 @@ void ld1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t
 		}
 		else
 		{
-			for (uint64_t s = 0; s < (selem); s++)
+			if ((is_load))
 			{
-				uint128_t rval = V_interpreter(ctx,t);
-				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
-				uint128_t::insert(&rval, index, esize, mem_interpreter<uint16_t>(ctx,eaddr));
-				V_interpreter(ctx,t,rval);
-				offs = ((uint64_t)offs + (uint64_t)ebytes);
-				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					uint128_t::insert(&rval, index, esize, mem_interpreter<uint16_t>(ctx,eaddr));
+					V_interpreter(ctx,t,rval);
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+			else
+			{
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint16_t>(ctx,eaddr,(uint16_t)uint128_t::extract(rval, index, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
 			}
 		}
 		if ((wback))
@@ -3298,14 +3654,28 @@ void ld1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t
 		}
 		else
 		{
-			for (uint64_t s = 0; s < (selem); s++)
+			if ((is_load))
 			{
-				uint128_t rval = V_interpreter(ctx,t);
-				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
-				uint128_t::insert(&rval, index, esize, mem_interpreter<uint32_t>(ctx,eaddr));
-				V_interpreter(ctx,t,rval);
-				offs = ((uint64_t)offs + (uint64_t)ebytes);
-				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					uint128_t::insert(&rval, index, esize, mem_interpreter<uint32_t>(ctx,eaddr));
+					V_interpreter(ctx,t,rval);
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+			else
+			{
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint32_t>(ctx,eaddr,(uint32_t)uint128_t::extract(rval, index, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
 			}
 		}
 		if ((wback))
@@ -3335,14 +3705,28 @@ void ld1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t
 		}
 		else
 		{
-			for (uint64_t s = 0; s < (selem); s++)
+			if ((is_load))
 			{
-				uint128_t rval = V_interpreter(ctx,t);
-				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
-				uint128_t::insert(&rval, index, esize, mem_interpreter<uint64_t>(ctx,eaddr));
-				V_interpreter(ctx,t,rval);
-				offs = ((uint64_t)offs + (uint64_t)ebytes);
-				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					uint128_t::insert(&rval, index, esize, mem_interpreter<uint64_t>(ctx,eaddr));
+					V_interpreter(ctx,t,rval);
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+			else
+			{
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint64_t>(ctx,eaddr,(uint64_t)uint128_t::extract(rval, index, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
 			}
 		}
 		if ((wback))
@@ -3372,14 +3756,28 @@ void ld1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t
 		}
 		else
 		{
-			for (uint64_t s = 0; s < (selem); s++)
+			if ((is_load))
 			{
-				uint128_t rval = V_interpreter(ctx,t);
-				uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
-				uint128_t::insert(&rval, index, esize, mem_interpreter<uint128_t>(ctx,eaddr));
-				V_interpreter(ctx,t,rval);
-				offs = ((uint64_t)offs + (uint64_t)ebytes);
-				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					uint128_t::insert(&rval, index, esize, mem_interpreter<uint128_t>(ctx,eaddr));
+					V_interpreter(ctx,t,rval);
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+			else
+			{
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					uint128_t rval = V_interpreter(ctx,t);
+					uint64_t eaddr = ((uint64_t)address + (uint64_t)offs);
+					mem_interpreter<uint128_t>(ctx,eaddr,(uint128_t)uint128_t::extract(rval, index, esize));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
 			}
 		}
 		if ((wback))
@@ -3394,6 +3792,45 @@ void ld1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t
 		}
 	}
 	
+}
+
+void fcm_vector_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t mode, uint64_t Q, uint64_t sz)
+{
+	uint128_t n = V_interpreter(ctx,Rn);
+	uint128_t m;
+	uint128_t result = 0;
+	if ((((uint64_t)Rm == (uint64_t)-1ULL)))
+	{
+		m = 0;
+	}
+	else
+	{
+		m = V_interpreter(ctx,Rm);
+	}
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(n, e, esize);
+		uint64_t element2 = uint128_t::extract(m, e, esize);
+		uint64_t element_result;
+		if ((((uint64_t)mode == (uint64_t)0ULL)))
+		{
+			element_result = ((uint64_t)0ULL - (uint64_t)FPCompareEQ_interpreter(ctx,element1,element2,fpcr_state,esize));
+		}
+		else if ((((uint64_t)mode == (uint64_t)1ULL)))
+		{
+			element_result = ((uint64_t)0ULL - (uint64_t)FPCompareGT_interpreter(ctx,element1,element2,fpcr_state,esize));
+		}
+		else if ((((uint64_t)mode == (uint64_t)2ULL)))
+		{
+			element_result = ((uint64_t)0ULL - (uint64_t)FPCompareGE_interpreter(ctx,element1,element2,fpcr_state,esize));
+		}
+		uint128_t::insert(&result, e, esize, element_result);
+	}
+	V_interpreter(ctx,Rd,result);
 }
 
 uint64_t FPAdd_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
@@ -6229,11 +6666,11 @@ void convert_to_float_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint
 			uint64_t working;
 			if ((U))
 			{
-				working = convert_to_float<uint16_t, uint64_t>(element, 0);
+				working = convert_to_float<uint16_t, uint16_t>((uint16_t)element, 0);
 			}
 			else
 			{
-				working = convert_to_float<uint16_t, uint64_t>(element, 1);
+				working = convert_to_float<uint16_t, uint16_t>((uint16_t)element, 1);
 			}
 			uint128_t::insert(&result, e, esize, working);
 		}
@@ -6247,11 +6684,11 @@ void convert_to_float_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint
 			uint64_t working;
 			if ((U))
 			{
-				working = convert_to_float<uint32_t, uint64_t>(element, 0);
+				working = convert_to_float<uint32_t, uint32_t>((uint32_t)element, 0);
 			}
 			else
 			{
-				working = convert_to_float<uint32_t, uint64_t>(element, 1);
+				working = convert_to_float<uint32_t, uint32_t>((uint32_t)element, 1);
 			}
 			uint128_t::insert(&result, e, esize, working);
 		}
@@ -6265,11 +6702,11 @@ void convert_to_float_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint
 			uint64_t working;
 			if ((U))
 			{
-				working = convert_to_float<uint64_t, uint64_t>(element, 0);
+				working = convert_to_float<uint64_t, uint64_t>((uint64_t)element, 0);
 			}
 			else
 			{
-				working = convert_to_float<uint64_t, uint64_t>(element, 1);
+				working = convert_to_float<uint64_t, uint64_t>((uint64_t)element, 1);
 			}
 			uint128_t::insert(&result, e, esize, working);
 		}
@@ -6987,22 +7424,72 @@ void tbl_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t le
 
 void ld1r_no_offset_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rt)
 {
-	ld1_interpreter(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,6ULL,0ULL,size,Rn,Rt);
+	memory_1_interpreter(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,6ULL,0ULL,size,Rn,Rt,1ULL);
 }
 
 void ld1r_post_index_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt)
 {
-	ld1_interpreter(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,6ULL,0ULL,size,Rn,Rt);
+	memory_1_interpreter(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,6ULL,0ULL,size,Rn,Rt,1ULL);
 }
 
 void ld1_single_structure_no_offset_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
 {
-	ld1_interpreter(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt);
+	memory_1_interpreter(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt,1ULL);
 }
 
 void ld1_single_structure_post_index_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
 {
-	ld1_interpreter(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt);
+	memory_1_interpreter(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt,1ULL);
+}
+
+void st2_multiple_structures_no_offset_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	st_interpreter(ctx,0ULL,Q,0ULL,4ULL,size,0ULL,Rn,Rt);
+}
+
+void st2_multiple_structures_post_index_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	st_interpreter(ctx,1ULL,Q,0ULL,4ULL,size,Rm,Rn,Rt);
+}
+
+void st1_single_structure_no_offset_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	memory_1_interpreter(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt,0ULL);
+}
+
+void st1_single_structure_post_index_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	memory_1_interpreter(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt,0ULL);
+}
+
+void fcmeq_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_interpreter(ctx,Rd,Rn,-1ULL,0ULL,Q,sz);
+}
+
+void fcmgt_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_interpreter(ctx,Rd,Rn,-1ULL,1ULL,Q,sz);
+}
+
+void fcmge_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_interpreter(ctx,Rd,Rn,-1ULL,2ULL,Q,sz);
+}
+
+void fcmeq_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_interpreter(ctx,Rd,Rn,Rm,0ULL,Q,sz);
+}
+
+void fcmgt_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_interpreter(ctx,Rd,Rn,Rm,1ULL,Q,sz);
+}
+
+void fcmge_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_interpreter(ctx,Rd,Rn,Rm,2ULL,Q,sz);
 }
 
 void floating_point_conditional_select_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd)
@@ -7037,97 +7524,6 @@ void floating_point_conditional_select_interpreter(interpreter_data* ctx, uint64
 		V_interpreter(ctx,Rd,(uint128_t)result);
 	}
 	
-}
-
-void fcmeq_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint64_t working;
-		working = ((uint64_t)0ULL - (uint64_t)FPCompareEQ_interpreter(ctx,element1,element2,fpcr_state,esize));
-		uint128_t::insert(&result, e, esize, working);
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fcmg_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint64_t working;
-		if ((U))
-		{
-			working = ((uint64_t)0ULL - (uint64_t)FPCompareGE_interpreter(ctx,element1,element2,fpcr_state,esize));
-		}
-		else
-		{
-			working = ((uint64_t)0ULL - (uint64_t)FPCompareGT_interpreter(ctx,element1,element2,fpcr_state,esize));
-		}
-		uint128_t::insert(&result, e, esize, working);
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fcmeq_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = 0ULL;
-		uint64_t working = ((uint64_t)0ULL - (uint64_t)FPCompareEQ_interpreter(ctx,element1,element2,fpcr_state,esize));
-		uint128_t::insert(&result, e, esize, working);
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fcmg_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = 0ULL;
-		uint64_t working;
-		if ((U))
-		{
-			working = ((uint64_t)0ULL - (uint64_t)FPCompareGE_interpreter(ctx,element1,element2,fpcr_state,esize));
-		}
-		else
-		{
-			working = ((uint64_t)0ULL - (uint64_t)FPCompareGT_interpreter(ctx,element1,element2,fpcr_state,esize));
-		}
-		uint128_t::insert(&result, e, esize, working);
-	}
-	V_interpreter(ctx,Rd,result);
 }
 
 void fmov_scalar_immediate_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
@@ -7179,6 +7575,23 @@ void fsqrt_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn
 	uint128_t vector = 0;
 	uint128_t::insert(&vector, 0ULL, fltsize, result);
 	V_interpreter(ctx,Rd,vector);
+}
+
+void fsqrt_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element = uint128_t::extract(operand, e, esize);
+		uint64_t working = FPSqrt_interpreter(ctx,element,fpcr_state,esize);
+		uint128_t::insert(&result, e, esize, working);
+	}
+	V_interpreter(ctx,Rd,result);
 }
 
 void fcmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc)
@@ -8208,7 +8621,49 @@ ir_operand replicate_vector_jit(ssa_emit_context* ctx, ir_operand source, uint64
 	return result;
 }
 
-void ld1_jit(ssa_emit_context* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t R, uint64_t Rm, uint64_t o2, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+void st_jit(ssa_emit_context* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t opcode, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rt)
+{
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t esize = ((uint64_t)8ULL << (uint64_t)size);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t ebytes = ((uint64_t)esize / (uint64_t)8ULL);
+	uint64_t rpt = 1ULL;
+	uint64_t selem = 2ULL;
+	ir_operand address = XSP_jit(ctx,Rn);
+	uint64_t offs = 0ULL;
+	uint64_t t = Rt;
+	uint64_t m = Rm;
+	uint64_t O = (((uint64_t)ebytes * (uint64_t)8ULL)) == 8ULL ? int8 : (((uint64_t)ebytes * (uint64_t)8ULL)) == 16ULL ? int16 : (((uint64_t)ebytes * (uint64_t)8ULL)) == 32ULL ? int32 : (((uint64_t)ebytes * (uint64_t)8ULL)) == 64ULL ? int64 : (((uint64_t)ebytes * (uint64_t)8ULL)) == 128ULL ? int128 : 0;
+	{
+		for (uint64_t r = 0; r < (rpt); r++)
+		{
+			for (uint64_t e = 0; e < (elements); e++)
+			{
+				uint64_t tt = ((uint64_t)(((uint64_t)t + (uint64_t)r)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					ir_operand rval = V_jit(ctx,tt);
+					ir_operand eaddr = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offs, int64));
+					mem_jit(ctx,O,eaddr,copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,rval, e, esize), O));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					tt = ((uint64_t)(((uint64_t)tt + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+		}
+		if ((wback))
+		{
+			ir_operand _offs = ir_operand::create_con(offs, int64);
+			if ((((uint64_t)Rm != (uint64_t)31ULL)))
+			{
+				_offs = X_jit(ctx,Rm);
+			}
+			address = ssa_emit_context::emit_ssa(ctx, ir_add, address, _offs);
+			XSP_jit(ctx,Rn,address);
+		}
+	}
+}
+
+void memory_1_jit(ssa_emit_context* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t R, uint64_t Rm, uint64_t o2, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t is_load)
 {
 	uint64_t scale = bits_c_jit(ctx,opcode,2ULL,1ULL);
 	uint64_t selem = ((uint64_t)(((uint64_t)(((uint64_t)bit_c_jit(ctx,opcode,0ULL) << (uint64_t)1ULL)) | (uint64_t)R)) + (uint64_t)1ULL);
@@ -8264,14 +8719,28 @@ void ld1_jit(ssa_emit_context* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint
 		}
 		else
 		{
-			for (uint64_t s = 0; s < (selem); s++)
+			if ((is_load))
 			{
-				ir_operand rval = V_jit(ctx,t);
-				ir_operand eaddr = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offs, int64));
-				ssa_emit_context::vector_insert(ctx,rval, index, esize, mem_jit(ctx,O,eaddr));
-				V_jit(ctx,t,rval);
-				offs = ((uint64_t)offs + (uint64_t)ebytes);
-				t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					ir_operand rval = V_jit(ctx,t);
+					ir_operand eaddr = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offs, int64));
+					ssa_emit_context::vector_insert(ctx,rval, index, esize, mem_jit(ctx,O,eaddr));
+					V_jit(ctx,t,rval);
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
+			}
+			else
+			{
+				for (uint64_t s = 0; s < (selem); s++)
+				{
+					ir_operand rval = V_jit(ctx,t);
+					ir_operand eaddr = ssa_emit_context::emit_ssa(ctx, ir_add, address, ir_operand::create_con(offs, int64));
+					mem_jit(ctx,O,eaddr,copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,rval, index, esize), O));
+					offs = ((uint64_t)offs + (uint64_t)ebytes);
+					t = ((uint64_t)(((uint64_t)t + (uint64_t)1ULL)) % (uint64_t)32ULL);
+				}
 			}
 		}
 		if ((wback))
@@ -8285,6 +8754,45 @@ void ld1_jit(ssa_emit_context* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint
 			XSP_jit(ctx,Rn,address);
 		}
 	}
+}
+
+void fcm_vector_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t mode, uint64_t Q, uint64_t sz)
+{
+	ir_operand n = V_jit(ctx,Rn);
+	ir_operand m;
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	if ((((uint64_t)Rm == (uint64_t)-1ULL)))
+	{
+		m = ssa_emit_context::vector_zero(ctx);
+	}
+	else
+	{
+		m = V_jit(ctx,Rm);
+	}
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,n, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,m, e, esize);
+		ir_operand element_result;
+		if ((((uint64_t)mode == (uint64_t)0ULL)))
+		{
+			element_result = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareEQ_jit(ctx,element1,element2,fpcr_state,esize));
+		}
+		else if ((((uint64_t)mode == (uint64_t)1ULL)))
+		{
+			element_result = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGT_jit(ctx,element1,element2,fpcr_state,esize));
+		}
+		else if ((((uint64_t)mode == (uint64_t)2ULL)))
+		{
+			element_result = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGE_jit(ctx,element1,element2,fpcr_state,esize));
+		}
+		ssa_emit_context::vector_insert(ctx,result, e, esize, element_result);
+	}
+	V_jit(ctx,Rd,result);
 }
 
 ir_operand FPAdd_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
@@ -9934,11 +10442,11 @@ void convert_to_float_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, 
 			ir_operand working;
 			if ((U))
 			{
-				working = copy_new_raw_size(ctx, ssa_emit_context::convert_to_float(ctx,element,F,int64, 0), int64);
+				working = copy_new_raw_size(ctx, ssa_emit_context::convert_to_float(ctx,copy_new_raw_size(ctx, element, F),F,F, 0), int64);
 			}
 			else
 			{
-				working = copy_new_raw_size(ctx, ssa_emit_context::convert_to_float(ctx,element,F,int64, 1), int64);
+				working = copy_new_raw_size(ctx, ssa_emit_context::convert_to_float(ctx,copy_new_raw_size(ctx, element, F),F,F, 1), int64);
 			}
 			ssa_emit_context::vector_insert(ctx,result, e, esize, working);
 		}
@@ -10521,22 +11029,72 @@ void tbl_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t len, uint6
 
 void ld1r_no_offset_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rt)
 {
-	ld1_jit(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,6ULL,0ULL,size,Rn,Rt);
+	memory_1_jit(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,6ULL,0ULL,size,Rn,Rt,1ULL);
 }
 
 void ld1r_post_index_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt)
 {
-	ld1_jit(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,6ULL,0ULL,size,Rn,Rt);
+	memory_1_jit(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,6ULL,0ULL,size,Rn,Rt,1ULL);
 }
 
 void ld1_single_structure_no_offset_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
 {
-	ld1_jit(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt);
+	memory_1_jit(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt,1ULL);
 }
 
 void ld1_single_structure_post_index_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
 {
-	ld1_jit(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt);
+	memory_1_jit(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt,1ULL);
+}
+
+void st2_multiple_structures_no_offset_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	st_jit(ctx,0ULL,Q,0ULL,4ULL,size,0ULL,Rn,Rt);
+}
+
+void st2_multiple_structures_post_index_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	st_jit(ctx,1ULL,Q,0ULL,4ULL,size,Rm,Rn,Rt);
+}
+
+void st1_single_structure_no_offset_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	memory_1_jit(ctx,0ULL,Q,1ULL,0ULL,0ULL,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt,0ULL);
+}
+
+void st1_single_structure_post_index_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt)
+{
+	memory_1_jit(ctx,1ULL,Q,1ULL,0ULL,Rm,0ULL,((uint64_t)opcode << (uint64_t)1ULL),S,size,Rn,Rt,0ULL);
+}
+
+void fcmeq_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_jit(ctx,Rd,Rn,-1ULL,0ULL,Q,sz);
+}
+
+void fcmgt_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_jit(ctx,Rd,Rn,-1ULL,1ULL,Q,sz);
+}
+
+void fcmge_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_jit(ctx,Rd,Rn,-1ULL,2ULL,Q,sz);
+}
+
+void fcmeq_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_jit(ctx,Rd,Rn,Rm,0ULL,Q,sz);
+}
+
+void fcmgt_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_jit(ctx,Rd,Rn,Rm,1ULL,Q,sz);
+}
+
+void fcmge_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	fcm_vector_jit(ctx,Rd,Rn,Rm,2ULL,Q,sz);
 }
 
 void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd)
@@ -10569,97 +11127,6 @@ void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype
 		}
 		V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
 	}
-}
-
-void fcmeq_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ir_operand working;
-		working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareEQ_jit(ctx,element1,element2,fpcr_state,esize));
-		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fcmg_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ir_operand working;
-		if ((U))
-		{
-			working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGE_jit(ctx,element1,element2,fpcr_state,esize));
-		}
-		else
-		{
-			working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGT_jit(ctx,element1,element2,fpcr_state,esize));
-		}
-		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fcmeq_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ir_operand::create_con(0ULL, int64);
-		ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareEQ_jit(ctx,element1,element2,fpcr_state,esize));
-		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fcmg_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ir_operand::create_con(0ULL, int64);
-		ir_operand working;
-		if ((U))
-		{
-			working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGE_jit(ctx,element1,element2,fpcr_state,esize));
-		}
-		else
-		{
-			working = ssa_emit_context::emit_ssa(ctx, ir_subtract, ir_operand::create_con(0ULL, int64), FPCompareGT_jit(ctx,element1,element2,fpcr_state,esize));
-		}
-		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
-	}
-	V_jit(ctx,Rd,result);
 }
 
 void fmov_scalar_immediate_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
@@ -10711,6 +11178,23 @@ void fsqrt_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64
 	ir_operand vector = ssa_emit_context::vector_zero(ctx);
 	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
 	V_jit(ctx,Rd,vector);
+}
+
+void fsqrt_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
+		ir_operand working = FPSqrt_jit(ctx,element,fpcr_state,esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
+	}
+	V_jit(ctx,Rd,result);
 }
 
 void fcmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc)

@@ -16,6 +16,7 @@ struct aarch64_emit_context
     ssa_emit_context*                                           ssa;
     ir_operation_block*                                         raw_ir;
     guest_process*                                              process;
+    bool                                                        translate_functions;
 
     std::unordered_map<uint64_t, ir_operand>                    basic_block_labels;
     std::unordered_set<uint64_t>                                basic_block_translate_que;

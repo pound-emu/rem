@@ -27,9 +27,13 @@ void* growing_jit_cache::allocate(growing_jit_cache* jit_cache, uint64_t size)
 
 void* growing_jit_cache::append_code(growing_jit_cache* jit_cache, void* code, uint64_t size)
 {
+    jit_cache->lock.lock();
+
     void* result = allocate(jit_cache, size);
 
     memcpy(result, code, size);
+
+    jit_cache->lock.unlock();
 
     return result;
 }

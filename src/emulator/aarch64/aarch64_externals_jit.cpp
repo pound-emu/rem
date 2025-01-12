@@ -95,11 +95,18 @@ void _branch_long_jit(ssa_emit_context* ctx, ir_operand location)
 void _branch_short_jit(ssa_emit_context* ctx, uint64_t location)
 {
     aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    
+    if (actx->translate_functions)
+    {
+        actx->branch_state = branch_type::short_branch;
+        actx->basic_block_translate_que.insert(location);
 
-    actx->branch_state = branch_type::short_branch;
-    actx->basic_block_translate_que.insert(location);
-
-    ir_operation_block::jump(ctx->ir, aarch64_emit_context::get_or_create_basic_block_label(actx, location));
+        ir_operation_block::jump(ctx->ir, aarch64_emit_context::get_or_create_basic_block_label(actx, location));
+    }
+    else
+    {
+        aarch64_emit_context::branch_long((aarch64_emit_context*)ctx->context_data, ir_operand::create_con(location));
+    }
 }
 
 void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t condition_pass, uint64_t condition_fail, ir_operand condition)

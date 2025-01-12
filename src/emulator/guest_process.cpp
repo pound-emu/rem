@@ -39,6 +39,24 @@ uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_func
     return jit_context::call_jitted_function(process->host_jit_context, (void*)function_to_execute.raw_function, (uint64_t*)arguments);
 }
 
+static uint64_t undefined_instruction_error(guest_process* process, void* context, uint64_t address)
+{
+    if (process->undefined_instruction == nullptr)
+    {
+        void* physical_memory = process->guest_memory_context.translate_address(process->guest_memory_context.base,address);
+
+        uint32_t instruction = *(uint32_t*)physical_memory;
+
+        std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
+
+        throw_error();
+    }
+    else
+    {
+        return ((uint64_t(*)(void*, uint64_t))process->undefined_instruction)(context,address);
+    }
+}
+
 guest_function guest_process::translate_function(translate_request_data* data)
 {
     uint64_t entry_address = data->address;
@@ -62,6 +80,8 @@ guest_function guest_process::translate_function(translate_request_data* data)
     aarch64_emit.basic_block_translate_que.insert(entry_address);
 
     std::unordered_set<uint64_t> already_translated;
+
+    aarch64_emit.translate_functions = true;
 
     while (true)
     {
@@ -102,25 +122,16 @@ guest_function guest_process::translate_function(translate_request_data* data)
 
                 if (instruction_table == nullptr)
                 {
-                    if (process->undefined_instruction != nullptr)
-                    {
-                        ir_operand function_pointer = ir_operand::create_con((uint64_t)process->undefined_instruction, int64);
-                        ir_operand new_address = ssa_emit_context::create_local(&ssa_emit, int64);
+                    ir_operand function_pointer = ir_operand::create_con((uint64_t)undefined_instruction_error, int64);
+                    ir_operand new_address = ssa_emit_context::create_local(&ssa_emit, int64);
 
-                        aarch64_emit_context::emit_store_context(&aarch64_emit);
+                    aarch64_emit_context::emit_store_context(&aarch64_emit);
 
-                        ir_operation_block::emitds(raw_ir, ir_external_call, new_address, function_pointer, aarch64_emit.context_pointer, ir_operand::create_con(working_address));
-                        
-                        aarch64_emit_context::emit_load_context(&aarch64_emit);
+                    ir_operation_block::emitds(raw_ir, ir_external_call, new_address, function_pointer, ir_operand::create_con((uint64_t)process), aarch64_emit.context_pointer, ir_operand::create_con(working_address));
+                    
+                    aarch64_emit_context::emit_load_context(&aarch64_emit);
 
-                        aarch64_emit_context::branch_long(&aarch64_emit, new_address, false);
-                    }   
-                    else
-                    {
-                        std::cout << "Undefined instruction " << std::hex << raw_instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(raw_instruction) << std::endl;
-
-                        throw_error();
-                    }
+                    aarch64_emit_context::branch_long(&aarch64_emit, new_address, false);
                 }
                 else
                 {
@@ -187,18 +198,9 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         if (table == nullptr)
         {
-            if (process->undefined_instruction != nullptr)
-            {
-                interpreter.current_pc = ((uint64_t(*)(void*, uint64_t))process->undefined_instruction)(arm_context,interpreter.current_pc);
+            interpreter.current_pc = undefined_instruction_error(process, arm_context, interpreter.current_pc);
 
-                continue;
-            }
-            else
-            {
-                std::cout << "Undefined instruction " << std::hex << instruction << " " << std::setfill('0') << std::setw(8) << std::hex << reverse_bytes(instruction) << std::endl;
-
-                throw_error();
-            }
+            continue;
         }
 
         interpreter.branch_type = branch_type::no_branch;
