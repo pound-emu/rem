@@ -20,10 +20,9 @@ Accomplishments:
     
     SCREENSHOTS:
     
-![alt text](image.png)   
-![alt text](image-1.png)    
-![alt text](image-2.png)    
-![alt text](image-3.png)    
-![alt text](image-4.png)
+![alt text](image_0.png)    
+![alt text](image_1.png)    
+![alt text](image_2.png)    
+![alt text](image_3.png)
 
     Possible nintendo switch emulator written from the ground up in the works??????
