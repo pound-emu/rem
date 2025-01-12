@@ -2,9 +2,6 @@ A (Hopefully Multi System) Jit emulator framework written in C++.
 
 Libraries Used:
     https://github.com/herumi/xbyak
-    https://github.com/unicorn-engine/unicorn
-    https://github.com/keystone-engine/keystone
-    https://github.com/capstone-engine/capstone
 
 Road Plan:
 
