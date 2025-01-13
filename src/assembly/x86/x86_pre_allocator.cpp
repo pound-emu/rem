@@ -169,26 +169,78 @@ static void emit_conditional_select(x86_pre_allocator_context* result, ir_operan
 	}
 }
 
-static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, uint64_t instruction, ir_operand destination, ir_operand source_0, ir_operand source_1)
+static bool instruction_is_commutative(uint64_t instruction)
+{
+	switch (instruction)
+	{
+		case ir_add:
+		case ir_multiply:
+		case ir_bitwise_and:
+		case ir_bitwise_or:
+		case ir_bitwise_exclusive_or:
+		{
+			return true;
+		};
+	}
+
+	return false;
+}
+
+static void swap(ir_operand* l, ir_operand* r)
+{
+	ir_operand tmp = *l;
+
+	*l = *r;
+	*r = tmp;
+}
+
+static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, ir_instructions instruction, ir_operand destination, ir_operand source_0, ir_operand source_1)
 {
 	assert_same_size({ destination, source_0, source_1 });
+
+	if (instruction_is_commutative(instruction) && ir_operand::is_constant(&source_0) && !ir_operand::is_constant(&source_1))
+	{
+		swap(&source_0, &source_1);	
+	}
+
+	if ((ir_operand::is_constant(&source_1) && source_1.value < INT32_MAX) && !ir_operand::is_constant(&source_0))
+	{
+		if (!ir_operand::are_equal(destination, source_0))
+		{
+			emit_move(result,destination, source_0);
+		}
+
+		ir_operation_block::emitds(result->ir, instruction, destination, destination, source_1);
+
+		return;
+	}
 
 	ir_operand working_destination = destination;
 	ir_operand working_source_0 = register_or_constant(result, &source_0);
 	ir_operand working_source_1 = register_or_constant(result, &source_1);
 
-	ir_operand working_scrap	= create_scrap_operand(result, destination.meta_data);
+	if (ir_operand::are_equal(working_destination, working_source_0))
+	{
+		ir_operation_block::emitds(result->ir, instruction, working_destination, working_destination, working_source_1);
+	}
+	else if (instruction == ir_add && ir_operand::get_raw_size(&working_destination) > int16)
+	{
+		ir_operation_block::emitds(result->ir, x86_lea, working_destination, working_source_0, working_source_1);
+	}
+	else if (!ir_operand::are_equal(working_destination, working_source_1))
+	{
+		emit_move(result,destination, source_0);
+		ir_operation_block::emitds(result->ir, instruction, working_destination, working_destination, working_source_1);
+	}
+	else
+	{
+		ir_operand working_scrap = create_scrap_operand(result, destination.meta_data);
 
-	//ins destination source_0 source_1
-
-	//mov scrap source_0
-	emit_move(result, working_scrap, working_source_0);
-	
-	//ins scrap source_1
-	ir_operation_block::emitds(result->ir, instruction, working_scrap, working_scrap, working_source_1);
-	 
-	//mov destination scrap
-	emit_move(result, working_destination, working_scrap);
+		emit_move(result, working_scrap, working_source_0);
+		ir_operation_block::emitds(result->ir, instruction, working_scrap, working_scrap, working_source_1);
+		
+		emit_move(result, working_destination, working_scrap);
+	}
 }
 
 static void emit_floating_point_compare(x86_pre_allocator_context* result, uint64_t instruction, ir_operand destination, ir_operand source_0, ir_operand source_1)
@@ -271,6 +323,18 @@ static void emit_shift(x86_pre_allocator_context* result, uint64_t instruction, 
 {
 	assert_same_size({ destination, source_0, source_1 });
 
+	if ((ir_operand::is_constant(&source_1) && source_1.value < 255) && !ir_operand::is_constant(&source_0))
+	{
+		if (!ir_operand::are_equal(destination, source_0))
+		{
+			emit_move(result,destination, source_0);
+		}
+
+		ir_operation_block::emitds(result->ir, instruction, destination, destination, source_1);
+
+		return;
+	}
+
 	ir_operand working_destination = destination;
 	ir_operand working_source_0 = register_or_constant(result, &source_0);
 	ir_operand working_source_1 = register_or_constant(result, &source_1);
@@ -332,9 +396,14 @@ static void emit_d_f_d_n(x86_pre_allocator_context* result, uint64_t instruction
 	assert_is_register(destination);
 
 	ir_operand working_destination = destination;
-	ir_operand working_source_0 = register_or_constant(result, &source);
 
-	emit_move(result, working_destination, working_source_0);
+	if (!ir_operand::are_equal(destination, source))
+	{
+		ir_operand working_source_0 = register_or_constant(result, &source);
+
+		emit_move(result, working_destination, working_source_0);
+	}
+
 	ir_operation_block::emitds(result->ir, instruction, working_destination, working_destination);
 }
 
@@ -428,20 +497,20 @@ static void emit_big_multiply_divide(x86_pre_allocator_context* result, uint64_t
 	ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_unlock, ax);
 }
 
-static void emit_return(x86_pre_allocator_context* result, ir_operand to_return)
+static void emit_context_exit(x86_pre_allocator_context* result, uint64_t instruction, ir_operand new_location)
 {
-	int raw_size = ir_operand::get_raw_size(&to_return);
+	int raw_size = ir_operand::get_raw_size(&new_location);
 
-	to_return = register_or_constant(result, &to_return, raw_size != int64);
+	new_location = register_or_constant(result, &new_location, raw_size != int64);
 
-	to_return.meta_data = int64;
+	new_location.meta_data = int64;
 
 	if (raw_size <= int16)
 	{
-		ir_operation_block::emitds(result->ir,ir_bitwise_and, to_return, to_return, ir_operand::create_con((1 << (8 << raw_size)) - 1));
+		ir_operation_block::emitds(result->ir,ir_bitwise_and, new_location, new_location, ir_operand::create_con((1 << (8 << raw_size)) - 1));
 	}
 
-	ir_operation_block::emits(result->ir, ir_instructions::ir_close_and_return,to_return , ir_operand::create_con(0));
+	ir_operation_block::emits(result->ir, instruction, new_location , ir_operand::create_con(0));
 
 	intrusive_linked_list< intrusive_linked_list_element<ir_operation>*>::insert_element(result->revisit_instructions, result->ir->operations->last->prev);
 }
@@ -512,7 +581,11 @@ static void emit_vector_insert(x86_pre_allocator_context* result, ir_operation* 
 	assert_is_constant(index);
 	assert_is_constant(size);
 
-	emit_move(result, destination, source_vector);
+	if (!ir_operand::are_equal(destination, source_vector))
+	{
+		emit_move(result, destination, source_vector);
+	}
+
 	ir_operation_block::emitds(result->ir, ir_vector_insert, destination, destination, value, index, size);
 }
 
@@ -777,10 +850,11 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 
 		//ABI
 		case ir_close_and_return:
+		case ir_table_jump:
 		{
 			assert_operand_count(operation, 0, 1);
 
-			emit_return(pre_allocator_context, operation->sources[0]);
+			emit_context_exit(pre_allocator_context, working_instruction, operation->sources[0]);
 
 		}; break;
 
@@ -985,6 +1059,7 @@ void x86_pre_allocator_context::run_pass(x86_pre_allocator_context* pre_allocato
 		} break;
 		
 		case ir_close_and_return:
+		case ir_table_jump:
 		{
 			working_element->data.sources[1].value = context_size; 
 		} break;

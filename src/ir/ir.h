@@ -84,6 +84,7 @@ enum ir_instructions : uint64_t
 	ir_compare_and_swap,
 	ir_get_argument,
 	ir_external_call,
+	ir_table_jump,
 
 	//Memory
 	ir_load,
@@ -94,6 +95,7 @@ enum ir_instructions : uint64_t
 	ir_open_context,
 	ir_register_allocator_p_lock,
 	ir_register_allocator_p_unlock,
+	ir_ssa_phi,
 
 	//Vectors
 	ir_vector_extract,
@@ -173,6 +175,17 @@ static std::string instruction_names[] = {
 	"ir_shift_right_signed",
 	"ir_shift_right_unsigned",
 	"ir_subtract",
+	"ir_floating_point_add",
+	"ir_floating_point_subtract",
+	"ir_floating_point_multiply",
+	"ir_floating_point_divide",
+	"ir_floating_point_select_min",
+	"ir_floating_point_select_max",
+	"ir_floating_point_compare_equal",
+	"ir_floating_point_compare_not_equal",
+	"ir_floating_point_compare_less",
+	"ir_floating_point_compare_greater",
+	"ir_floating_point_compare_greater_equal",
 
 	"ir_binary_end",
 
@@ -187,6 +200,7 @@ static std::string instruction_names[] = {
 	"ir_logical_not",
 	"ir_convert_to_float_signed",
 	"ir_convert_to_float_unsigned",
+	"ir_floating_point_square_root",
 
 	"ir_unary_end",
 
@@ -207,6 +221,7 @@ static std::string instruction_names[] = {
 	"ir_compare_and_swap",
 	"ir_get_argument",
 	"ir_external_call",
+	"ir_table_jump",
 
 	//Memory
 	"ir_load",
@@ -217,6 +232,7 @@ static std::string instruction_names[] = {
 	"ir_open_context",
 	"ir_register_allocator_p_lock",
 	"ir_register_allocator_p_unlock",
+	"ir_ssa_phi",
 
 	//Vectors
 	"ir_vector_extract",
@@ -227,7 +243,7 @@ static std::string instruction_names[] = {
 	"ir_assert_false",
 	"ir_assert_true",
 
-	//"x86
+	//x86
 	"x86_cqo",
 	"x86_cdq",
 	"x86_cwd",
@@ -257,6 +273,11 @@ static std::string instruction_names[] = {
 	"x86_subps",
 	"x86_subsd",
 	"x86_subss",
+
+	"x86_sqrtss",
+	"x86_sqrtsd",	
+	"x86_sqrtps",
+	"x86_sqrtpd",
 
 	//Emulator Helpers
 	"ir_guest_store_context",
@@ -305,7 +326,7 @@ struct ir_operand
 
 struct ir_operation
 {
-	uint64_t				instruction;
+	ir_instructions			instruction;
 	fast_array<ir_operand>	destinations;
 	fast_array<ir_operand>	sources;
 };
@@ -321,9 +342,11 @@ struct ir_operation_block
 	static void											create_raw_operation(arena_allocator* allocator, ir_operation* result, uint64_t instruction, int destination_count, int source_count);
 	static void 										create_vector_gp_remap_scheme(arena_allocator* allocator, std::unordered_map<uint64_t, uint64_t>* remap_store, std::unordered_map<uint64_t, uint64_t>** remap_redirect);
 	static void 										clamp_operands(ir_operation_block* ir, bool use_bit_register_allocations, int* size_counts = nullptr);
-	
-	static bool 										is_label(uint64_t instruction);
-	static bool 										is_label(ir_operation* operation);
+	static void 										ssa_remap(ir_operation_block* ir, std::unordered_map<uint64_t, uint64_t>* remap_data);
+
+
+	static bool 										is_flow_critical(uint64_t instruction);
+	static bool 										is_flow_critical(ir_operation* operation);
 	static ir_operand 									create_label(ir_operation_block* block);
 	static void 										mark_label(ir_operation_block* block, ir_operand label);
 	static void 										jump(ir_operation_block* block, ir_operand label);

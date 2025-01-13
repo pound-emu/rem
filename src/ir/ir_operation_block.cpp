@@ -30,7 +30,7 @@ void ir_operation_block::create_raw_operation(arena_allocator* allocator, ir_ope
 	fast_array<ir_operand>::create(allocator, destination_count, &result->destinations);
 	fast_array<ir_operand>::create(allocator, source_count, &result->sources);
 
-	result->instruction = instruction;
+	result->instruction = (ir_instructions)instruction;
 }
 
 intrusive_linked_list_element<ir_operation>* ir_operation_block::emit(ir_operation_block* block, ir_operation operation, intrusive_linked_list_element<ir_operation>* point)
@@ -137,6 +137,21 @@ void ir_operation_block::clamp_operands(ir_operation_block* ir, bool use_bit_reg
 	{
 		size_counts[0] = remap_safe[0].size();
 		size_counts[1] = remap_safe[1].size();
+	}
+}
+
+void ir_operation_block::ssa_remap(ir_operation_block* ir, std::unordered_map<uint64_t, uint64_t>* remap_data)
+{
+	std::unordered_map<uint64_t, uint64_t>* remap_redirection[ir_operand_meta::top];
+
+	for (int i = 0; i < ir_operand_meta::top; ++i)
+	{
+		remap_redirection[i] = remap_data;
+	}
+
+	for (auto i = ir->operations->first; i != ir->operations->last; i = i->next)
+	{
+		remap_operands_operations_impl(remap_redirection, &i->data, false);
 	}
 }
 
@@ -302,7 +317,7 @@ intrusive_linked_list_element<ir_operation>* ir_operation_block::emits(ir_operat
 	return emit(ir, result, point);
 }
 
-bool ir_operation_block::is_label(uint64_t instruction)
+bool ir_operation_block::is_flow_critical(uint64_t instruction)
 {
 	switch (instruction)
 	{
@@ -315,9 +330,9 @@ bool ir_operation_block::is_label(uint64_t instruction)
 	}
 }
 
-bool ir_operation_block::is_label(ir_operation* operation)
+bool ir_operation_block::is_flow_critical(ir_operation* operation)
 {
-	return ir_operation_block::is_label(operation->instruction);
+	return ir_operation_block::is_flow_critical(operation->instruction);
 }
 
 ir_operand ir_operation_block::create_label(ir_operation_block* block)
@@ -333,6 +348,8 @@ ir_operand ir_operation_block::create_label(ir_operation_block* block)
 void ir_operation_block::mark_label(ir_operation_block* block, ir_operand label)
 {
 	ir_operation_block::emits(block, ir_mark_label, label);
+
+	ir_operation_block::emits(block, ir_no_operation);
 }
 
 void ir_operation_block::jump_if(ir_operation_block* block, ir_operand label, ir_operand condition)
@@ -394,11 +411,12 @@ std::string get_string(ir_operand value)
 
 	switch (raw_size)
 	{
-	case ir_operand_meta::int8:  result += "INT8"; break;
-	case ir_operand_meta::int16: result += "INT16"; break;
-	case ir_operand_meta::int32: result += "INT32"; break;
-	case ir_operand_meta::int64: result += "INT64"; break;
-	case ir_operand_meta::int128: result += "INT128"; break;
+	case ir_operand_meta::int8:  		result += "INT8"; break;
+	case ir_operand_meta::int16: 		result += "INT16"; break;
+	case ir_operand_meta::int32: 		result += "INT32"; break;
+	case ir_operand_meta::int64: 		result += "INT64"; break;
+	case ir_operand_meta::int128: 		result += "INT128"; break;
+	case (ir_operand_meta)UINT32_MAX:	result += "GENERIC"; break;
 	default: throw_error();
 	}
 

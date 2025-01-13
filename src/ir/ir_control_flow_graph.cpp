@@ -4,12 +4,36 @@ static ir_control_flow_node* create_and_insert_node(intrusive_linked_list<ir_con
 {
     ir_control_flow_node* result = arena_allocator::allocate_struct<ir_control_flow_node>(list->allocator);
 
-    intrusive_linked_list<ir_control_flow_node*>::insert_element(list, result);
-
     result->entry_instruction = first_instruction;
     result->final_instruction = block_final_instruction;
 
+    intrusive_linked_list<ir_control_flow_node*>::insert_element(list, result);
+
     return result;
+}
+
+static bool is_label(ir_operation* operation)
+{
+    switch (operation->instruction)
+    {
+        case ir_mark_label:
+            return true;
+    }
+
+    return false;
+}
+
+static bool is_jump(ir_operation* operation)
+{
+    switch (operation->instruction)
+    {
+        case ir_jump_if:
+        case ir_close_and_return:
+        case ir_table_jump:
+            return true;
+    }
+
+    return false;
 }
 
 static void get_linier_nodes(ir_control_flow_graph* result)
@@ -22,7 +46,7 @@ static void get_linier_nodes(ir_control_flow_graph* result)
     {
         ir_operation working_operation = i->data;
 
-        if (ir_operation_block::is_label(&working_operation))
+        if (is_jump(&working_operation) || (i->next != nullptr && is_label(&i->next->data)))
         {
             working_node->final_instruction = i;
 

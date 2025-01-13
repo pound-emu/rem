@@ -4054,10 +4054,14 @@ uint64_t FPAdd_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t op
 	{
 		if (N == 32ULL)
 		{
+			uint32_t o1 = operand1;
+			uint32_t o2 = operand2;
 			return (undefined_value());
 		}
 		if (N == 64ULL)
 		{
+			uint64_t o1 = operand1;
+			uint64_t o2 = operand2;
 			return (undefined_value());
 		}
 		
@@ -4071,10 +4075,14 @@ uint64_t FPSub_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t op
 	{
 		if (N == 32ULL)
 		{
+			uint32_t o1 = operand1;
+			uint32_t o2 = operand2;
 			return (undefined_value());
 		}
 		if (N == 64ULL)
 		{
+			uint64_t o1 = operand1;
+			uint64_t o2 = operand2;
 			return (undefined_value());
 		}
 		
@@ -4088,10 +4096,14 @@ uint64_t FPMul_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t op
 	{
 		if (N == 32ULL)
 		{
+			uint32_t o1 = operand1;
+			uint32_t o2 = operand2;
 			return (undefined_value());
 		}
 		if (N == 64ULL)
 		{
+			uint64_t o1 = operand1;
+			uint64_t o2 = operand2;
 			return (undefined_value());
 		}
 		
@@ -4105,10 +4117,14 @@ uint64_t FPDiv_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t op
 	{
 		if (N == 32ULL)
 		{
+			uint32_t o1 = operand1;
+			uint32_t o2 = operand2;
 			return (undefined_value());
 		}
 		if (N == 64ULL)
 		{
+			uint64_t o1 = operand1;
+			uint64_t o2 = operand2;
 			return (undefined_value());
 		}
 		
@@ -4122,10 +4138,14 @@ uint64_t FPMax_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t op
 	{
 		if (N == 32ULL)
 		{
+			uint32_t o1 = operand1;
+			uint32_t o2 = operand2;
 			return (undefined_value());
 		}
 		if (N == 64ULL)
 		{
+			uint64_t o1 = operand1;
+			uint64_t o2 = operand2;
 			return (undefined_value());
 		}
 		
@@ -4139,10 +4159,14 @@ uint64_t FPMin_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t op
 	{
 		if (N == 32ULL)
 		{
+			uint32_t o1 = operand1;
+			uint32_t o2 = operand2;
 			return (undefined_value());
 		}
 		if (N == 64ULL)
 		{
+			uint64_t o1 = operand1;
+			uint64_t o2 = operand2;
 			return (undefined_value());
 		}
 		
@@ -9683,7 +9707,9 @@ ir_operand FPAdd_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand oper
 	{
 		uint64_t F = N == 32ULL ? int32 : N == 64ULL ? int64 : 0;
 		{
-			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_add, copy_new_raw_size(ctx, operand1, F), copy_new_raw_size(ctx, operand2, F)), int64);
+			ir_operand o1 = copy_new_raw_size(ctx, operand1, F);
+			ir_operand o2 = copy_new_raw_size(ctx, operand2, F);
+			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_add, o1, o2), int64);
 		}
 	}
 	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPAdd_I);
@@ -9695,7 +9721,9 @@ ir_operand FPSub_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand oper
 	{
 		uint64_t F = N == 32ULL ? int32 : N == 64ULL ? int64 : 0;
 		{
-			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_subtract, copy_new_raw_size(ctx, operand1, F), copy_new_raw_size(ctx, operand2, F)), int64);
+			ir_operand o1 = copy_new_raw_size(ctx, operand1, F);
+			ir_operand o2 = copy_new_raw_size(ctx, operand2, F);
+			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_subtract, o1, o2), int64);
 		}
 	}
 	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPSub_I);
@@ -9707,7 +9735,9 @@ ir_operand FPMul_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand oper
 	{
 		uint64_t F = N == 32ULL ? int32 : N == 64ULL ? int64 : 0;
 		{
-			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_multiply, copy_new_raw_size(ctx, operand1, F), copy_new_raw_size(ctx, operand2, F)), int64);
+			ir_operand o1 = copy_new_raw_size(ctx, operand1, F);
+			ir_operand o2 = copy_new_raw_size(ctx, operand2, F);
+			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_multiply, o1, o2), int64);
 		}
 	}
 	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMul_I);
@@ -9719,7 +9749,9 @@ ir_operand FPDiv_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand oper
 	{
 		uint64_t F = N == 32ULL ? int32 : N == 64ULL ? int64 : 0;
 		{
-			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_divide, copy_new_raw_size(ctx, operand1, F), copy_new_raw_size(ctx, operand2, F)), int64);
+			ir_operand o1 = copy_new_raw_size(ctx, operand1, F);
+			ir_operand o2 = copy_new_raw_size(ctx, operand2, F);
+			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_divide, o1, o2), int64);
 		}
 	}
 	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPDiv_I);
@@ -9731,7 +9763,9 @@ ir_operand FPMax_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand oper
 	{
 		uint64_t F = N == 32ULL ? int32 : N == 64ULL ? int64 : 0;
 		{
-			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_select_max, copy_new_raw_size(ctx, operand1, F), copy_new_raw_size(ctx, operand2, F)), int64);
+			ir_operand o1 = copy_new_raw_size(ctx, operand1, F);
+			ir_operand o2 = copy_new_raw_size(ctx, operand2, F);
+			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_select_max, o1, o2), int64);
 		}
 	}
 	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMax_I);
@@ -9743,7 +9777,9 @@ ir_operand FPMin_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand oper
 	{
 		uint64_t F = N == 32ULL ? int32 : N == 64ULL ? int64 : 0;
 		{
-			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_select_min, copy_new_raw_size(ctx, operand1, F), copy_new_raw_size(ctx, operand2, F)), int64);
+			ir_operand o1 = copy_new_raw_size(ctx, operand1, F);
+			ir_operand o2 = copy_new_raw_size(ctx, operand2, F);
+			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_select_min, o1, o2), int64);
 		}
 	}
 	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMin_I);

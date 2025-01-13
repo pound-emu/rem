@@ -170,6 +170,7 @@ void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc)
     );
 
     ir_operation_block::emits(ctx->ir,ir_close_and_return ,ir_operand::create_con(actx->current_instruction_address + 4));
+    
     actx->branch_state = branch_type::long_branch;
 }
 

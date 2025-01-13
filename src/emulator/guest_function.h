@@ -6,6 +6,7 @@
 struct guest_function
 {
     uint64_t    times_executed;
+    uint32_t    jit_offset;
     void        (*raw_function)(void* arguments);
 };
 

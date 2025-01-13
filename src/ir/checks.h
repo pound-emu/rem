@@ -3,6 +3,7 @@
 
 #include "ir.h"
 #include <vector>
+#include "debugging.h"
 
 static void assert_operand_count(ir_operation* operation, int destinations, int sources)
 {
@@ -90,7 +91,10 @@ static void assert_same_size(std::initializer_list<ir_operand> operands)
 	{
 		uint64_t working_size = operands.begin()[i].meta_data & UINT32_MAX;
 
-		assert(working_size == first_size);
+		if (working_size != first_size)
+		{
+			throw_error();
+		}
 	}
 }
 

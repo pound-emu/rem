@@ -1,6 +1,7 @@
 #include "aarch64_emit_context.h"
 #include "emulator/ssa_emit_context.h"
 #include "emulator/guest_process.h"
+#include "jit/jit_memory.h"
 
 void aarch64_emit_context::create(guest_process* process, aarch64_emit_context* result, ssa_emit_context* ssa)
 {
@@ -60,13 +61,51 @@ void aarch64_emit_context::emit_store_context(aarch64_emit_context* ctx)
     ctx->context_movement.push_back(ir_operation_block::emits(ir, ir_guest_store_context, ctx->context_pointer));
 }
 
-void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new_location, bool store_context)
-{   
+static void table_branch(aarch64_emit_context* ctx, ir_operand address)
+{
+    guest_process* process = ctx->process;
+    ir_operation_block* ir = ctx->raw_ir;
+
+    auto table = &process->guest_functions.native_function_table;
+
+    if (!fast_function_table::is_open(table))
+    {
+        return;
+    }
+
+    ir_operand end = ir_operation_block::create_label(ir);
+
+    ir_operand table_base = ir_operand::create_con((uint64_t)table->function_store);
+    
+    address = ssa_emit_context::emit_ssa(ctx->ssa, ir_subtract, address, ir_operand::create_con(table->entry_address));
+
+    ir_operation_block::jump_if(ir, end, ssa_emit_context::emit_ssa(ctx->ssa, ir_compare_greater_equal_unsigned, address, ir_operand::create_con(table->function_store_size)));
+
+    ir_operand value_test = ssa_emit_context::emit_ssa(ctx->ssa, ir_load, ssa_emit_context::emit_ssa(ctx->ssa, ir_add, address, table_base), int32);
+
+    ir_operation_block::jump_if(ir, end, ssa_emit_context::emit_ssa(ctx->ssa, ir_compare_equal, value_test, ir_operand::create_con(UINT32_MAX, int32)));
+
+    ir_operand jit_base = ir_operand::create_con((uint64_t)process->host_jit_context->jit_cache.memory->raw_memory_block);
+
+    value_test = ir_operand::copy_new_raw_size(value_test, int64);
+    
+    ir_operation_block::emits(ir, ir_table_jump, ssa_emit_context::emit_ssa(ctx->ssa, ir_add, jit_base, value_test));
+
+    ir_operation_block::mark_label(ir, end);
+}
+
+void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new_location, bool store_context, bool allow_table_branch)
+{
     ctx->branch_state = branch_type::long_branch;
 
     if (store_context)
     {
         emit_store_context(ctx);
+    }
+
+    if (allow_table_branch)
+    {
+        table_branch(ctx, new_location);
     }
 
     ir_operation_block::emits(ctx->raw_ir, ir_close_and_return, new_location);

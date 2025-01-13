@@ -6,6 +6,7 @@
 
 #include "aarch64/aarch64_process.h"
 #include "aarch64/aarch64_impl.h"
+#include "jit/jit_memory.h"
 
 #include <iostream>
 #include <iomanip>
@@ -19,6 +20,7 @@ void guest_process::create(guest_process* result, guest_memory guest_memory_cont
     result->svc_function = nullptr;
     result->undefined_instruction = nullptr;
     result->debug_mode = false;
+    result->guest_functions.use_flt = true;
 
     init_aarch64_decoder(result);
 }
@@ -118,7 +120,7 @@ guest_function guest_process::translate_function(translate_request_data* data)
 
                 auto instruction_table = fixed_length_decoder<uint32_t>::decode_slow(&process->decoder, raw_instruction);
 
-                ssa_emit_context::reset_local(&ssa_emit);
+                //ssa_emit_context::reset_local(&ssa_emit);
 
                 if (instruction_table == nullptr)
                 {
@@ -157,14 +159,13 @@ guest_function guest_process::translate_function(translate_request_data* data)
     
     aarch64_emit_context::emit_context_movement(&aarch64_emit);
 
-    //ir_operation_block::log(raw_ir);
-
-    void* code = jit_context::compile_code(process->host_jit_context, raw_ir,(compiler_flags)0);
+    void* code = jit_context::compile_code(process->host_jit_context, raw_ir,compiler_flags::optimize_ssa);
 
     guest_function result;
 
     result.times_executed = 0;
     result.raw_function = (void(*)(void*))code;
+    result.jit_offset = (uint64_t)result.raw_function - (uint64_t)process->host_jit_context->jit_cache.memory->raw_memory_block;
     
     arena_allocator::destroy(&allocator);
 
@@ -240,6 +241,8 @@ void guest_process::create(guest_process* result, guest_memory memory, jit_conte
 
 void guest_process::destroy(guest_process* process)
 {
+    guest_function_store::destroy(&process->guest_functions);
+
     switch (process->process_type)
     {
         case arm:

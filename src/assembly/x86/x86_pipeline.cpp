@@ -2,6 +2,7 @@
 #include "x86_pre_allocator.h"
 #include "x86_assembler.h"
 #include "debugging.h"
+#include "ir/ssa.h"
 
 #include "ir/basic_register_allocator.h"
 #include "ir/undefined_behavior_check.h"
@@ -27,6 +28,11 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 		run_undefined_behavior_check_pass(undefined_behavior_checked_code, source_ir);
 
 		source_ir = undefined_behavior_checked_code;
+	}
+
+	if (flags & optimize_ssa)
+	{
+		ssa_construct_and_optimize(source_ir, flags);
 	}
 	
 	x86_pre_allocator_context::run_pass(&pre_allocation_data, pre_allocated_code, source_ir, working_abi.cpu,working_abi.os);

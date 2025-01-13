@@ -337,7 +337,7 @@ void basic_register_allocator_context::run_pass(basic_register_allocator_context
 			allocate_registers(result_register_allocator, new_sources, stack_max, working_operation.sources.data, working_operation.sources.count, register_mode::read);
 			allocate_registers(result_register_allocator, new_destinations, stack_max, working_operation.destinations.data, working_operation.destinations.count, register_mode::write);
 
-			if (ir_operation_block::is_label(instruction) || instruction == ir_external_call)
+			if (ir_operation_block::is_flow_critical(instruction) || instruction == ir_external_call)
 			{
 				unlock_all_basic(result_register_allocator);
 

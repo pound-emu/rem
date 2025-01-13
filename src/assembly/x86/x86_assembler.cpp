@@ -438,7 +438,10 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			{
 				uint64_t imm = sources[1].value;
 
-				assert(imm <= INT32_MAX);
+				if (imm >= INT32_MAX)
+				{
+					throw_error();
+				}
 
 				switch (instruction)
 				{
@@ -486,6 +489,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		}; break;
 
 		case ir_close_and_return:
+		case ir_table_jump:
 		{
 			ir_operand value = working_operation.sources[0];
 			ir_operand context_size = working_operation.sources[1];
@@ -502,7 +506,14 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 				c.mov(c.rax, create_operand<Xbyak::Reg64>(value));
 			}
 
-			c.ret();
+			if (instruction == ir_close_and_return)
+			{
+				c.ret();
+			}
+			else
+			{
+				c.jmp(c.rax);
+			}
 
 		}; break;
 
@@ -738,6 +749,24 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			assert(!ir_operand::is_vector(&s));
 
 			c.movq(create_operand<Xbyak::Xmm>(d), create_operand<Xbyak::Reg64>(s));
+		}; break;
+
+		case x86_lea: 
+		{
+			assert_operand_count(&working_operation, 1, 2);
+			
+			ir_operand d = working_operation.destinations[0];
+			ir_operand s0 = working_operation.sources[0];
+			ir_operand s1 = working_operation.sources[1];
+			
+			switch (d.meta_data)
+			{
+				case int32: c.lea(create_operand<Xbyak::Reg32>(d), c.ptr[create_operand<Xbyak::Reg32>(s0) + create_operand<Xbyak::Reg32>(s1)]); break;
+				case int64: c.lea(create_operand<Xbyak::Reg64>(d), c.ptr[create_operand<Xbyak::Reg64>(s0) + create_operand<Xbyak::Reg64>(s1)]); break;
+
+				default: throw_error();
+			}
+
 		}; break;
 
 		case x86_addpd: assert_valid_binary_float_operation(&working_operation); c.addpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
