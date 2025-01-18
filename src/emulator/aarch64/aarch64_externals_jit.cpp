@@ -205,16 +205,6 @@ uint64_t _get_pc_jit(ssa_emit_context* ctx)
 
 void undefined_jit(ssa_emit_context* ctx){throw_error();};
 
-uint64_t x86_enable_sse_jit(ssa_emit_context* ctx)
-{
-    return true;
-}
-
-uint64_t x86_enable_avx_jit(ssa_emit_context* ctx)
-{
-    return true;
-}
-
 ir_operand call_jit(ssa_emit_context* ctx, ir_operand a0, ir_operand a1, ir_operand a2, ir_operand a3, ir_operand a4, ir_operand a5, uint64_t function)
 {
     ir_operand result = ssa_emit_context::create_local(ctx,int64);
@@ -230,7 +220,33 @@ uint64_t use_fast_float_jit(ssa_emit_context* ctx)
     return 1;
 }
 
-uint64_t use_x86_sse(ssa_emit_context* ctx)
+uint64_t use_x86_sse_jit(ssa_emit_context* ctx)
 {
     return 1;
+}
+
+uint64_t use_x86_sse2_jit(ssa_emit_context* ctx)
+{
+    return 1;
+}
+
+
+ir_operand intrinsic_unary_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source)
+{
+    return ssa_emit_context::emit_ssa(ctx, (ir_instructions)instruction, source, R);
+}
+
+ir_operand intrinsic_binary_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1)
+{
+    return ssa_emit_context::emit_ssa(ctx, (ir_instructions)instruction, source_0, source_1);
+}
+
+ir_operand intrinsic_binary_imm_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source_0, uint64_t source_1)
+{
+    return ssa_emit_context::emit_ssa(ctx, (ir_instructions)instruction, source_0, ir_operand::create_con(source_1), false);
+}
+
+ir_operand intrinsic_ternary_imm_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1, uint64_t source_2)
+{
+    return ssa_emit_context::emit_ssa(ctx, (ir_instructions)instruction, source_0, source_1, ir_operand::create_con(source_2));
 }

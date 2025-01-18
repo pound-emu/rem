@@ -9,7 +9,7 @@ struct ssa_context;
 struct ssa_cf_node
 {
     int                                                             location;
-    ssa_context*                                                    ir;
+    ssa_context*                                                    context;
     ir_control_flow_node*                                           raw_node;
 
     std::unordered_set<ssa_cf_node*>                                outlets;
@@ -74,11 +74,16 @@ static bool is_global(ssa_context* context, uint64_t check)
     return context->globals.find(check) != context->globals.end();
 }
 
+static bool is_global(ssa_context* context, ir_operand check)
+{
+    return is_global(context, check.value);
+}
+
 static ssa_cf_node create_ssa_cf_node(ssa_context* context, ir_control_flow_node* node)
 {
     ssa_cf_node result;
 
-    result.ir = context;
+    result.context = context;
     result.raw_node = node;
     result.location = -1;
 
@@ -132,7 +137,7 @@ static uint64_t get_remap_at_time(ssa_cf_node* node, uint64_t old, int time)
 
 static int create_phi(ssa_cf_node* node, std::vector<uint64_t>* sources)
 {
-    ssa_context* context = node->ir;
+    ssa_context* context = node->context;
     
     int result = request_new_register(context);
 
@@ -157,7 +162,7 @@ static int create_phi(ssa_cf_node* node, std::vector<uint64_t>* sources)
 
 static void remap_sources(ssa_cf_node* node, ir_operand* sources, int source_count, int time)
 {
-    ssa_context* context = node->ir;
+    ssa_context* context = node->context;
 
     for (int i = 0; i < source_count; ++i)
     {
@@ -179,7 +184,7 @@ static void remap_sources(ssa_cf_node* node, ir_operand* sources, int source_cou
 
 static void declare_destinations(ssa_cf_node* node, ir_operand* destinations, int destination_count, int time)
 {
-    ssa_context* context = node->ir;
+    ssa_context* context = node->context;
 
     for (int i = 0; i < destination_count; ++i)
     {
@@ -240,7 +245,7 @@ void append_to_hashset(std::unordered_set<uint64_t>* result, std::vector<uint64_
     }
 }
 
-static void append_usage_data(std::unordered_map<uint64_t, std::unordered_set<ssa_cf_node*>>* usage, ssa_cf_node* node, ir_operand* operands, int count)
+static void append_usage_data(std::unordered_map<uint64_t, std::unordered_set<ssa_cf_node*>>* usage, std::unordered_map<uint64_t, std::unordered_map<ssa_cf_node*, uint64_t>>* total_register_usage_count, ssa_cf_node* node, ir_operand* operands, int count)
 {
     for (int i = 0; i < count; ++i)
     {
@@ -249,18 +254,26 @@ static void append_usage_data(std::unordered_map<uint64_t, std::unordered_set<ss
         if (ir_operand::is_constant(&working))
             continue;
 
-        (*usage)[working.value].insert(node);
+        if (usage != nullptr)
+        {
+            (*usage)[working.value].insert(node);
+        }
+
+        if (total_register_usage_count != nullptr)
+        {
+            (*total_register_usage_count)[working.value][node]++;
+        }
     }
 }
 
-static void append_usage_data_global(std::unordered_map<uint64_t, std::unordered_set<ssa_cf_node*>>* usage, ssa_cf_node* node)
+static void append_usage_data_global(std::unordered_map<uint64_t, std::unordered_set<ssa_cf_node*>>* usage,std::unordered_map<uint64_t, std::unordered_map<ssa_cf_node*, uint64_t>>* total_register_usage_count, ssa_cf_node* node)
 {
     for (auto i = node->raw_node->entry_instruction; i != node->raw_node->final_instruction->next; i = i->next)
     {
         auto working = i->data;
 
-        append_usage_data(usage, node, working.destinations.data, working.destinations.count);
-        append_usage_data(usage, node, working.sources.data, working.sources.count);
+        append_usage_data(usage, total_register_usage_count, node, working.destinations.data, working.destinations.count);
+        append_usage_data(usage, total_register_usage_count, node, working.sources.data, working.sources.count);
     }
 }
 
@@ -394,6 +407,404 @@ static void linier_scan_register_allocator_pass(ir_operation_block* source)
     //std::cin.get();
 }
 
+static void replace_sources_if_same(ir_operand* to_replace_buffer, int to_replace_count,int old_register, ir_operand new_operand)
+{
+    for (int i = 0; i < to_replace_count; ++i)
+    {
+        ir_operand* to_replace = &to_replace_buffer[i];
+
+        if (ir_operand::is_constant(to_replace))
+            continue;
+
+        if (to_replace->value != old_register)
+            continue;
+
+        to_replace_buffer[i] = ir_operand::copy_new_raw_size(new_operand, to_replace->meta_data);
+    }
+}
+
+static bool check_size_greater(ir_operand* check, int to_replace_count,int old_register, int size_check)
+{
+    for (int i = 0; i < to_replace_count; ++i)
+    {
+        ir_operand* to_check = &check[i];
+
+        if (ir_operand::is_constant(to_check))
+            continue;
+
+        if (to_check->value != old_register)
+            continue;
+
+        if (to_check->meta_data > size_check)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool check_if_local_used(ir_operand* check, int to_replace_count,int old_register)
+{
+    for (int i = 0; i < to_replace_count; ++i)
+    {
+        ir_operand* to_check = &check[i];
+
+        if (ir_operand::is_constant(to_check))
+            continue;
+
+        if (to_check->value == old_register)
+            return true;
+    }
+
+    return false;
+}
+
+static void set_operand(ir_operation* operation, ir_operand new_opernad)
+{
+    operation->instruction = ir_move;
+    operation->sources[0] = ir_operand::copy_new_raw_size(new_opernad, operation->sources[0].meta_data);
+
+    operation->sources.count = 1;    
+    operation->destinations.count = 1;
+}
+
+static bool check_constant(ir_operand check, uint64_t value)
+{
+    if (!ir_operand::is_constant(&check))
+        return false;
+
+    return check.value == value;
+}
+
+static uint64_t get_mask(int size)
+{
+    switch (size)
+    {
+        case int8:  return UINT8_MAX;
+        case int16: return UINT16_MAX;
+        case int32: return UINT32_MAX;
+        case int64: return UINT64_MAX;
+    }
+
+    throw_error();
+}
+
+static bool perform_move_propagation(ssa_cf_node* node)
+{
+    bool done = true;
+
+    ssa_context* ctx = node->context;
+
+    for (auto i = node->raw_node->entry_instruction; i != node->raw_node->final_instruction->next; i = i->next)
+    {
+        auto working_instruction = i->data;
+
+        if (working_instruction.instruction != ir_move)
+            continue;
+
+        ir_operand destination = i->data.destinations[0];
+
+        if (is_global(ctx, destination))
+            continue;
+
+        //TODO: look for zero extends.
+        if (ir_operand::get_raw_size(&destination) < int64)
+        {
+            int working_size = destination.meta_data;
+
+            bool is_zero_extend = false;
+
+            for (auto s = i->next; s != nullptr; s = s->next)
+            {
+                is_zero_extend |= check_size_greater(s->data.sources.data, s->data.sources.count,destination.value, working_size);
+
+                if (is_zero_extend)
+                    break;
+            }
+
+            if (is_zero_extend)
+            {
+                continue;
+            }
+        }
+
+        for (auto s = i->next; s != nullptr; s = s->next)
+        {
+            replace_sources_if_same(s->data.sources.data, s->data.sources.count,destination.value, i->data.sources[0]);
+
+            if (s == node->raw_node->final_instruction)
+                break;
+        }
+
+        i->data.instruction = ir_no_operation;
+        i->data.destinations.count = 0;
+        i->data.sources.count = 0;
+
+        done = false;
+    }
+
+    return done;
+}
+
+static bool perform_global_move_propagation(ssa_cf_node* node, std::unordered_map<uint64_t, std::unordered_map<ssa_cf_node*, uint64_t>>* usage_count_map)
+{
+    bool done = true;
+
+    ssa_context* ctx = node->context;
+
+    for (auto i = node->raw_node->entry_instruction; i != node->raw_node->final_instruction->next; i = i->next)
+    {
+        auto working_instruction = i->data;
+
+        if (working_instruction.instruction != ir_move)
+            continue;
+
+        ir_operand destination = i->data.destinations[0];
+
+        if (!is_global(ctx, destination))
+            continue;
+
+        ir_operand source = i->data.sources[0];
+
+        if (ir_operand::is_constant(&source))
+            continue;
+
+        if (is_global(ctx, source))
+            continue;
+
+        ir_operand* to_replace = nullptr;
+
+        int usage_count = 0;
+
+        if ((*usage_count_map)[source.value][node] > 1)
+        {
+            continue;
+        }
+
+        for (auto s = i->prev; s != nullptr; s = s->prev)
+        {
+            ir_operation* check_instruction = &s->data;
+
+            if (check_instruction->destinations.count != 1)
+                continue;
+
+            ir_operand destination_check = check_instruction->destinations[0];
+
+            if (destination_check.value == source.value && destination_check.meta_data <= source.meta_data)
+            {
+                to_replace = &check_instruction->destinations[0];
+
+                break;
+            }
+
+            if (s == node->raw_node->entry_instruction)
+                break;
+
+            if (s->data.instruction == ir_mark_label)
+            {
+                throw_error();
+            }
+        }
+
+        if (to_replace == nullptr)
+        {
+            continue;
+        }
+
+        if (usage_count != 0)
+            break;
+
+        to_replace->value = destination.value;
+
+        i->data.instruction = ir_no_operation;
+        i->data.destinations.count = 0;
+        i->data.sources.count = 0;
+
+        done = false;
+    }
+
+    return done;
+}
+
+static bool perform_math_propagation(ssa_cf_node* node)
+{
+    bool done = true;
+
+    ssa_context* ctx = node->context;
+
+    for (auto i = node->raw_node->entry_instruction; i != node->raw_node->final_instruction->next; i = i->next)
+    {
+        ir_operation* working_instruction = &i->data;
+
+        ir_operand* destinations = i->data.destinations.data;
+        ir_operand* sources = i->data.sources.data;
+
+        switch (working_instruction->instruction)
+        {
+            case ir_shift_left:
+            case ir_shift_right_unsigned:
+            case ir_shift_right_signed:
+            {
+                if (check_constant(sources[1], 0))
+                {
+                    set_operand(working_instruction, sources[0]);
+
+                    done = false;
+                }
+
+            }; break;
+
+            case ir_add:
+            {
+                if (check_constant(sources[0], 0))
+                {
+                    set_operand(working_instruction, sources[1]);
+
+                    done = false;
+                }
+                else if (check_constant(sources[1], 0))
+                {
+                    set_operand(working_instruction, sources[0]);
+
+                    done = false;
+                }
+                else if (check_constant(sources[1], 1))
+                {
+                    working_instruction->instruction = ir_incrament;
+                    working_instruction->sources.count = 1;
+
+                    done = false;
+                }
+
+            }; break;
+
+            case ir_subtract:
+            {   
+                if (check_constant(sources[0], 0))
+                {
+                    working_instruction->instruction = ir_negate;
+                    working_instruction->sources.count = 1;
+                    
+                    sources[0] = sources[1];
+
+                    done = false;
+                }
+                else if (check_constant(sources[1], 0))
+                {
+                    set_operand(working_instruction, sources[0]);
+
+                    done = false;
+                }
+                else if (check_constant(sources[1], 1))
+                {
+                    working_instruction->instruction = ir_decrament;
+                    working_instruction->sources.count = 1;
+
+                    done = false;
+                }
+            }; break;
+
+            case ir_bitwise_and:
+            {
+                if (check_constant(sources[0], 0) || check_constant(sources[1], 0))
+                {
+                    set_operand(working_instruction, ir_operand::create_con(0));
+
+                    done = false;
+                }
+
+            }; break;
+
+            case ir_bitwise_or:
+            {
+                if (check_constant(sources[0], 0))
+                {
+                    set_operand(working_instruction, sources[1]);
+
+                    done = false;
+                }
+                else if (check_constant(sources[1], 0))
+                {
+                    set_operand(working_instruction, sources[0]);
+
+                    done = false;
+                }
+
+            }; break;
+
+            case ir_bitwise_exclusive_or:
+            {
+                if (check_constant(sources[0], 0))
+                {
+                    set_operand(working_instruction, sources[1]);
+
+                    done = false;
+                }
+                else if (check_constant(sources[1], 0))
+                {
+                    set_operand(working_instruction, sources[0]);
+
+                    done = false;
+                }
+            }; break;
+
+            case ir_bitwise_not:
+            {
+                if (ir_operand::is_constant(&sources[0]))
+                {
+                    set_operand(working_instruction, ir_operand::create_con(~sources[0].value));
+
+                    done = false;
+                }
+            }; break;
+
+            case ir_incrament:
+            {
+                if (ir_operand::is_constant(&sources[0]))
+                {
+                    set_operand(working_instruction, ir_operand::create_con(sources[0].value + 1));
+
+                    done = false;
+                }
+            }; break;
+
+            case ir_decrament:
+            {
+                if (ir_operand::is_constant(&sources[0]))
+                {
+                    set_operand(working_instruction, ir_operand::create_con(sources[0].value - 1));
+
+                    done = false;
+                }
+            }; break;
+
+            case ir_negate:
+            {
+                if (ir_operand::is_constant(&sources[0]))
+                {
+                    set_operand(working_instruction, ir_operand::create_con(-sources[0].value));
+
+                    done = false;
+                }
+            }; break;
+
+            case ir_logical_not:
+            {
+                if (ir_operand::is_constant(&sources[0]))
+                {
+                    set_operand(working_instruction, ir_operand::create_con(!sources[0].value));
+
+                    done = false;
+                }
+            }; break;
+
+        }
+    }
+
+    return done;
+}
+
 void ssa_construct_and_optimize(ir_operation_block* source, compiler_flags flags)
 {
     ir_control_flow_graph* raw_cfg;
@@ -409,6 +820,8 @@ void ssa_construct_and_optimize(ir_operation_block* source, compiler_flags flags
     int count = 0;
 
     int size_counts[2];
+
+    //ir_operation_block::log(source);
 
     ir_operation_block::clamp_operands(source, true, size_counts);
 
@@ -478,10 +891,9 @@ void ssa_construct_and_optimize(ir_operation_block* source, compiler_flags flags
     ctx.local_bottom = 0;
 
     std::unordered_map<uint64_t, std::unordered_set<ssa_cf_node*>> register_usage_map;
-
     for (int i = 0; i < count; ++i)
     {
-        append_usage_data_global(&register_usage_map, &ssa_node_store[i]);
+        append_usage_data_global(&register_usage_map, nullptr, &ssa_node_store[i]);
     }
 
     for (auto i : register_usage_map)
@@ -501,6 +913,35 @@ void ssa_construct_and_optimize(ir_operation_block* source, compiler_flags flags
     {
         remap_ssa_sources(&ctx, &ssa_node_store[i]);
     }
+
+    std::unordered_map<uint64_t, std::unordered_map<ssa_cf_node*, uint64_t>> total_register_usage_count;
+
+    for (int i = 0; i < count; ++i)
+    {
+        append_usage_data_global(nullptr, &total_register_usage_count, &ssa_node_store[i]);
+    }
+
+    //ir_operation_block::log(source);
+
+    if (flags & compiler_flags::mathmatical_fold)
+    {
+        while (true)
+        {
+            bool done = true;
+
+            for (int i = 0; i < count; ++i)
+            {
+                ssa_cf_node* working_node = &ssa_node_store[i];
+
+                done &= perform_move_propagation(working_node);
+                done &= perform_math_propagation(working_node);
+                done &= perform_global_move_propagation(working_node, &total_register_usage_count);
+            }
+
+            if (done)
+                break;
+        }
+    } 
 
     linier_scan_register_allocator_pass(source);
 }

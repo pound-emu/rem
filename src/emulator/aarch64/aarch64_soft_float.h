@@ -10,9 +10,9 @@
 #include <exception>
 #include <string.h>
 
-typedef bool            boolean;
-typedef long double     real;
-typedef int64_t         integer; 
+typedef bool        boolean;
+typedef long double real;
+typedef int64_t     integer; 
 
 #define bits(N) meta_number
 #define FALSE   false

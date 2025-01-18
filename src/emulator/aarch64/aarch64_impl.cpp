@@ -86,6 +86,36 @@ static ir_operand copy_new_raw_size(ssa_emit_context* ctx, ir_operand source, ui
 	}
 }
 
+template <typename R>
+R intrinsic_unary_interpreter(interpreter_data* ctx, uint64_t instruction, R source)
+{
+
+}
+
+template <typename R>
+R intrinsic_binary_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, R source_1)
+{
+
+}
+
+template <typename R>
+R intrinsic_binary_imm_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, uint64_t source_1)
+{
+
+}
+
+template <typename R>
+R intrinsic_ternary_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, R source_1, R source_2)
+{
+
+}
+
+template <typename R>
+R intrinsic_ternary_imm_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, R source_1, uint64_t source_2)
+{
+
+}
+
 static void call_add_subtract_imm12_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int sf = (instruction >> 31) & 1;
@@ -924,6 +954,778 @@ static void emit_load_store_exclusive_ordered_jit(ssa_emit_context* ctx, uint32_
 	load_store_exclusive_ordered_jit(ctx, size, ordered, L, Rs, o0, Rn, Rt);
 }
 
+static void call_conversion_between_floating_point_and_fixed_point_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int S = (instruction >> 29) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int rmode = (instruction >> 19) & 3;
+	int opcode = (instruction >> 16) & 7;
+	int scale = (instruction >> 10) & 63;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	conversion_between_floating_point_and_fixed_point_interpreter(ctx, sf, S, ftype, rmode, opcode, scale, Rn, Rd);
+}
+
+static void emit_conversion_between_floating_point_and_fixed_point_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int S = (instruction >> 29) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int rmode = (instruction >> 19) & 3;
+	int opcode = (instruction >> 16) & 7;
+	int scale = (instruction >> 10) & 63;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	conversion_between_floating_point_and_fixed_point_jit(ctx, sf, S, ftype, rmode, opcode, scale, Rn, Rd);
+}
+
+static void call_fcvt_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int opc = (instruction >> 15) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvt_interpreter(ctx, ftype, opc, Rn, Rd);
+}
+
+static void emit_fcvt_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int opc = (instruction >> 15) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvt_jit(ctx, ftype, opc, Rn, Rd);
+}
+
+static void call_fcvtz_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvtz_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void emit_fcvtz_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvtz_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void call_fcvtn_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvtn_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void emit_fcvtn_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvtn_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void call_fcvta_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvta_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void emit_fcvta_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvta_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void call_fcvtm_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvtm_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void emit_fcvtm_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvtm_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void call_frintp_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frintp_scalar_interpreter(ctx, ftype, Rn, Rd);
+}
+
+static void emit_frintp_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frintp_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
+static void call_frintm_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frintm_scalar_interpreter(ctx, ftype, Rn, Rd);
+}
+
+static void emit_frintm_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frintm_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
+static void call_fcvtp_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvtp_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void emit_fcvtp_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sf = (instruction >> 31) & 1;
+	int ftype = (instruction >> 22) & 3;
+	int U = (instruction >> 16) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fcvtp_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
+}
+
+static void call_fadd_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fadd_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fadd_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fadd_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fmul_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fmul_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fsub_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsub_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fsub_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsub_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fdiv_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fdiv_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_fdiv_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fdiv_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fmul_accumulate_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int neg = (instruction >> 23) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_vector_interpreter(ctx, Q, neg, sz, Rm, Rn, Rd);
+}
+
+static void emit_fmul_accumulate_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int neg = (instruction >> 23) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_vector_jit(ctx, Q, neg, sz, Rm, Rn, Rd);
+}
+
+static void call_faddp_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	faddp_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_faddp_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	faddp_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_frsqrte_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrte_vector_interpreter(ctx, Q, sz, Rn, Rd);
+}
+
+static void emit_frsqrte_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrte_vector_jit(ctx, Q, sz, Rn, Rd);
+}
+
+static void call_frsqrts_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrts_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_frsqrts_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrts_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_frecps_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frecps_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void emit_frecps_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frecps_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
+}
+
+static void call_fmul_scalar_by_element_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_scalar_by_element_interpreter(ctx, sz, L, M, Rm, H, Rn, Rd);
+}
+
+static void emit_fmul_scalar_by_element_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_scalar_by_element_jit(ctx, sz, L, M, Rm, H, Rn, Rd);
+}
+
+static void call_fmul_vector_by_element_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_vector_by_element_interpreter(ctx, Q, sz, L, M, Rm, H, Rn, Rd);
+}
+
+static void emit_fmul_vector_by_element_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_vector_by_element_jit(ctx, Q, sz, L, M, Rm, H, Rn, Rd);
+}
+
+static void call_fmul_accumulate_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int neg = (instruction >> 14) & 1;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_scalar_interpreter(ctx, sz, L, M, Rm, neg, H, Rn, Rd);
+}
+
+static void emit_fmul_accumulate_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int neg = (instruction >> 14) & 1;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_scalar_jit(ctx, sz, L, M, Rm, neg, H, Rn, Rd);
+}
+
+static void call_fmul_accumulate_element_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int neg = (instruction >> 14) & 1;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_element_interpreter(ctx, Q, sz, L, M, Rm, neg, H, Rn, Rd);
+}
+
+static void emit_fmul_accumulate_element_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int L = (instruction >> 21) & 1;
+	int M = (instruction >> 20) & 1;
+	int Rm = (instruction >> 16) & 15;
+	int neg = (instruction >> 14) & 1;
+	int H = (instruction >> 11) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_accumulate_element_jit(ctx, Q, sz, L, M, Rm, neg, H, Rn, Rd);
+}
+
+static void call_faddp_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	faddp_scalar_interpreter(ctx, sz, Rn, Rd);
+}
+
+static void emit_faddp_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	faddp_scalar_jit(ctx, sz, Rn, Rd);
+}
+
+static void call_fadd_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fadd_scalar_interpreter(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void emit_fadd_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fadd_scalar_jit(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void call_fsub_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsub_scalar_interpreter(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void emit_fsub_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsub_scalar_jit(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void call_fmul_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_scalar_interpreter(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void emit_fmul_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmul_scalar_jit(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void call_fdiv_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fdiv_scalar_interpreter(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void emit_fdiv_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fdiv_scalar_jit(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void call_fmax_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmax_scalar_interpreter(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void emit_fmax_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmax_scalar_jit(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void call_fmin_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmin_scalar_interpreter(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void emit_fmin_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmin_scalar_jit(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void call_fmaxnm_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmaxnm_scalar_interpreter(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void emit_fmaxnm_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fmaxnm_scalar_jit(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void call_fminnm_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fminnm_scalar_interpreter(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void emit_fminnm_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fminnm_scalar_jit(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void call_fnmul_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fnmul_scalar_interpreter(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void emit_fnmul_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rm = (instruction >> 16) & 31;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fnmul_scalar_jit(ctx, ftype, Rm, Rn, Rd);
+}
+
+static void call_fabs_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fabs_scalar_interpreter(ctx, ftype, Rn, Rd);
+}
+
+static void emit_fabs_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fabs_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
+static void call_fneg_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fneg_scalar_interpreter(ctx, ftype, Rn, Rd);
+}
+
+static void emit_fneg_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fneg_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
+static void call_fneg_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fneg_vector_interpreter(ctx, Q, sz, Rn, Rd);
+}
+
+static void emit_fneg_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fneg_vector_jit(ctx, Q, sz, Rn, Rd);
+}
+
+static void call_fsqrt_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsqrt_scalar_interpreter(ctx, ftype, Rn, Rd);
+}
+
+static void emit_fsqrt_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsqrt_scalar_jit(ctx, ftype, Rn, Rd);
+}
+
+static void call_fsqrt_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsqrt_vector_interpreter(ctx, Q, sz, Rn, Rd);
+}
+
+static void emit_fsqrt_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	fsqrt_vector_jit(ctx, Q, sz, Rn, Rd);
+}
+
+static void call_frecpe_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frecpe_vector_interpreter(ctx, Q, sz, Rn, Rd);
+}
+
+static void emit_frecpe_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int Q = (instruction >> 30) & 1;
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frecpe_vector_jit(ctx, Q, sz, Rn, Rd);
+}
+
+static void call_frsqrte_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrte_scalar_interpreter(ctx, sz, Rn, Rd);
+}
+
+static void emit_frsqrte_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int sz = (instruction >> 22) & 1;
+	int Rn = (instruction >> 5) & 31;
+	int Rd = (instruction >> 0) & 31;
+	frsqrte_scalar_jit(ctx, sz, Rn, Rd);
+}
+
+static void call_fmov_scalar_immediate_interpreter(interpreter_data* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int imm8 = (instruction >> 13) & 255;
+	int Rd = (instruction >> 0) & 31;
+	fmov_scalar_immediate_interpreter(ctx, ftype, imm8, Rd);
+}
+
+static void emit_fmov_scalar_immediate_jit(ssa_emit_context* ctx, uint32_t instruction)
+{
+	int ftype = (instruction >> 22) & 3;
+	int imm8 = (instruction >> 13) & 255;
+	int Rd = (instruction >> 0) & 31;
+	fmov_scalar_immediate_jit(ctx, ftype, imm8, Rd);
+}
+
 static void call_dup_general_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int Q = (instruction >> 30) & 1;
@@ -1130,52 +1932,6 @@ static void emit_convert_to_float_vector_jit(ssa_emit_context* ctx, uint32_t ins
 	int Rn = (instruction >> 5) & 31;
 	int Rd = (instruction >> 0) & 31;
 	convert_to_float_vector_jit(ctx, Q, U, sz, Rn, Rd);
-}
-
-static void call_floating_point_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rm = (instruction >> 16) & 31;
-	int opcode = (instruction >> 12) & 15;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	floating_point_scalar_interpreter(ctx, ftype, Rm, opcode, Rn, Rd);
-}
-
-static void emit_floating_point_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rm = (instruction >> 16) & 31;
-	int opcode = (instruction >> 12) & 15;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	floating_point_scalar_jit(ctx, ftype, Rm, opcode, Rn, Rd);
-}
-
-static void call_conversion_between_floating_point_and_fixed_point_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int S = (instruction >> 29) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int rmode = (instruction >> 19) & 3;
-	int opcode = (instruction >> 16) & 7;
-	int scale = (instruction >> 10) & 63;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	conversion_between_floating_point_and_fixed_point_interpreter(ctx, sf, S, ftype, rmode, opcode, scale, Rn, Rd);
-}
-
-static void emit_conversion_between_floating_point_and_fixed_point_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int S = (instruction >> 29) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int rmode = (instruction >> 19) & 3;
-	int opcode = (instruction >> 16) & 7;
-	int scale = (instruction >> 10) & 63;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	conversion_between_floating_point_and_fixed_point_jit(ctx, sf, S, ftype, rmode, opcode, scale, Rn, Rd);
 }
 
 static void call_shl_immedaite_interpreter(interpreter_data* ctx, uint32_t instruction)
@@ -1994,142 +2750,6 @@ static void emit_floating_point_conditional_select_jit(ssa_emit_context* ctx, ui
 	floating_point_conditional_select_jit(ctx, ftype, Rm, cond, Rn, Rd);
 }
 
-static void call_fmov_scalar_immediate_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int imm8 = (instruction >> 13) & 255;
-	int Rd = (instruction >> 0) & 31;
-	fmov_scalar_immediate_interpreter(ctx, ftype, imm8, Rd);
-}
-
-static void emit_fmov_scalar_immediate_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int imm8 = (instruction >> 13) & 255;
-	int Rd = (instruction >> 0) & 31;
-	fmov_scalar_immediate_jit(ctx, ftype, imm8, Rd);
-}
-
-static void call_fcvt_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int opc = (instruction >> 15) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvt_interpreter(ctx, ftype, opc, Rn, Rd);
-}
-
-static void emit_fcvt_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int opc = (instruction >> 15) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvt_jit(ctx, ftype, opc, Rn, Rd);
-}
-
-static void call_fabs_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fabs_scalar_interpreter(ctx, ftype, Rn, Rd);
-}
-
-static void emit_fabs_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fabs_scalar_jit(ctx, ftype, Rn, Rd);
-}
-
-static void call_fneg_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fneg_scalar_interpreter(ctx, ftype, Rn, Rd);
-}
-
-static void emit_fneg_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fneg_scalar_jit(ctx, ftype, Rn, Rd);
-}
-
-static void call_fneg_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fneg_vector_interpreter(ctx, Q, sz, Rn, Rd);
-}
-
-static void emit_fneg_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fneg_vector_jit(ctx, Q, sz, Rn, Rd);
-}
-
-static void call_fsqrt_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fsqrt_scalar_interpreter(ctx, ftype, Rn, Rd);
-}
-
-static void emit_fsqrt_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fsqrt_scalar_jit(ctx, ftype, Rn, Rd);
-}
-
-static void call_fsqrt_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fsqrt_vector_interpreter(ctx, Q, sz, Rn, Rd);
-}
-
-static void emit_fsqrt_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fsqrt_vector_jit(ctx, Q, sz, Rn, Rd);
-}
-
-static void call_frecpe_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frecpe_vector_interpreter(ctx, Q, sz, Rn, Rd);
-}
-
-static void emit_frecpe_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frecpe_vector_jit(ctx, Q, sz, Rn, Rd);
-}
-
 static void call_fcmp_interpreter(interpreter_data* ctx, uint32_t instruction)
 {
 	int ftype = (instruction >> 22) & 3;
@@ -2166,454 +2786,6 @@ static void emit_fccmp_jit(ssa_emit_context* ctx, uint32_t instruction)
 	int Rn = (instruction >> 5) & 31;
 	int nzcv = (instruction >> 0) & 15;
 	fccmp_jit(ctx, ftype, Rm, cond, Rn, nzcv);
-}
-
-static void call_fcvtz_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvtz_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void emit_fcvtz_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvtz_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void call_fcvtn_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvtn_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void emit_fcvtn_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvtn_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void call_fcvta_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvta_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void emit_fcvta_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvta_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void call_fcvtm_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvtm_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void emit_fcvtm_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvtm_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void call_fadd_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fadd_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void emit_fadd_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fadd_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void call_fmul_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void emit_fmul_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void call_fsub_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fsub_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void emit_fsub_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fsub_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void call_fdiv_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fdiv_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void emit_fdiv_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fdiv_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void call_fmul_accumulate_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int neg = (instruction >> 23) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_accumulate_vector_interpreter(ctx, Q, neg, sz, Rm, Rn, Rd);
-}
-
-static void emit_fmul_accumulate_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int neg = (instruction >> 23) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_accumulate_vector_jit(ctx, Q, neg, sz, Rm, Rn, Rd);
-}
-
-static void call_faddp_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	faddp_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void emit_faddp_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	faddp_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void call_frsqrte_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frsqrte_scalar_interpreter(ctx, sz, Rn, Rd);
-}
-
-static void emit_frsqrte_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frsqrte_scalar_jit(ctx, sz, Rn, Rd);
-}
-
-static void call_frsqrte_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frsqrte_vector_interpreter(ctx, Q, sz, Rn, Rd);
-}
-
-static void emit_frsqrte_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frsqrte_vector_jit(ctx, Q, sz, Rn, Rd);
-}
-
-static void call_frsqrts_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frsqrts_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void emit_frsqrts_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frsqrts_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void call_frecps_vector_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frecps_vector_interpreter(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void emit_frecps_vector_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int Rm = (instruction >> 16) & 31;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frecps_vector_jit(ctx, Q, sz, Rm, Rn, Rd);
-}
-
-static void call_fmul_scalar_by_element_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sz = (instruction >> 22) & 1;
-	int L = (instruction >> 21) & 1;
-	int M = (instruction >> 20) & 1;
-	int Rm = (instruction >> 16) & 15;
-	int H = (instruction >> 11) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_scalar_by_element_interpreter(ctx, sz, L, M, Rm, H, Rn, Rd);
-}
-
-static void emit_fmul_scalar_by_element_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sz = (instruction >> 22) & 1;
-	int L = (instruction >> 21) & 1;
-	int M = (instruction >> 20) & 1;
-	int Rm = (instruction >> 16) & 15;
-	int H = (instruction >> 11) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_scalar_by_element_jit(ctx, sz, L, M, Rm, H, Rn, Rd);
-}
-
-static void call_fmul_vector_by_element_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int L = (instruction >> 21) & 1;
-	int M = (instruction >> 20) & 1;
-	int Rm = (instruction >> 16) & 15;
-	int H = (instruction >> 11) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_vector_by_element_interpreter(ctx, Q, sz, L, M, Rm, H, Rn, Rd);
-}
-
-static void emit_fmul_vector_by_element_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int L = (instruction >> 21) & 1;
-	int M = (instruction >> 20) & 1;
-	int Rm = (instruction >> 16) & 15;
-	int H = (instruction >> 11) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_vector_by_element_jit(ctx, Q, sz, L, M, Rm, H, Rn, Rd);
-}
-
-static void call_fmul_accumulate_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sz = (instruction >> 22) & 1;
-	int L = (instruction >> 21) & 1;
-	int M = (instruction >> 20) & 1;
-	int Rm = (instruction >> 16) & 15;
-	int neg = (instruction >> 14) & 1;
-	int H = (instruction >> 11) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_accumulate_scalar_interpreter(ctx, sz, L, M, Rm, neg, H, Rn, Rd);
-}
-
-static void emit_fmul_accumulate_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sz = (instruction >> 22) & 1;
-	int L = (instruction >> 21) & 1;
-	int M = (instruction >> 20) & 1;
-	int Rm = (instruction >> 16) & 15;
-	int neg = (instruction >> 14) & 1;
-	int H = (instruction >> 11) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_accumulate_scalar_jit(ctx, sz, L, M, Rm, neg, H, Rn, Rd);
-}
-
-static void call_fmul_accumulate_element_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int L = (instruction >> 21) & 1;
-	int M = (instruction >> 20) & 1;
-	int Rm = (instruction >> 16) & 15;
-	int neg = (instruction >> 14) & 1;
-	int H = (instruction >> 11) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_accumulate_element_interpreter(ctx, Q, sz, L, M, Rm, neg, H, Rn, Rd);
-}
-
-static void emit_fmul_accumulate_element_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int Q = (instruction >> 30) & 1;
-	int sz = (instruction >> 22) & 1;
-	int L = (instruction >> 21) & 1;
-	int M = (instruction >> 20) & 1;
-	int Rm = (instruction >> 16) & 15;
-	int neg = (instruction >> 14) & 1;
-	int H = (instruction >> 11) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fmul_accumulate_element_jit(ctx, Q, sz, L, M, Rm, neg, H, Rn, Rd);
-}
-
-static void call_frintp_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frintp_scalar_interpreter(ctx, ftype, Rn, Rd);
-}
-
-static void emit_frintp_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frintp_scalar_jit(ctx, ftype, Rn, Rd);
-}
-
-static void call_frintm_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frintm_scalar_interpreter(ctx, ftype, Rn, Rd);
-}
-
-static void emit_frintm_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int ftype = (instruction >> 22) & 3;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	frintm_scalar_jit(ctx, ftype, Rn, Rd);
-}
-
-static void call_fcvtp_scalar_integer_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvtp_scalar_integer_interpreter(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void emit_fcvtp_scalar_integer_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sf = (instruction >> 31) & 1;
-	int ftype = (instruction >> 22) & 3;
-	int U = (instruction >> 16) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	fcvtp_scalar_integer_jit(ctx, sf, ftype, U, Rn, Rd);
-}
-
-static void call_faddp_scalar_interpreter(interpreter_data* ctx, uint32_t instruction)
-{
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	faddp_scalar_interpreter(ctx, sz, Rn, Rd);
-}
-
-static void emit_faddp_scalar_jit(ssa_emit_context* ctx, uint32_t instruction)
-{
-	int sz = (instruction >> 22) & 1;
-	int Rn = (instruction >> 5) & 31;
-	int Rd = (instruction >> 0) & 31;
-	faddp_scalar_jit(ctx, sz, Rn, Rd);
 }
 
 void init_aarch64_decoder(guest_process* process)
@@ -2660,6 +2832,46 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "--111-01------------------------", (void*)emit_load_store_register_imm_unsigned_jit, (void*)call_load_store_register_imm_unsigned_interpreter,nullptr, "load_store_register_imm_unsigned");
 	append_table(process, "--111-00--1---------10----------", (void*)emit_load_store_register_offset_jit, (void*)call_load_store_register_offset_interpreter,nullptr, "load_store_register_offset");
 	append_table(process, "--001000--0------11111----------", (void*)emit_load_store_exclusive_ordered_jit, (void*)call_load_store_exclusive_ordered_interpreter,nullptr, "load_store_exclusive_ordered");
+	append_table(process, "-0-11110--0---------------------", (void*)emit_conversion_between_floating_point_and_fixed_point_jit, (void*)call_conversion_between_floating_point_and_fixed_point_interpreter,nullptr, "conversion_between_floating_point_and_fixed_point");
+	append_table(process, "00011110--10001--10000----------", (void*)emit_fcvt_jit, (void*)call_fcvt_interpreter,nullptr, "fcvt");
+	append_table(process, "-0011110--11100-000000----------", (void*)emit_fcvtz_scalar_integer_jit, (void*)call_fcvtz_scalar_integer_interpreter,nullptr, "fcvtz_scalar_integer");
+	append_table(process, "-0011110--10000-000000----------", (void*)emit_fcvtn_scalar_integer_jit, (void*)call_fcvtn_scalar_integer_interpreter,nullptr, "fcvtn_scalar_integer");
+	append_table(process, "-0011110--10010-000000----------", (void*)emit_fcvta_scalar_integer_jit, (void*)call_fcvta_scalar_integer_interpreter,nullptr, "fcvta_scalar_integer");
+	append_table(process, "-0011110--11000-000000----------", (void*)emit_fcvtm_scalar_integer_jit, (void*)call_fcvtm_scalar_integer_interpreter,nullptr, "fcvtm_scalar_integer");
+	append_table(process, "00011110--100100110000----------", (void*)emit_frintp_scalar_jit, (void*)call_frintp_scalar_interpreter,nullptr, "frintp_scalar");
+	append_table(process, "00011110--100101010000----------", (void*)emit_frintm_scalar_jit, (void*)call_frintm_scalar_interpreter,nullptr, "frintm_scalar");
+	append_table(process, "-0011110--10100-000000----------", (void*)emit_fcvtp_scalar_integer_jit, (void*)call_fcvtp_scalar_integer_interpreter,nullptr, "fcvtp_scalar_integer");
+	append_table(process, "0-0011100-1-----110101----------", (void*)emit_fadd_vector_jit, (void*)call_fadd_vector_interpreter,nullptr, "fadd_vector");
+	append_table(process, "0-1011100-1-----110111----------", (void*)emit_fmul_vector_jit, (void*)call_fmul_vector_interpreter,nullptr, "fmul_vector");
+	append_table(process, "0-0011101-1-----110101----------", (void*)emit_fsub_vector_jit, (void*)call_fsub_vector_interpreter,nullptr, "fsub_vector");
+	append_table(process, "0-1011100-1-----111111----------", (void*)emit_fdiv_vector_jit, (void*)call_fdiv_vector_interpreter,nullptr, "fdiv_vector");
+	append_table(process, "0-001110--1-----110011----------", (void*)emit_fmul_accumulate_vector_jit, (void*)call_fmul_accumulate_vector_interpreter,nullptr, "fmul_accumulate_vector");
+	append_table(process, "0-1011100-1-----110101----------", (void*)emit_faddp_vector_jit, (void*)call_faddp_vector_interpreter,nullptr, "faddp_vector");
+	append_table(process, "0-1011101-100001110110----------", (void*)emit_frsqrte_vector_jit, (void*)call_frsqrte_vector_interpreter,nullptr, "frsqrte_vector");
+	append_table(process, "0-0011101-1-----111111----------", (void*)emit_frsqrts_vector_jit, (void*)call_frsqrts_vector_interpreter,nullptr, "frsqrts_vector");
+	append_table(process, "0-0011100-1-----111111----------", (void*)emit_frecps_vector_jit, (void*)call_frecps_vector_interpreter,nullptr, "frecps_vector");
+	append_table(process, "010111111-------1001-0----------", (void*)emit_fmul_scalar_by_element_jit, (void*)call_fmul_scalar_by_element_interpreter,nullptr, "fmul_scalar_by_element");
+	append_table(process, "0-0011111-------1001-0----------", (void*)emit_fmul_vector_by_element_jit, (void*)call_fmul_vector_by_element_interpreter,nullptr, "fmul_vector_by_element");
+	append_table(process, "010111111-------0-01-0----------", (void*)emit_fmul_accumulate_scalar_jit, (void*)call_fmul_accumulate_scalar_interpreter,nullptr, "fmul_accumulate_scalar");
+	append_table(process, "0-0011111-------0-01-0----------", (void*)emit_fmul_accumulate_element_jit, (void*)call_fmul_accumulate_element_interpreter,nullptr, "fmul_accumulate_element");
+	append_table(process, "011111100-110000110110----------", (void*)emit_faddp_scalar_jit, (void*)call_faddp_scalar_interpreter,nullptr, "faddp_scalar");
+	append_table(process, "00011110--1-----001010----------", (void*)emit_fadd_scalar_jit, (void*)call_fadd_scalar_interpreter,nullptr, "fadd_scalar");
+	append_table(process, "00011110--1-----001110----------", (void*)emit_fsub_scalar_jit, (void*)call_fsub_scalar_interpreter,nullptr, "fsub_scalar");
+	append_table(process, "00011110--1-----000010----------", (void*)emit_fmul_scalar_jit, (void*)call_fmul_scalar_interpreter,nullptr, "fmul_scalar");
+	append_table(process, "00011110--1-----000110----------", (void*)emit_fdiv_scalar_jit, (void*)call_fdiv_scalar_interpreter,nullptr, "fdiv_scalar");
+	append_table(process, "00011110--1-----010010----------", (void*)emit_fmax_scalar_jit, (void*)call_fmax_scalar_interpreter,nullptr, "fmax_scalar");
+	append_table(process, "00011110--1-----010110----------", (void*)emit_fmin_scalar_jit, (void*)call_fmin_scalar_interpreter,nullptr, "fmin_scalar");
+	append_table(process, "00011110--1-----011010----------", (void*)emit_fmaxnm_scalar_jit, (void*)call_fmaxnm_scalar_interpreter,nullptr, "fmaxnm_scalar");
+	append_table(process, "00011110--1-----011110----------", (void*)emit_fminnm_scalar_jit, (void*)call_fminnm_scalar_interpreter,nullptr, "fminnm_scalar");
+	append_table(process, "00011110--1-----100010----------", (void*)emit_fnmul_scalar_jit, (void*)call_fnmul_scalar_interpreter,nullptr, "fnmul_scalar");
+	append_table(process, "00011110--100000110000----------", (void*)emit_fabs_scalar_jit, (void*)call_fabs_scalar_interpreter,nullptr, "fabs_scalar");
+	append_table(process, "00011110--100001010000----------", (void*)emit_fneg_scalar_jit, (void*)call_fneg_scalar_interpreter,nullptr, "fneg_scalar");
+	append_table(process, "0-1011101-100000111110----------", (void*)emit_fneg_vector_jit, (void*)call_fneg_vector_interpreter,nullptr, "fneg_vector");
+	append_table(process, "00011110--100001110000----------", (void*)emit_fsqrt_scalar_jit, (void*)call_fsqrt_scalar_interpreter,nullptr, "fsqrt_scalar");
+	append_table(process, "0-1011101-100001111110----------", (void*)emit_fsqrt_vector_jit, (void*)call_fsqrt_vector_interpreter,nullptr, "fsqrt_vector");
+	append_table(process, "0-0011101-100001110110----------", (void*)emit_frecpe_vector_jit, (void*)call_frecpe_vector_interpreter,nullptr, "frecpe_vector");
+	append_table(process, "011111101-100001110110----------", (void*)emit_frsqrte_scalar_jit, (void*)call_frsqrte_scalar_interpreter,nullptr, "frsqrte_scalar");
+	append_table(process, "00011110--1--------10000000-----", (void*)emit_fmov_scalar_immediate_jit, (void*)call_fmov_scalar_immediate_interpreter,nullptr, "fmov_scalar_immediate");
 	append_table(process, "0-001110000-----000011----------", (void*)emit_dup_general_jit, (void*)call_dup_general_interpreter,nullptr, "dup_general");
 	append_table(process, "01011110000-----000001----------", (void*)emit_dup_element_scalar_jit, (void*)call_dup_element_scalar_interpreter,nullptr, "dup_element_scalar");
 	append_table(process, "0-001110000-----000001----------", (void*)emit_dup_element_vector_jit, (void*)call_dup_element_vector_interpreter,nullptr, "dup_element_vector");
@@ -2671,8 +2883,6 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "-0011110--10001-000000----------", (void*)emit_convert_to_float_gp_jit, (void*)call_convert_to_float_gp_interpreter,nullptr, "convert_to_float_gp");
 	append_table(process, "01-111100-100001110110----------", (void*)emit_convert_to_float_vector_scalar_jit, (void*)call_convert_to_float_vector_scalar_interpreter,nullptr, "convert_to_float_vector_scalar");
 	append_table(process, "0--011100-100001110110----------", (void*)emit_convert_to_float_vector_jit, (void*)call_convert_to_float_vector_interpreter,nullptr, "convert_to_float_vector");
-	append_table(process, "00011110--1---------10----------", (void*)emit_floating_point_scalar_jit, (void*)call_floating_point_scalar_interpreter,nullptr, "floating_point_scalar");
-	append_table(process, "-0-11110--0---------------------", (void*)emit_conversion_between_floating_point_and_fixed_point_jit, (void*)call_conversion_between_floating_point_and_fixed_point_interpreter,nullptr, "conversion_between_floating_point_and_fixed_point");
 	append_table(process, "0-0011110-------010101----------", (void*)emit_shl_immedaite_jit, (void*)call_shl_immedaite_interpreter,(void*)help_decode_shl_immedaite, "shl_immedaite");
 	append_table(process, "0-0011110-------000001----------", (void*)emit_sshr_vector_jit, (void*)call_sshr_vector_interpreter,(void*)help_decode_sshr_vector, "sshr_vector");
 	append_table(process, "0--011110-------101001----------", (void*)emit_shll_shll2_jit, (void*)call_shll_shll2_interpreter,(void*)help_decode_shll_shll2, "shll_shll2");
@@ -2712,38 +2922,8 @@ void init_aarch64_decoder(guest_process* process)
 	append_table(process, "0-1011101-1-----111001----------", (void*)emit_fcmgt_vector_register_jit, (void*)call_fcmgt_vector_register_interpreter,nullptr, "fcmgt_vector_register");
 	append_table(process, "0-1011100-1-----111001----------", (void*)emit_fcmge_vector_register_jit, (void*)call_fcmge_vector_register_interpreter,nullptr, "fcmge_vector_register");
 	append_table(process, "00011110--1---------11----------", (void*)emit_floating_point_conditional_select_jit, (void*)call_floating_point_conditional_select_interpreter,nullptr, "floating_point_conditional_select");
-	append_table(process, "00011110--1--------10000000-----", (void*)emit_fmov_scalar_immediate_jit, (void*)call_fmov_scalar_immediate_interpreter,nullptr, "fmov_scalar_immediate");
-	append_table(process, "00011110--10001--10000----------", (void*)emit_fcvt_jit, (void*)call_fcvt_interpreter,nullptr, "fcvt");
-	append_table(process, "00011110--100000110000----------", (void*)emit_fabs_scalar_jit, (void*)call_fabs_scalar_interpreter,nullptr, "fabs_scalar");
-	append_table(process, "00011110--100001010000----------", (void*)emit_fneg_scalar_jit, (void*)call_fneg_scalar_interpreter,nullptr, "fneg_scalar");
-	append_table(process, "0-1011101-100000111110----------", (void*)emit_fneg_vector_jit, (void*)call_fneg_vector_interpreter,nullptr, "fneg_vector");
-	append_table(process, "00011110--100001110000----------", (void*)emit_fsqrt_scalar_jit, (void*)call_fsqrt_scalar_interpreter,nullptr, "fsqrt_scalar");
-	append_table(process, "0-1011101-100001111110----------", (void*)emit_fsqrt_vector_jit, (void*)call_fsqrt_vector_interpreter,nullptr, "fsqrt_vector");
-	append_table(process, "0-0011101-100001110110----------", (void*)emit_frecpe_vector_jit, (void*)call_frecpe_vector_interpreter,nullptr, "frecpe_vector");
 	append_table(process, "00011110--1-----001000-----0-000", (void*)emit_fcmp_jit, (void*)call_fcmp_interpreter,nullptr, "fcmp");
 	append_table(process, "00011110--1---------01-----0----", (void*)emit_fccmp_jit, (void*)call_fccmp_interpreter,nullptr, "fccmp");
-	append_table(process, "-0011110--11100-000000----------", (void*)emit_fcvtz_scalar_integer_jit, (void*)call_fcvtz_scalar_integer_interpreter,nullptr, "fcvtz_scalar_integer");
-	append_table(process, "-0011110--10000-000000----------", (void*)emit_fcvtn_scalar_integer_jit, (void*)call_fcvtn_scalar_integer_interpreter,nullptr, "fcvtn_scalar_integer");
-	append_table(process, "-0011110--10010-000000----------", (void*)emit_fcvta_scalar_integer_jit, (void*)call_fcvta_scalar_integer_interpreter,nullptr, "fcvta_scalar_integer");
-	append_table(process, "-0011110--11000-000000----------", (void*)emit_fcvtm_scalar_integer_jit, (void*)call_fcvtm_scalar_integer_interpreter,nullptr, "fcvtm_scalar_integer");
-	append_table(process, "0-0011100-1-----110101----------", (void*)emit_fadd_vector_jit, (void*)call_fadd_vector_interpreter,nullptr, "fadd_vector");
-	append_table(process, "0-1011100-1-----110111----------", (void*)emit_fmul_vector_jit, (void*)call_fmul_vector_interpreter,nullptr, "fmul_vector");
-	append_table(process, "0-0011101-1-----110101----------", (void*)emit_fsub_vector_jit, (void*)call_fsub_vector_interpreter,nullptr, "fsub_vector");
-	append_table(process, "0-1011100-1-----111111----------", (void*)emit_fdiv_vector_jit, (void*)call_fdiv_vector_interpreter,nullptr, "fdiv_vector");
-	append_table(process, "0-001110--1-----110011----------", (void*)emit_fmul_accumulate_vector_jit, (void*)call_fmul_accumulate_vector_interpreter,nullptr, "fmul_accumulate_vector");
-	append_table(process, "0-1011100-1-----110101----------", (void*)emit_faddp_vector_jit, (void*)call_faddp_vector_interpreter,nullptr, "faddp_vector");
-	append_table(process, "011111101-100001110110----------", (void*)emit_frsqrte_scalar_jit, (void*)call_frsqrte_scalar_interpreter,nullptr, "frsqrte_scalar");
-	append_table(process, "0-1011101-100001110110----------", (void*)emit_frsqrte_vector_jit, (void*)call_frsqrte_vector_interpreter,nullptr, "frsqrte_vector");
-	append_table(process, "0-0011101-1-----111111----------", (void*)emit_frsqrts_vector_jit, (void*)call_frsqrts_vector_interpreter,nullptr, "frsqrts_vector");
-	append_table(process, "0-0011100-1-----111111----------", (void*)emit_frecps_vector_jit, (void*)call_frecps_vector_interpreter,nullptr, "frecps_vector");
-	append_table(process, "010111111-------1001-0----------", (void*)emit_fmul_scalar_by_element_jit, (void*)call_fmul_scalar_by_element_interpreter,nullptr, "fmul_scalar_by_element");
-	append_table(process, "0-0011111-------1001-0----------", (void*)emit_fmul_vector_by_element_jit, (void*)call_fmul_vector_by_element_interpreter,nullptr, "fmul_vector_by_element");
-	append_table(process, "010111111-------0-01-0----------", (void*)emit_fmul_accumulate_scalar_jit, (void*)call_fmul_accumulate_scalar_interpreter,nullptr, "fmul_accumulate_scalar");
-	append_table(process, "0-0011111-------0-01-0----------", (void*)emit_fmul_accumulate_element_jit, (void*)call_fmul_accumulate_element_interpreter,nullptr, "fmul_accumulate_element");
-	append_table(process, "00011110--100100110000----------", (void*)emit_frintp_scalar_jit, (void*)call_frintp_scalar_interpreter,nullptr, "frintp_scalar");
-	append_table(process, "00011110--100101010000----------", (void*)emit_frintm_scalar_jit, (void*)call_frintm_scalar_interpreter,nullptr, "frintm_scalar");
-	append_table(process, "-0011110--10100-000000----------", (void*)emit_fcvtp_scalar_integer_jit, (void*)call_fcvtp_scalar_integer_interpreter,nullptr, "fcvtp_scalar_integer");
-	append_table(process, "011111100-110000110110----------", (void*)emit_faddp_scalar_jit, (void*)call_faddp_scalar_interpreter,nullptr, "faddp_scalar");
 }
 
 uint64_t sign_extend_interpreter(interpreter_data* ctx, uint64_t source, uint64_t count)
@@ -4111,6 +4291,12 @@ uint64_t FPMul_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t op
 	return call_float_binary_interpreter(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMul_I);
 }
 
+uint64_t FPNMul_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
+{
+	uint64_t result = FPMul_interpreter(ctx,operand1,operand2,FPCR,N);
+	return FPNeg_interpreter(ctx,result,FPCR,N);
+}
+
 uint64_t FPDiv_interpreter(interpreter_data* ctx, uint64_t operand1, uint64_t operand2, uint64_t FPCR, uint64_t N)
 {
 	if ((((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)((uint64_t)N != (uint64_t)16ULL))))
@@ -4633,6 +4819,190 @@ uint64_t FPMulAdd_interpreter(interpreter_data* ctx, uint64_t addend, uint64_t e
 		
 	}
 	return call_interpreter(ctx,addend,element1,element2,fpcr,(uint64_t)N,(uint64_t)0ULL,(uint64_t)FPMulAdd_I);
+}
+
+void float_unary_scalar_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t fsize, uint64_t float_function)
+{
+	uint64_t operand = V_interpreter(ctx,Rn);
+	uint64_t N = get_flt_size_interpreter(ctx,fsize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t element_result = ((uint64_t(*)(void*,uint64_t,uint64_t,uint64_t))float_function)(ctx,operand,fpcr_state,N);
+	uint128_t vector_result = 0;
+	uint128_t::insert(&vector_result, 0ULL, N, element_result);
+	V_interpreter(ctx,Rd,vector_result);
+}
+
+void float_unary_vector_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Q, uint64_t sz, uint64_t float_function)
+{
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t working = uint128_t::extract(operand, e, esize);
+		uint64_t element_result = ((uint64_t(*)(void*,uint64_t,uint64_t,uint64_t))float_function)(ctx,working,fpcr_state,esize);
+		uint128_t::insert(&result, e, esize, element_result);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void float_binary_scalar_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t fsize, uint64_t float_function)
+{
+	uint64_t operand1 = V_interpreter(ctx,Rn);
+	uint64_t operand2 = V_interpreter(ctx,Rm);
+	uint64_t N = get_flt_size_interpreter(ctx,fsize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t element_result = ((uint64_t(*)(void*,uint64_t,uint64_t,uint64_t,uint64_t))float_function)(ctx,operand1,operand2,fpcr_state,N);
+	uint128_t vector_result = 0;
+	uint128_t::insert(&vector_result, 0ULL, N, element_result);
+	V_interpreter(ctx,Rd,vector_result);
+}
+
+void float_binary_vector_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t Q, uint64_t sz, uint64_t float_function)
+{
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, ((uint64_t(*)(void*,uint64_t,uint64_t,uint64_t,uint64_t))float_function)(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void frint_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd, uint64_t rounding)
+{
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t esize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t working = FPRoundInt_interpreter(ctx,(uint64_t)operand1,fpcr_state,rounding,esize);
+	uint128_t::insert(&result, 0ULL, esize, working);
+	V_interpreter(ctx,Rd,result);
+}
+
+void intrinsic_float_binary_vector_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t Q, uint64_t sz, uint64_t float_instruction, uint64_t double_instruction)
+{
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result;
+	if ((sz))
+	{
+		result = intrinsic_binary_interpreter<uint128_t>(ctx,double_instruction,operand1,operand2);
+	}
+	else
+	{
+		result = intrinsic_binary_interpreter<uint128_t>(ctx,float_instruction,operand1,operand2);
+	}
+	if ((!Q))
+	{
+		uint128_t::insert(&result, 1ULL, 64ULL, (uint64_t)0ULL);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void intrinsic_float_binary_scalar_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t fsize, uint64_t half_instruction, uint64_t float_instruction, uint64_t double_instruction)
+{
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result;
+	uint64_t esize = get_flt_size_interpreter(ctx,fsize);
+	if ((((uint64_t)esize == (uint64_t)64ULL)))
+	{
+		result = intrinsic_binary_interpreter<uint128_t>(ctx,double_instruction,operand1,operand2);
+	}
+	else if ((((uint64_t)esize == (uint64_t)32ULL)))
+	{
+		result = intrinsic_binary_interpreter<uint128_t>(ctx,float_instruction,operand1,operand2);
+		uint128_t::insert(&result, 1ULL, 32ULL, (uint64_t)0ULL);
+	}
+	else if ((((uint64_t)esize == (uint64_t)16ULL)))
+	{
+		result = intrinsic_binary_interpreter<uint128_t>(ctx,half_instruction,operand1,operand2);
+		uint128_t::insert(&result, 1ULL, 16ULL, (uint64_t)0ULL);
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	uint128_t::insert(&result, 1ULL, 64ULL, (uint64_t)0ULL);
+	V_interpreter(ctx,Rd,result);
+}
+
+void x86_sse_logic_vector_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t Q, uint64_t invert, uint64_t primary_instruction)
+{
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	if ((invert))
+	{
+		uint128_t one = uint128_t(-1, -1);
+		operand2 = intrinsic_binary_interpreter<uint128_t>(ctx,(uint64_t)x86_xorps,operand2,one);
+	}
+	uint128_t result = intrinsic_binary_interpreter<uint128_t>(ctx,primary_instruction,operand1,operand2);
+	if ((!Q))
+	{
+		uint128_t::insert(&result, 1ULL, 64ULL, (uint64_t)0ULL);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+uint128_t sse_copy_to_xmm_from_xmm_element_interpreter(interpreter_data* ctx, uint128_t source, uint64_t size, uint64_t index)
+{
+	if ((((uint64_t)size <= (uint64_t)16ULL)))
+	{
+		uint64_t source_element = uint128_t::extract(source, size, index);
+		return sse_coppy_gp_across_lanes_interpreter(ctx,source_element,size);
+	}
+	if ((((uint64_t)size == (uint64_t)32ULL)))
+	{
+		return intrinsic_ternary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_shufps,source,source,((uint64_t)((uint64_t)((uint64_t)index | (uint64_t)(((uint64_t)index << (uint64_t)2ULL))) | (uint64_t)(((uint64_t)index << (uint64_t)4ULL))) | (uint64_t)(((uint64_t)index << (uint64_t)6ULL))));
+	}
+	else if ((((uint64_t)size == (uint64_t)64ULL)))
+	{
+		return intrinsic_ternary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_shufpd,source,source,((uint64_t)index | (uint64_t)(((uint64_t)index << (uint64_t)1ULL))));
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+}
+
+uint128_t sse_coppy_gp_across_lanes_interpreter(interpreter_data* ctx, uint64_t source, uint64_t size)
+{
+	if ((((uint64_t)size == (uint64_t)8ULL)))
+	{
+		source = ((uint64_t)source & (uint64_t)255ULL);
+		source = ((uint64_t)((uint64_t)((uint64_t)source | (uint64_t)(((uint64_t)source << (uint64_t)8ULL))) | (uint64_t)(((uint64_t)source << (uint64_t)16ULL))) | (uint64_t)(((uint64_t)source << (uint64_t)24ULL)));
+		size = 32ULL;
+	}
+	else if ((((uint64_t)size == (uint64_t)16ULL)))
+	{
+		source = ((uint64_t)source & (uint64_t)65535ULL);
+		source = ((uint64_t)source | (uint64_t)(((uint64_t)source << (uint64_t)16ULL)));
+		size = 32ULL;
+	}
+	uint128_t working_element = source;
+	if ((((uint64_t)size == (uint64_t)32ULL)))
+	{
+		return intrinsic_ternary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_shufps,working_element,working_element,0ULL);
+	}
+	else if ((((uint64_t)size == (uint64_t)64ULL)))
+	{
+		return intrinsic_ternary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_shufpd,working_element,working_element,0ULL);
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
 }
 
 void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -7008,6 +7378,590 @@ void store_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, u
 	
 }
 
+void conversion_between_floating_point_and_fixed_point_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t S, uint64_t ftype, uint64_t rmode, uint64_t opcode, uint64_t scale, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t fracbits = ((uint64_t)64ULL - (uint64_t)scale);
+	uint64_t result;
+	if ((((uint64_t)rmode == (uint64_t)0ULL)))
+	{
+		uint64_t source = X_interpreter(ctx,Rn);
+		result = FixedToFP_interpreter(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)3ULL),fltsize,intsize);
+		V_interpreter(ctx,Rd,(uint128_t)result);
+	}
+	else if ((((uint64_t)rmode == (uint64_t)3ULL)))
+	{
+		uint64_t source = V_interpreter(ctx,Rn);
+		result = FPToFixed_interpreter(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)1ULL),(uint64_t)FPRounding_ZERO,intsize,fltsize);
+		X_interpreter(ctx,Rd,result);
+	}
+	else
+	{
+		undefined_with_interpreter(ctx,100ULL);
+	}
+}
+
+void fcvt_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t opc, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t srcsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t dstsize = get_flt_size_interpreter(ctx,opc);
+	uint64_t operand = V_interpreter(ctx,Rn);
+	V_interpreter(ctx,Rd,(uint128_t)FPConvert_interpreter(ctx,operand,dstsize,srcsize));
+}
+
+void fcvtz_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_ZERO,U,0ULL);
+}
+
+void fcvtn_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEEVEN,U,0ULL);
+}
+
+void fcvta_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEAWAY,U,0ULL);
+}
+
+void fcvtm_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_NEGINF,U,0ULL);
+}
+
+void frintp_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	frint_interpreter(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_POSINF);
+}
+
+void frintm_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	frint_interpreter(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_NEGINF);
+}
+
+void fcvtp_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_POSINF,U,0ULL);
+}
+
+void fadd_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx))))
+	{
+		intrinsic_float_binary_vector_interpreter(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)x86_addps,(uint64_t)x86_addpd);
+		return;
+	}
+	float_binary_vector_interpreter(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)FPAdd_interpreter);
+}
+
+void fmul_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx))))
+	{
+		intrinsic_float_binary_vector_interpreter(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)x86_mulps,(uint64_t)x86_mulpd);
+		return;
+	}
+	float_binary_vector_interpreter(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)FPMul_interpreter);
+}
+
+void fsub_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx))))
+	{
+		intrinsic_float_binary_vector_interpreter(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)x86_subps,(uint64_t)x86_subpd);
+		return;
+	}
+	float_binary_vector_interpreter(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)FPSub_interpreter);
+}
+
+void fdiv_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx))))
+	{
+		intrinsic_float_binary_vector_interpreter(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)x86_divps,(uint64_t)x86_divpd);
+		return;
+	}
+	float_binary_vector_interpreter(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)FPDiv_interpreter);
+}
+
+void fmul_accumulate_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t neg, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t operand3 = V_interpreter(ctx,Rd);
+	uint128_t result;
+	if ((((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx))))
+	{
+		uint64_t add_instruction;
+		uint64_t subtract_instruction;
+		uint64_t multiply_instruction;
+		if ((((uint64_t)esize == (uint64_t)64ULL)))
+		{
+			add_instruction = (uint64_t)x86_addpd;
+			subtract_instruction = (uint64_t)x86_subpd;
+			multiply_instruction = (uint64_t)x86_mulpd;
+		}
+		else
+		{
+			add_instruction = (uint64_t)x86_addps;
+			subtract_instruction = (uint64_t)x86_subps;
+			multiply_instruction = (uint64_t)x86_mulps;
+		}
+		result = intrinsic_binary_interpreter<uint128_t>(ctx,multiply_instruction,operand1,operand2);
+		if ((neg))
+		{
+			result = intrinsic_binary_interpreter<uint128_t>(ctx,subtract_instruction,operand3,result);
+		}
+		else
+		{
+			result = intrinsic_binary_interpreter<uint128_t>(ctx,add_instruction,operand3,result);
+		}
+		if ((((uint64_t)datasize == (uint64_t)64ULL)))
+		{
+			uint128_t::insert(&result, 1ULL, 64ULL, (uint64_t)0ULL);
+		}
+	}
+	else
+	{
+		result = 0;
+		uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element2 = uint128_t::extract(operand2, e, esize);
+			uint64_t element3 = uint128_t::extract(operand3, e, esize);
+			if ((neg))
+			{
+				element1 = FPNeg_interpreter(ctx,element1,fpcr_state,esize);
+			}
+			uint128_t::insert(&result, e, esize, FPMulAdd_interpreter(ctx,element3,element1,element2,fpcr_state,esize));
+		}
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void faddp_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint128_t lo = V_interpreter(ctx,Rn);
+	uint128_t hi = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = get_from_concacted_vector_interpreter(ctx,hi,lo,((uint64_t)2ULL * (uint64_t)e),((uint64_t)datasize / (uint64_t)esize),esize);
+		uint64_t element2 = get_from_concacted_vector_interpreter(ctx,hi,lo,((uint64_t)(((uint64_t)2ULL * (uint64_t)e)) + (uint64_t)1ULL),((uint64_t)datasize / (uint64_t)esize),esize);
+		uint128_t::insert(&result, e, esize, FPAdd_interpreter(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void frsqrte_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element = uint128_t::extract(operand, e, esize);
+		element = FPRSqrtEstimate_interpreter(ctx,element,fpcr_state,esize);
+		uint128_t::insert(&result, e, esize, element);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void frsqrts_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, FPRSqrtStepFused_interpreter(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void frecps_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,Rm);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint64_t element2 = uint128_t::extract(operand2, e, esize);
+		uint128_t::insert(&result, e, esize, FPRecipStepFused_interpreter(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmul_scalar_by_element_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t product = FPMul_interpreter(ctx,(uint64_t)operand1,uint128_t::extract(operand2, index, esize),fpcr_state,esize);
+	uint128_t::insert(&result, 0ULL, esize, product);
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmul_vector_by_element_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	uint128_t result = 0;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	uint64_t element2 = uint128_t::extract(operand2, index, esize);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		uint64_t element1 = uint128_t::extract(operand1, e, esize);
+		uint128_t::insert(&result, e, esize, FPMul_interpreter(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmul_accumulate_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	uint128_t operand3 = V_interpreter(ctx,Rd);
+	uint128_t result;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	if ((((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx))))
+	{
+		uint64_t add_instruction;
+		uint64_t subtract_instruction;
+		uint64_t multiply_instruction;
+		operand2 = uint128_t::extract(operand2, index, esize);
+		if ((((uint64_t)esize == (uint64_t)64ULL)))
+		{
+			add_instruction = (uint64_t)x86_addsd;
+			subtract_instruction = (uint64_t)x86_subsd;
+			multiply_instruction = (uint64_t)x86_mulsd;
+		}
+		else
+		{
+			add_instruction = (uint64_t)x86_addss;
+			subtract_instruction = (uint64_t)x86_subss;
+			multiply_instruction = (uint64_t)x86_mulss;
+		}
+		result = intrinsic_binary_interpreter<uint128_t>(ctx,multiply_instruction,operand1,operand2);
+		if ((neg))
+		{
+			result = intrinsic_binary_interpreter<uint128_t>(ctx,subtract_instruction,operand3,result);
+		}
+		else
+		{
+			result = intrinsic_binary_interpreter<uint128_t>(ctx,add_instruction,operand3,result);
+		}
+		uint128_t::insert(&result, 1ULL, 64ULL, (uint64_t)0ULL);
+		if ((((uint64_t)esize == (uint64_t)32ULL)))
+		{
+			uint128_t::insert(&result, 1ULL, 32ULL, (uint64_t)0ULL);
+		}
+	}
+	else
+	{
+		result = 0;
+		uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+		uint64_t element1 = operand1;
+		if ((neg))
+		{
+			element1 = FPNeg_interpreter(ctx,element1,fpcr_state,esize);
+		}
+		uint64_t product_accumalant = FPMulAdd_interpreter(ctx,(uint64_t)operand3,element1,uint128_t::extract(operand2, index, esize),fpcr_state,esize);
+		uint128_t::insert(&result, 0ULL, esize, product_accumalant);
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void fmul_accumulate_element_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_interpreter(ctx);
+	}
+	uint128_t operand1 = V_interpreter(ctx,Rn);
+	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	uint128_t operand3 = V_interpreter(ctx,Rd);
+	uint128_t result;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	if ((((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx))))
+	{
+		uint64_t add_instruction;
+		uint64_t subtract_instruction;
+		uint64_t multiply_instruction;
+		if ((((uint64_t)esize == (uint64_t)64ULL)))
+		{
+			add_instruction = (uint64_t)x86_addpd;
+			subtract_instruction = (uint64_t)x86_subpd;
+			multiply_instruction = (uint64_t)x86_mulpd;
+		}
+		else
+		{
+			add_instruction = (uint64_t)x86_addps;
+			subtract_instruction = (uint64_t)x86_subps;
+			multiply_instruction = (uint64_t)x86_mulps;
+		}
+		operand2 = sse_copy_to_xmm_from_xmm_element_interpreter(ctx,operand2,esize,index);
+		result = intrinsic_binary_interpreter<uint128_t>(ctx,multiply_instruction,operand1,operand2);
+		if ((neg))
+		{
+			result = intrinsic_binary_interpreter<uint128_t>(ctx,subtract_instruction,operand3,result);
+		}
+		else
+		{
+			result = intrinsic_binary_interpreter<uint128_t>(ctx,add_instruction,operand3,result);
+		}
+		if ((((uint64_t)datasize == (uint64_t)64ULL)))
+		{
+			uint128_t::insert(&result, 1ULL, 64ULL, (uint64_t)0ULL);
+		}
+	}
+	else
+	{
+		result = 0;
+		uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+		uint64_t element2 = uint128_t::extract(operand2, index, esize);
+		uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element3 = uint128_t::extract(operand3, e, esize);
+			if ((neg))
+			{
+				element1 = FPNeg_interpreter(ctx,element1,fpcr_state,esize);
+			}
+			uint128_t::insert(&result, e, esize, FPMulAdd_interpreter(ctx,element3,element1,element2,fpcr_state,esize));
+		}
+	}
+	V_interpreter(ctx,Rd,result);
+}
+
+void faddp_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)esize * (uint64_t)2ULL);
+	uint128_t operand = V_interpreter(ctx,Rn);
+	uint128_t result = 0;
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t bottom = uint128_t::extract(operand, 0ULL, esize);
+	uint64_t top = uint128_t::extract(operand, 1ULL, esize);
+	uint128_t::insert(&result, 0ULL, esize, FPAdd_interpreter(ctx,bottom,top,fpcr_state,esize));
+	V_interpreter(ctx,Rd,result);
+}
+
+void fadd_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_addss,(uint64_t)x86_addsd);
+		return;
+	}
+	float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPAdd_interpreter);
+}
+
+void fsub_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_subss,(uint64_t)x86_subsd);
+		return;
+	}
+	float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPSub_interpreter);
+}
+
+void fmul_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_mulss,(uint64_t)x86_mulsd);
+		return;
+	}
+	float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMul_interpreter);
+}
+
+void fdiv_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_divss,(uint64_t)x86_divsd);
+		return;
+	}
+	float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPDiv_interpreter);
+}
+
+void fmax_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_maxss,(uint64_t)x86_maxsd);
+		return;
+	}
+	float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMax_interpreter);
+}
+
+void fmin_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)use_x86_sse_interpreter(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_minss,(uint64_t)x86_minsd);
+		return;
+	}
+	float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMin_interpreter);
+}
+
+void fmaxnm_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMaxNum_interpreter);
+}
+
+void fminnm_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMinNum_interpreter);
+}
+
+void fnmul_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	float_binary_scalar_interpreter(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPNMul_interpreter);
+}
+
+void fabs_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_scalar_interpreter(ctx,Rd,Rn,ftype,(uint64_t)FPAbs_interpreter);
+}
+
+void fneg_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_scalar_interpreter(ctx,Rd,Rn,ftype,(uint64_t)FPNeg_interpreter);
+}
+
+void fneg_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_vector_interpreter(ctx,Rd,Rn,Q,sz,(uint64_t)FPNeg_interpreter);
+}
+
+void fsqrt_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_scalar_interpreter(ctx,Rd,Rn,ftype,(uint64_t)FPSqrt_interpreter);
+}
+
+void fsqrt_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_vector_interpreter(ctx,Rd,Rn,Q,sz,(uint64_t)FPSqrt_interpreter);
+}
+
+void frecpe_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_vector_interpreter(ctx,Rd,Rn,Q,sz,(uint64_t)FPRecipEstimate_interpreter);
+}
+
+void frsqrte_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t operand = V_interpreter(ctx,Rn);
+	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
+	uint64_t result = FPRSqrtEstimate_interpreter(ctx,operand,fpcr_state,esize);
+	if ((((uint64_t)esize == (uint64_t)32ULL)))
+	{
+		result = ((uint64_t)result & (uint64_t)4294967295ULL);
+	}
+	V_interpreter(ctx,Rd,(uint128_t)result);
+}
+
+void fmov_scalar_immediate_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
+	uint64_t imm = vfp_expand_imm_interpreter(ctx,imm8,fltsize);
+	V_interpreter(ctx,Rd,(uint128_t)imm);
+}
+
 uint64_t _compare_and_swap_interpreter(interpreter_data* ctx, uint64_t physical_address, uint64_t expecting, uint64_t to_swap, uint64_t size)
 {
 	return call_interpreter(ctx,physical_address,expecting,to_swap,(uint64_t)size,(uint64_t)0ULL,(uint64_t)0ULL,(uint64_t)compare_and_swap_interpreter_cpp);
@@ -7074,10 +8028,22 @@ void dup_general_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, u
 	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
 	uint64_t element = X_interpreter(ctx,Rn);
 	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t result = 0;
-	for (uint64_t e = 0; e < (elements); e++)
+	uint128_t result;
+	if ((use_x86_sse_interpreter(ctx)))
 	{
-		uint128_t::insert(&result, e, esize, element);
+		result = sse_coppy_gp_across_lanes_interpreter(ctx,element,esize);
+		if ((!Q))
+		{
+			uint128_t::insert(&result, 1ULL, 64ULL, (uint64_t)0ULL);
+		}
+	}
+	else
+	{
+		result = 0;
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint128_t::insert(&result, e, esize, element);
+		}
 	}
 	V_interpreter(ctx,Rd,result);
 }
@@ -7115,21 +8081,21 @@ void move_to_gp_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, ui
 	{
 		if (datasize == 32ULL)
 		{
-			uint32_t working_operand = uint128_t::extract(operand, index, esize);
+			uint32_t result = uint128_t::extract(operand, index, esize);
 			if ((!U))
 			{
-				working_operand = (uint32_t)sign_extend((uint8_t)working_operand);
+				result = (uint32_t)sign_extend((uint8_t)result);
 			}
-			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		if (datasize == 64ULL)
 		{
-			uint64_t working_operand = uint128_t::extract(operand, index, esize);
+			uint64_t result = uint128_t::extract(operand, index, esize);
 			if ((!U))
 			{
-				working_operand = (uint64_t)sign_extend((uint8_t)working_operand);
+				result = (uint64_t)sign_extend((uint8_t)result);
 			}
-			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		
 	}
@@ -7137,21 +8103,21 @@ void move_to_gp_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, ui
 	{
 		if (datasize == 32ULL)
 		{
-			uint32_t working_operand = uint128_t::extract(operand, index, esize);
+			uint32_t result = uint128_t::extract(operand, index, esize);
 			if ((!U))
 			{
-				working_operand = (uint32_t)sign_extend((uint16_t)working_operand);
+				result = (uint32_t)sign_extend((uint16_t)result);
 			}
-			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		if (datasize == 64ULL)
 		{
-			uint64_t working_operand = uint128_t::extract(operand, index, esize);
+			uint64_t result = uint128_t::extract(operand, index, esize);
 			if ((!U))
 			{
-				working_operand = (uint64_t)sign_extend((uint16_t)working_operand);
+				result = (uint64_t)sign_extend((uint16_t)result);
 			}
-			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		
 	}
@@ -7159,21 +8125,21 @@ void move_to_gp_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, ui
 	{
 		if (datasize == 32ULL)
 		{
-			uint32_t working_operand = uint128_t::extract(operand, index, esize);
+			uint32_t result = uint128_t::extract(operand, index, esize);
 			if ((!U))
 			{
-				working_operand = (uint32_t)sign_extend((uint32_t)working_operand);
+				result = (uint32_t)sign_extend((uint32_t)result);
 			}
-			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		if (datasize == 64ULL)
 		{
-			uint64_t working_operand = uint128_t::extract(operand, index, esize);
+			uint64_t result = uint128_t::extract(operand, index, esize);
 			if ((!U))
 			{
-				working_operand = (uint64_t)sign_extend((uint32_t)working_operand);
+				result = (uint64_t)sign_extend((uint32_t)result);
 			}
-			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		
 	}
@@ -7181,21 +8147,21 @@ void move_to_gp_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t imm5, ui
 	{
 		if (datasize == 32ULL)
 		{
-			uint32_t working_operand = uint128_t::extract(operand, index, esize);
+			uint32_t result = uint128_t::extract(operand, index, esize);
 			if ((!U))
 			{
-				working_operand = (uint32_t)sign_extend((uint64_t)working_operand);
+				result = (uint32_t)sign_extend((uint64_t)result);
 			}
-			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		if (datasize == 64ULL)
 		{
-			uint64_t working_operand = uint128_t::extract(operand, index, esize);
+			uint64_t result = uint128_t::extract(operand, index, esize);
 			if ((!U))
 			{
-				working_operand = (uint64_t)sign_extend((uint64_t)working_operand);
+				result = (uint64_t)sign_extend((uint64_t)result);
 			}
-			X_interpreter(ctx,Rd,(uint64_t)working_operand);
+			X_interpreter(ctx,Rd,(uint64_t)result);
 		}
 		
 	}
@@ -7314,22 +8280,22 @@ void fmov_general_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype
 	uint64_t int_to_float = opcode;
 	if ((int_to_float))
 	{
-		uint64_t src = X_interpreter(ctx,Rn);
+		uint64_t result = X_interpreter(ctx,Rn);
 		if (size == 32ULL)
 		{
-			VPart_interpreter(ctx,Rd,part,size,(uint64_t)(uint32_t)src);
+			VPart_interpreter(ctx,Rd,part,size,(uint64_t)(uint32_t)result);
 		}
 		if (size == 64ULL)
 		{
-			VPart_interpreter(ctx,Rd,part,size,(uint64_t)(uint64_t)src);
+			VPart_interpreter(ctx,Rd,part,size,(uint64_t)(uint64_t)result);
 		}
 		
 	}
 	else
 	{
 		uint128_t v = V_interpreter(ctx,Rn);
-		uint64_t src = uint128_t::extract(v, part, size);
-		X_interpreter(ctx,Rd,src);
+		uint64_t result = uint128_t::extract(v, part, size);
+		X_interpreter(ctx,Rd,result);
 	}
 }
 
@@ -7405,83 +8371,6 @@ void convert_to_float_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint
 		V_interpreter(ctx,Rd,result);
 	}
 	
-}
-
-void floating_point_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t operand1 = V_interpreter(ctx,Rn);
-	uint64_t operand2 = V_interpreter(ctx,Rm);
-	uint64_t result;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	if ((((uint64_t)opcode == (uint64_t)0ULL)))
-	{
-		result = FPMul_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)1ULL)))
-	{
-		result = FPDiv_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)2ULL)))
-	{
-		result = FPAdd_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)3ULL)))
-	{
-		result = FPSub_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)4ULL)))
-	{
-		result = FPMax_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)5ULL)))
-	{
-		result = FPMin_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)6ULL)))
-	{
-		result = FPMaxNum_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)7ULL)))
-	{
-		result = FPMinNum_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)8ULL)))
-	{
-		result = FPMul_interpreter(ctx,operand1,operand2,fpcr_state,fltsize);
-		result = FPNeg_interpreter(ctx,result,fpcr_state,fltsize);
-	}
-	else
-	{
-		undefined_with_interpreter(ctx,opcode);
-	}
-	uint128_t vector = 0;
-	uint128_t::insert(&vector, 0ULL, fltsize, result);
-	V_interpreter(ctx,Rd,vector);
-}
-
-void conversion_between_floating_point_and_fixed_point_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t S, uint64_t ftype, uint64_t rmode, uint64_t opcode, uint64_t scale, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t fracbits = ((uint64_t)64ULL - (uint64_t)scale);
-	uint64_t result;
-	if ((((uint64_t)rmode == (uint64_t)0ULL)))
-	{
-		uint64_t source = X_interpreter(ctx,Rn);
-		result = FixedToFP_interpreter(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)3ULL),fltsize,intsize);
-		V_interpreter(ctx,Rd,(uint128_t)result);
-	}
-	else if ((((uint64_t)rmode == (uint64_t)3ULL)))
-	{
-		uint64_t source = V_interpreter(ctx,Rn);
-		result = FPToFixed_interpreter(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)1ULL),(uint64_t)FPRounding_ZERO,intsize,fltsize);
-		X_interpreter(ctx,Rd,result);
-	}
-	else
-	{
-		undefined_with_interpreter(ctx,100ULL);
-	}
 }
 
 void shl_immedaite_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t immh, uint64_t immb, uint64_t Rn, uint64_t Rd)
@@ -8007,23 +8896,30 @@ void cnt_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t 
 
 void orr_orn_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t invert, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t esize = 64ULL;
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	for (uint64_t e = 0; e < (elements); e++)
+	if ((use_x86_sse_interpreter(ctx)))
 	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		if ((invert))
-		{
-			element2 = ~element2;
-		}
-		uint128_t::insert(&result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
+		x86_sse_logic_vector_interpreter(ctx,Rd,Rn,Rm,Q,invert,(uint64_t)x86_orps);
 	}
-	V_interpreter(ctx,Rd,result);
+	else
+	{
+		uint64_t esize = 64ULL;
+		uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+		uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+		uint128_t operand1 = V_interpreter(ctx,Rn);
+		uint128_t operand2 = V_interpreter(ctx,Rm);
+		uint128_t result = 0;
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element2 = uint128_t::extract(operand2, e, esize);
+			if ((invert))
+			{
+				element2 = ~element2;
+			}
+			uint128_t::insert(&result, e, esize, (((uint64_t)element1 | (uint64_t)element2)));
+		}
+		V_interpreter(ctx,Rd,result);
+	}
 }
 
 void bsl_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t Rn, uint64_t Rd)
@@ -8047,40 +8943,61 @@ void bsl_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint
 
 void and_bic_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t invert, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t esize = 64ULL;
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	for (uint64_t e = 0; e < (elements); e++)
+	if ((use_x86_sse2_interpreter(ctx)))
 	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
 		if ((invert))
 		{
-			element2 = ~element2;
+			x86_sse_logic_vector_interpreter(ctx,Rd,Rm,Rn,Q,0ULL,(uint64_t)x86_pandn);
 		}
-		uint128_t::insert(&result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
+		else
+		{
+			x86_sse_logic_vector_interpreter(ctx,Rd,Rn,Rm,Q,0ULL,(uint64_t)x86_pand);
+		}
 	}
-	V_interpreter(ctx,Rd,result);
+	else
+	{
+		uint64_t esize = 64ULL;
+		uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+		uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+		uint128_t operand1 = V_interpreter(ctx,Rn);
+		uint128_t operand2 = V_interpreter(ctx,Rm);
+		uint128_t result = 0;
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element2 = uint128_t::extract(operand2, e, esize);
+			if ((invert))
+			{
+				element2 = ~element2;
+			}
+			uint128_t::insert(&result, e, esize, (((uint64_t)element1 & (uint64_t)element2)));
+		}
+		V_interpreter(ctx,Rd,result);
+	}
 }
 
 void eor_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t esize = 64ULL;
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	for (uint64_t e = 0; e < (elements); e++)
+	if ((use_x86_sse_interpreter(ctx)))
 	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint128_t::insert(&result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
+		x86_sse_logic_vector_interpreter(ctx,Rd,Rn,Rm,Q,0ULL,(uint64_t)x86_xorps);
 	}
-	V_interpreter(ctx,Rd,result);
+	else
+	{
+		uint64_t esize = 64ULL;
+		uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+		uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+		uint128_t operand1 = V_interpreter(ctx,Rn);
+		uint128_t operand2 = V_interpreter(ctx,Rm);
+		uint128_t result = 0;
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			uint64_t element1 = uint128_t::extract(operand1, e, esize);
+			uint64_t element2 = uint128_t::extract(operand2, e, esize);
+			uint128_t::insert(&result, e, esize, (((uint64_t)element1 ^ (uint64_t)element2)));
+		}
+		V_interpreter(ctx,Rd,result);
+	}
 }
 
 void xnt_xnt2_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
@@ -8253,108 +9170,6 @@ void floating_point_conditional_select_interpreter(interpreter_data* ctx, uint64
 	
 }
 
-void fmov_scalar_immediate_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t imm = vfp_expand_imm_interpreter(ctx,imm8,fltsize);
-	V_interpreter(ctx,Rd,(uint128_t)imm);
-}
-
-void fcvt_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t opc, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t srcsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t dstsize = get_flt_size_interpreter(ctx,opc);
-	uint64_t operand = V_interpreter(ctx,Rn);
-	V_interpreter(ctx,Rd,(uint128_t)FPConvert_interpreter(ctx,operand,dstsize,srcsize));
-}
-
-void fabs_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t operand = V_interpreter(ctx,Rn);
-	uint64_t result = 0ULL;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	result = FPAbs_interpreter(ctx,operand,fpcr_state,fltsize);
-	uint128_t vector = 0;
-	uint128_t::insert(&vector, 0ULL, fltsize, result);
-	V_interpreter(ctx,Rd,vector);
-}
-
-void fneg_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t operand = V_interpreter(ctx,Rn);
-	uint64_t result = 0ULL;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	result = FPNeg_interpreter(ctx,operand,fpcr_state,fltsize);
-	uint128_t vector = 0;
-	uint128_t::insert(&vector, 0ULL, fltsize, result);
-	V_interpreter(ctx,Rd,vector);
-}
-
-void fneg_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand = V_interpreter(ctx,Rn);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element = uint128_t::extract(operand, e, esize);
-		uint64_t working = FPNeg_interpreter(ctx,element,fpcr_state,esize);
-		uint128_t::insert(&result, e, esize, working);
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fsqrt_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t operand = V_interpreter(ctx,Rn);
-	uint64_t result = 0ULL;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	result = FPSqrt_interpreter(ctx,operand,fpcr_state,fltsize);
-	uint128_t vector = 0;
-	uint128_t::insert(&vector, 0ULL, fltsize, result);
-	V_interpreter(ctx,Rd,vector);
-}
-
-void fsqrt_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand = V_interpreter(ctx,Rn);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element = uint128_t::extract(operand, e, esize);
-		uint64_t working = FPSqrt_interpreter(ctx,element,fpcr_state,esize);
-		uint128_t::insert(&result, e, esize, working);
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void frecpe_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand = V_interpreter(ctx,Rn);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element = uint128_t::extract(operand, e, esize);
-		uint64_t working = FPRecipEstimate_interpreter(ctx,element,fpcr_state,esize);
-		uint128_t::insert(&result, e, esize, working);
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
 void fcmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc)
 {
 	uint64_t datasize = get_flt_size_interpreter(ctx,ftype);
@@ -8398,381 +9213,6 @@ void fccmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint6
 		_sys_interpreter(ctx,(uint64_t)nzcv_c,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL));
 		_sys_interpreter(ctx,(uint64_t)nzcv_v,(uint64_t)((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL));
 	}
-}
-
-void fcvtz_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_ZERO,U,0ULL);
-}
-
-void fcvtn_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEEVEN,U,0ULL);
-}
-
-void fcvta_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEAWAY,U,0ULL);
-}
-
-void fcvtm_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_NEGINF,U,0ULL);
-}
-
-void fadd_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint128_t::insert(&result, e, esize, FPAdd_interpreter(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fmul_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint128_t::insert(&result, e, esize, FPMul_interpreter(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fsub_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint128_t::insert(&result, e, esize, FPSub_interpreter(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fdiv_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint128_t::insert(&result, e, esize, FPDiv_interpreter(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fmul_accumulate_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t neg, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t operand3 = V_interpreter(ctx,Rd);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint64_t element3 = uint128_t::extract(operand3, e, esize);
-		if ((neg))
-		{
-			element1 = FPNeg_interpreter(ctx,element1,fpcr_state,esize);
-		}
-		uint128_t::insert(&result, e, esize, FPMulAdd_interpreter(ctx,element3,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void faddp_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint128_t lo = V_interpreter(ctx,Rn);
-	uint128_t hi = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = get_from_concacted_vector_interpreter(ctx,hi,lo,((uint64_t)2ULL * (uint64_t)e),((uint64_t)datasize / (uint64_t)esize),esize);
-		uint64_t element2 = get_from_concacted_vector_interpreter(ctx,hi,lo,((uint64_t)(((uint64_t)2ULL * (uint64_t)e)) + (uint64_t)1ULL),((uint64_t)datasize / (uint64_t)esize),esize);
-		uint128_t::insert(&result, e, esize, FPAdd_interpreter(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void frsqrte_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t operand = V_interpreter(ctx,Rn);
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	uint64_t result = FPRSqrtEstimate_interpreter(ctx,operand,fpcr_state,esize);
-	if ((((uint64_t)esize == (uint64_t)32ULL)))
-	{
-		result = ((uint64_t)result & (uint64_t)4294967295ULL);
-	}
-	V_interpreter(ctx,Rd,(uint128_t)result);
-}
-
-void frsqrte_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand = V_interpreter(ctx,Rn);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element = uint128_t::extract(operand, e, esize);
-		element = FPRSqrtEstimate_interpreter(ctx,element,fpcr_state,esize);
-		uint128_t::insert(&result, e, esize, element);
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void frsqrts_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint128_t::insert(&result, e, esize, FPRSqrtStepFused_interpreter(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void frecps_vector_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,Rm);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element2 = uint128_t::extract(operand2, e, esize);
-		uint128_t::insert(&result, e, esize, FPRecipStepFused_interpreter(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fmul_scalar_by_element_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
-	uint64_t index;
-	uint64_t rm_hi = M;
-	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
-	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
-	{
-		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
-	}
-	else if ((((uint64_t)test == (uint64_t)2ULL)))
-	{
-		index = H;
-	}
-	else
-	{
-		undefined_interpreter(ctx);
-	}
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
-	uint128_t result = 0;
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	uint64_t product = FPMul_interpreter(ctx,(uint64_t)operand1,uint128_t::extract(operand2, index, esize),fpcr_state,esize);
-	uint128_t::insert(&result, 0ULL, esize, product);
-	V_interpreter(ctx,Rd,result);
-}
-
-void fmul_vector_by_element_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
-	uint64_t index;
-	uint64_t rm_hi = M;
-	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
-	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
-	{
-		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
-	}
-	else if ((((uint64_t)test == (uint64_t)2ULL)))
-	{
-		index = H;
-	}
-	else
-	{
-		undefined_interpreter(ctx);
-	}
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
-	uint128_t result = 0;
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint64_t element2 = uint128_t::extract(operand2, index, esize);
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint128_t::insert(&result, e, esize, FPMul_interpreter(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void fmul_accumulate_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
-	uint64_t index;
-	uint64_t rm_hi = M;
-	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
-	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
-	{
-		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
-	}
-	else if ((((uint64_t)test == (uint64_t)2ULL)))
-	{
-		index = H;
-	}
-	else
-	{
-		undefined_interpreter(ctx);
-	}
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
-	uint128_t operand3 = V_interpreter(ctx,Rd);
-	uint128_t result = 0;
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	uint64_t element1 = operand1;
-	if ((neg))
-	{
-		element1 = FPNeg_interpreter(ctx,element1,fpcr_state,esize);
-	}
-	uint64_t product_accumalant = FPMulAdd_interpreter(ctx,(uint64_t)operand3,element1,uint128_t::extract(operand2, index, esize),fpcr_state,esize);
-	uint128_t::insert(&result, 0ULL, esize, product_accumalant);
-	V_interpreter(ctx,Rd,result);
-}
-
-void fmul_accumulate_element_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
-	uint64_t index;
-	uint64_t rm_hi = M;
-	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
-	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
-	{
-		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
-	}
-	else if ((((uint64_t)test == (uint64_t)2ULL)))
-	{
-		index = H;
-	}
-	else
-	{
-		undefined_interpreter(ctx);
-	}
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t operand2 = V_interpreter(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
-	uint128_t operand3 = V_interpreter(ctx,Rd);
-	uint128_t result = 0;
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	uint64_t element2 = uint128_t::extract(operand2, index, esize);
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		uint64_t element1 = uint128_t::extract(operand1, e, esize);
-		uint64_t element3 = uint128_t::extract(operand3, e, esize);
-		if ((neg))
-		{
-			element1 = FPNeg_interpreter(ctx,element1,fpcr_state,esize);
-		}
-		uint128_t::insert(&result, e, esize, FPMulAdd_interpreter(ctx,element3,element1,element2,fpcr_state,esize));
-	}
-	V_interpreter(ctx,Rd,result);
-}
-
-void frint_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd, uint64_t rounding)
-{
-	uint128_t operand1 = V_interpreter(ctx,Rn);
-	uint128_t result = 0;
-	uint64_t esize = get_flt_size_interpreter(ctx,ftype);
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	uint64_t working = FPRoundInt_interpreter(ctx,(uint64_t)operand1,fpcr_state,rounding,esize);
-	uint128_t::insert(&result, 0ULL, esize, working);
-	V_interpreter(ctx,Rd,result);
-}
-
-void frintp_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	frint_interpreter(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_POSINF);
-}
-
-void frintm_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	frint_interpreter(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_NEGINF);
-}
-
-void fcvtp_scalar_integer_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_interpreter(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_POSINF,U,0ULL);
-}
-
-void faddp_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)esize * (uint64_t)2ULL);
-	uint128_t operand = V_interpreter(ctx,Rn);
-	uint128_t result = 0;
-	uint64_t fpcr_state = _sys_interpreter(ctx,(uint64_t)fpcr);
-	uint64_t bottom = uint128_t::extract(operand, 0ULL, esize);
-	uint64_t top = uint128_t::extract(operand, 1ULL, esize);
-	uint128_t::insert(&result, 0ULL, esize, FPAdd_interpreter(ctx,bottom,top,fpcr_state,esize));
-	V_interpreter(ctx,Rd,result);
 }
 
 uint64_t sign_extend_jit(ssa_emit_context* ctx, uint64_t source, uint64_t count)
@@ -9743,6 +10183,12 @@ ir_operand FPMul_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand oper
 	return call_float_binary_jit(ctx,operand1,operand2,FPCR,N,(uint64_t)FPMul_I);
 }
 
+ir_operand FPNMul_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
+{
+	ir_operand result = FPMul_jit(ctx,operand1,operand2,FPCR,N);
+	return FPNeg_jit(ctx,result,FPCR,N);
+}
+
 ir_operand FPDiv_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N)
 {
 	if ((((uint64_t)use_fast_float_jit(ctx) && (uint64_t)((uint64_t)N != (uint64_t)16ULL))))
@@ -10158,6 +10604,190 @@ ir_operand FPMulAdd_jit(ssa_emit_context* ctx, ir_operand addend, ir_operand ele
 		}
 	}
 	return call_jit(ctx,addend,element1,element2,fpcr,ir_operand::create_con(N, int64),ir_operand::create_con(0ULL, int64),(uint64_t)FPMulAdd_I);
+}
+
+void float_unary_scalar_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t fsize, uint64_t float_function)
+{
+	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	uint64_t N = get_flt_size_jit(ctx,fsize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand element_result = ((ir_operand(*)(void*,ir_operand,ir_operand,uint64_t))float_function)(ctx,operand,fpcr_state,N);
+	ir_operand vector_result = ssa_emit_context::vector_zero(ctx);
+	ssa_emit_context::vector_insert(ctx,vector_result, 0ULL, N, element_result);
+	V_jit(ctx,Rd,vector_result);
+}
+
+void float_unary_vector_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Q, uint64_t sz, uint64_t float_function)
+{
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand working = ssa_emit_context::vector_extract(ctx,operand, e, esize);
+		ir_operand element_result = ((ir_operand(*)(void*,ir_operand,ir_operand,uint64_t))float_function)(ctx,working,fpcr_state,esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, element_result);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void float_binary_scalar_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t fsize, uint64_t float_function)
+{
+	ir_operand operand1 = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	ir_operand operand2 = copy_new_raw_size(ctx, V_jit(ctx,Rm), int64);
+	uint64_t N = get_flt_size_jit(ctx,fsize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand element_result = ((ir_operand(*)(void*,ir_operand,ir_operand,ir_operand,uint64_t))float_function)(ctx,operand1,operand2,fpcr_state,N);
+	ir_operand vector_result = ssa_emit_context::vector_zero(ctx);
+	ssa_emit_context::vector_insert(ctx,vector_result, 0ULL, N, element_result);
+	V_jit(ctx,Rd,vector_result);
+}
+
+void float_binary_vector_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t Q, uint64_t sz, uint64_t float_function)
+{
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, ((ir_operand(*)(void*,ir_operand,ir_operand,ir_operand,uint64_t))float_function)(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void frint_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd, uint64_t rounding)
+{
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = get_flt_size_jit(ctx,ftype);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand working = FPRoundInt_jit(ctx,copy_new_raw_size(ctx, operand1, int64),fpcr_state,rounding,esize);
+	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, working);
+	V_jit(ctx,Rd,result);
+}
+
+void intrinsic_float_binary_vector_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t Q, uint64_t sz, uint64_t float_instruction, uint64_t double_instruction)
+{
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result;
+	if ((sz))
+	{
+		result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,double_instruction,operand1,operand2), int128);
+	}
+	else
+	{
+		result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,float_instruction,operand1,operand2), int128);
+	}
+	if ((!Q))
+	{
+		ssa_emit_context::vector_insert(ctx,result, 1ULL, 64ULL, ir_operand::create_con(0ULL, int64));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void intrinsic_float_binary_scalar_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t fsize, uint64_t half_instruction, uint64_t float_instruction, uint64_t double_instruction)
+{
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result;
+	uint64_t esize = get_flt_size_jit(ctx,fsize);
+	if ((((uint64_t)esize == (uint64_t)64ULL)))
+	{
+		result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,double_instruction,operand1,operand2), int128);
+	}
+	else if ((((uint64_t)esize == (uint64_t)32ULL)))
+	{
+		result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,float_instruction,operand1,operand2), int128);
+		ssa_emit_context::vector_insert(ctx,result, 1ULL, 32ULL, ir_operand::create_con(0ULL, int64));
+	}
+	else if ((((uint64_t)esize == (uint64_t)16ULL)))
+	{
+		result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,half_instruction,operand1,operand2), int128);
+		ssa_emit_context::vector_insert(ctx,result, 1ULL, 16ULL, ir_operand::create_con(0ULL, int64));
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	ssa_emit_context::vector_insert(ctx,result, 1ULL, 64ULL, ir_operand::create_con(0ULL, int64));
+	V_jit(ctx,Rd,result);
+}
+
+void x86_sse_logic_vector_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t Q, uint64_t invert, uint64_t primary_instruction)
+{
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	if ((invert))
+	{
+		ir_operand one = ssa_emit_context::vector_one(ctx);
+		operand2 = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,(uint64_t)x86_xorps,operand2,one), int128);
+	}
+	ir_operand result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,primary_instruction,operand1,operand2), int128);
+	if ((!Q))
+	{
+		ssa_emit_context::vector_insert(ctx,result, 1ULL, 64ULL, ir_operand::create_con(0ULL, int64));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+ir_operand sse_copy_to_xmm_from_xmm_element_jit(ssa_emit_context* ctx, ir_operand source, uint64_t size, uint64_t index)
+{
+	if ((((uint64_t)size <= (uint64_t)16ULL)))
+	{
+		ir_operand source_element = ssa_emit_context::vector_extract(ctx,source, size, index);
+		return sse_coppy_gp_across_lanes_jit(ctx,source_element,size);
+	}
+	if ((((uint64_t)size == (uint64_t)32ULL)))
+	{
+		return copy_new_raw_size(ctx, intrinsic_ternary_imm_jit(ctx,int128,(uint64_t)x86_shufps,source,source,((uint64_t)((uint64_t)((uint64_t)index | (uint64_t)(((uint64_t)index << (uint64_t)2ULL))) | (uint64_t)(((uint64_t)index << (uint64_t)4ULL))) | (uint64_t)(((uint64_t)index << (uint64_t)6ULL)))), int128);
+	}
+	else if ((((uint64_t)size == (uint64_t)64ULL)))
+	{
+		return copy_new_raw_size(ctx, intrinsic_ternary_imm_jit(ctx,int128,(uint64_t)x86_shufpd,source,source,((uint64_t)index | (uint64_t)(((uint64_t)index << (uint64_t)1ULL)))), int128);
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+}
+
+ir_operand sse_coppy_gp_across_lanes_jit(ssa_emit_context* ctx, ir_operand source, uint64_t size)
+{
+	if ((((uint64_t)size == (uint64_t)8ULL)))
+	{
+		source = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, source, ir_operand::create_con(255ULL, int64));
+		source = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, source, ssa_emit_context::emit_ssa(ctx, ir_shift_left, source, ir_operand::create_con(8ULL, int64))), ssa_emit_context::emit_ssa(ctx, ir_shift_left, source, ir_operand::create_con(16ULL, int64))), ssa_emit_context::emit_ssa(ctx, ir_shift_left, source, ir_operand::create_con(24ULL, int64)));
+		size = 32ULL;
+	}
+	else if ((((uint64_t)size == (uint64_t)16ULL)))
+	{
+		source = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, source, ir_operand::create_con(65535ULL, int64));
+		source = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, source, ssa_emit_context::emit_ssa(ctx, ir_shift_left, source, ir_operand::create_con(16ULL, int64)));
+		size = 32ULL;
+	}
+	ir_operand working_element = copy_new_raw_size(ctx, source, int128);
+	if ((((uint64_t)size == (uint64_t)32ULL)))
+	{
+		return copy_new_raw_size(ctx, intrinsic_ternary_imm_jit(ctx,int128,(uint64_t)x86_shufps,working_element,working_element,0ULL), int128);
+	}
+	else if ((((uint64_t)size == (uint64_t)64ULL)))
+	{
+		return copy_new_raw_size(ctx, intrinsic_ternary_imm_jit(ctx,int128,(uint64_t)x86_shufpd,working_element,working_element,0ULL), int128);
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
 }
 
 void add_subtract_imm12_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd)
@@ -11431,6 +12061,590 @@ void store_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t 
 	}
 }
 
+void conversion_between_floating_point_and_fixed_point_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t S, uint64_t ftype, uint64_t rmode, uint64_t opcode, uint64_t scale, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	uint64_t fracbits = ((uint64_t)64ULL - (uint64_t)scale);
+	ir_operand result;
+	if ((((uint64_t)rmode == (uint64_t)0ULL)))
+	{
+		ir_operand source = X_jit(ctx,Rn);
+		result = FixedToFP_jit(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)3ULL),fltsize,intsize);
+		V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
+	}
+	else if ((((uint64_t)rmode == (uint64_t)3ULL)))
+	{
+		ir_operand source = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+		result = FPToFixed_jit(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)1ULL),(uint64_t)FPRounding_ZERO,intsize,fltsize);
+		X_jit(ctx,Rd,result);
+	}
+	else
+	{
+		undefined_with_jit(ctx,100ULL);
+	}
+}
+
+void fcvt_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t opc, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t srcsize = get_flt_size_jit(ctx,ftype);
+	uint64_t dstsize = get_flt_size_jit(ctx,opc);
+	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	V_jit(ctx,Rd,copy_new_raw_size(ctx, FPConvert_jit(ctx,operand,dstsize,srcsize), int128));
+}
+
+void fcvtz_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_ZERO,U,0ULL);
+}
+
+void fcvtn_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEEVEN,U,0ULL);
+}
+
+void fcvta_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEAWAY,U,0ULL);
+}
+
+void fcvtm_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_NEGINF,U,0ULL);
+}
+
+void frintp_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	frint_jit(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_POSINF);
+}
+
+void frintm_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	frint_jit(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_NEGINF);
+}
+
+void fcvtp_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
+{
+	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_POSINF,U,0ULL);
+}
+
+void fadd_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx))))
+	{
+		intrinsic_float_binary_vector_jit(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)x86_addps,(uint64_t)x86_addpd);
+		return;
+	}
+	float_binary_vector_jit(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)FPAdd_jit);
+}
+
+void fmul_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx))))
+	{
+		intrinsic_float_binary_vector_jit(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)x86_mulps,(uint64_t)x86_mulpd);
+		return;
+	}
+	float_binary_vector_jit(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)FPMul_jit);
+}
+
+void fsub_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx))))
+	{
+		intrinsic_float_binary_vector_jit(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)x86_subps,(uint64_t)x86_subpd);
+		return;
+	}
+	float_binary_vector_jit(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)FPSub_jit);
+}
+
+void fdiv_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx))))
+	{
+		intrinsic_float_binary_vector_jit(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)x86_divps,(uint64_t)x86_divpd);
+		return;
+	}
+	float_binary_vector_jit(ctx,Rd,Rn,Rm,Q,sz,(uint64_t)FPDiv_jit);
+}
+
+void fmul_accumulate_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t neg, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand operand3 = V_jit(ctx,Rd);
+	ir_operand result;
+	if ((((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx))))
+	{
+		uint64_t add_instruction;
+		uint64_t subtract_instruction;
+		uint64_t multiply_instruction;
+		if ((((uint64_t)esize == (uint64_t)64ULL)))
+		{
+			add_instruction = (uint64_t)x86_addpd;
+			subtract_instruction = (uint64_t)x86_subpd;
+			multiply_instruction = (uint64_t)x86_mulpd;
+		}
+		else
+		{
+			add_instruction = (uint64_t)x86_addps;
+			subtract_instruction = (uint64_t)x86_subps;
+			multiply_instruction = (uint64_t)x86_mulps;
+		}
+		result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,multiply_instruction,operand1,operand2), int128);
+		if ((neg))
+		{
+			result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,subtract_instruction,operand3,result), int128);
+		}
+		else
+		{
+			result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,add_instruction,operand3,result), int128);
+		}
+		if ((((uint64_t)datasize == (uint64_t)64ULL)))
+		{
+			ssa_emit_context::vector_insert(ctx,result, 1ULL, 64ULL, ir_operand::create_con(0ULL, int64));
+		}
+	}
+	else
+	{
+		result = ssa_emit_context::vector_zero(ctx);
+		ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+			ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+			ir_operand element3 = ssa_emit_context::vector_extract(ctx,operand3, e, esize);
+			if ((neg))
+			{
+				element1 = FPNeg_jit(ctx,element1,fpcr_state,esize);
+			}
+			ssa_emit_context::vector_insert(ctx,result, e, esize, FPMulAdd_jit(ctx,element3,element1,element2,fpcr_state,esize));
+		}
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void faddp_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	ir_operand lo = V_jit(ctx,Rn);
+	ir_operand hi = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = get_from_concacted_vector_jit(ctx,hi,lo,((uint64_t)2ULL * (uint64_t)e),((uint64_t)datasize / (uint64_t)esize),esize);
+		ir_operand element2 = get_from_concacted_vector_jit(ctx,hi,lo,((uint64_t)(((uint64_t)2ULL * (uint64_t)e)) + (uint64_t)1ULL),((uint64_t)datasize / (uint64_t)esize),esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPAdd_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void frsqrte_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
+		element = FPRSqrtEstimate_jit(ctx,element,fpcr_state,esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void frsqrts_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPRSqrtStepFused_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void frecps_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,Rm);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPRecipStepFused_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fmul_scalar_by_element_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand product = FPMul_jit(ctx,copy_new_raw_size(ctx, operand1, int64),ssa_emit_context::vector_extract(ctx,operand2, index, esize),fpcr_state,esize);
+	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, product);
+	V_jit(ctx,Rd,result);
+}
+
+void fmul_vector_by_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+	ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, index, esize);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	for (uint64_t e = 0; e < (elements); e++)
+	{
+		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+		ssa_emit_context::vector_insert(ctx,result, e, esize, FPMul_jit(ctx,element1,element2,fpcr_state,esize));
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fmul_accumulate_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	ir_operand operand3 = V_jit(ctx,Rd);
+	ir_operand result;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	if ((((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx))))
+	{
+		uint64_t add_instruction;
+		uint64_t subtract_instruction;
+		uint64_t multiply_instruction;
+		operand2 = copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,operand2, index, esize), int128);
+		if ((((uint64_t)esize == (uint64_t)64ULL)))
+		{
+			add_instruction = (uint64_t)x86_addsd;
+			subtract_instruction = (uint64_t)x86_subsd;
+			multiply_instruction = (uint64_t)x86_mulsd;
+		}
+		else
+		{
+			add_instruction = (uint64_t)x86_addss;
+			subtract_instruction = (uint64_t)x86_subss;
+			multiply_instruction = (uint64_t)x86_mulss;
+		}
+		result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,multiply_instruction,operand1,operand2), int128);
+		if ((neg))
+		{
+			result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,subtract_instruction,operand3,result), int128);
+		}
+		else
+		{
+			result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,add_instruction,operand3,result), int128);
+		}
+		ssa_emit_context::vector_insert(ctx,result, 1ULL, 64ULL, ir_operand::create_con(0ULL, int64));
+		if ((((uint64_t)esize == (uint64_t)32ULL)))
+		{
+			ssa_emit_context::vector_insert(ctx,result, 1ULL, 32ULL, ir_operand::create_con(0ULL, int64));
+		}
+	}
+	else
+	{
+		result = ssa_emit_context::vector_zero(ctx);
+		ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+		ir_operand element1 = copy_new_raw_size(ctx, operand1, int64);
+		if ((neg))
+		{
+			element1 = FPNeg_jit(ctx,element1,fpcr_state,esize);
+		}
+		ir_operand product_accumalant = FPMulAdd_jit(ctx,copy_new_raw_size(ctx, operand3, int64),element1,ssa_emit_context::vector_extract(ctx,operand2, index, esize),fpcr_state,esize);
+		ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, product_accumalant);
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void fmul_accumulate_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
+	uint64_t index;
+	uint64_t rm_hi = M;
+	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
+	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
+	{
+		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
+	}
+	else if ((((uint64_t)test == (uint64_t)2ULL)))
+	{
+		index = H;
+	}
+	else
+	{
+		undefined_jit(ctx);
+	}
+	ir_operand operand1 = V_jit(ctx,Rn);
+	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
+	ir_operand operand3 = V_jit(ctx,Rd);
+	ir_operand result;
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+	if ((((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx))))
+	{
+		uint64_t add_instruction;
+		uint64_t subtract_instruction;
+		uint64_t multiply_instruction;
+		if ((((uint64_t)esize == (uint64_t)64ULL)))
+		{
+			add_instruction = (uint64_t)x86_addpd;
+			subtract_instruction = (uint64_t)x86_subpd;
+			multiply_instruction = (uint64_t)x86_mulpd;
+		}
+		else
+		{
+			add_instruction = (uint64_t)x86_addps;
+			subtract_instruction = (uint64_t)x86_subps;
+			multiply_instruction = (uint64_t)x86_mulps;
+		}
+		operand2 = sse_copy_to_xmm_from_xmm_element_jit(ctx,operand2,esize,index);
+		result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,multiply_instruction,operand1,operand2), int128);
+		if ((neg))
+		{
+			result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,subtract_instruction,operand3,result), int128);
+		}
+		else
+		{
+			result = copy_new_raw_size(ctx, intrinsic_binary_jit(ctx,int128,add_instruction,operand3,result), int128);
+		}
+		if ((((uint64_t)datasize == (uint64_t)64ULL)))
+		{
+			ssa_emit_context::vector_insert(ctx,result, 1ULL, 64ULL, ir_operand::create_con(0ULL, int64));
+		}
+	}
+	else
+	{
+		result = ssa_emit_context::vector_zero(ctx);
+		uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, index, esize);
+		ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+			ir_operand element3 = ssa_emit_context::vector_extract(ctx,operand3, e, esize);
+			if ((neg))
+			{
+				element1 = FPNeg_jit(ctx,element1,fpcr_state,esize);
+			}
+			ssa_emit_context::vector_insert(ctx,result, e, esize, FPMulAdd_jit(ctx,element3,element1,element2,fpcr_state,esize));
+		}
+	}
+	V_jit(ctx,Rd,result);
+}
+
+void faddp_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	uint64_t datasize = ((uint64_t)esize * (uint64_t)2ULL);
+	ir_operand operand = V_jit(ctx,Rn);
+	ir_operand result = ssa_emit_context::vector_zero(ctx);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand bottom = ssa_emit_context::vector_extract(ctx,operand, 0ULL, esize);
+	ir_operand top = ssa_emit_context::vector_extract(ctx,operand, 1ULL, esize);
+	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, FPAdd_jit(ctx,bottom,top,fpcr_state,esize));
+	V_jit(ctx,Rd,result);
+}
+
+void fadd_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_addss,(uint64_t)x86_addsd);
+		return;
+	}
+	float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPAdd_jit);
+}
+
+void fsub_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_subss,(uint64_t)x86_subsd);
+		return;
+	}
+	float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPSub_jit);
+}
+
+void fmul_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_mulss,(uint64_t)x86_mulsd);
+		return;
+	}
+	float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMul_jit);
+}
+
+void fdiv_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_divss,(uint64_t)x86_divsd);
+		return;
+	}
+	float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPDiv_jit);
+}
+
+void fmax_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_maxss,(uint64_t)x86_maxsd);
+		return;
+	}
+	float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMax_jit);
+}
+
+void fmin_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	if ((((uint64_t)((uint64_t)use_fast_float_jit(ctx) && (uint64_t)use_x86_sse_jit(ctx)) && (uint64_t)((uint64_t)ftype != (uint64_t)3ULL))))
+	{
+		intrinsic_float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,-1ULL,(uint64_t)x86_minss,(uint64_t)x86_minsd);
+		return;
+	}
+	float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMin_jit);
+}
+
+void fmaxnm_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMaxNum_jit);
+}
+
+void fminnm_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPMinNum_jit);
+}
+
+void fnmul_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd)
+{
+	float_binary_scalar_jit(ctx,Rd,Rn,Rm,ftype,(uint64_t)FPNMul_jit);
+}
+
+void fabs_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_scalar_jit(ctx,Rd,Rn,ftype,(uint64_t)FPAbs_jit);
+}
+
+void fneg_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_scalar_jit(ctx,Rd,Rn,ftype,(uint64_t)FPNeg_jit);
+}
+
+void fneg_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_vector_jit(ctx,Rd,Rn,Q,sz,(uint64_t)FPNeg_jit);
+}
+
+void fsqrt_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_scalar_jit(ctx,Rd,Rn,ftype,(uint64_t)FPSqrt_jit);
+}
+
+void fsqrt_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_vector_jit(ctx,Rd,Rn,Q,sz,(uint64_t)FPSqrt_jit);
+}
+
+void frecpe_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	float_unary_vector_jit(ctx,Rd,Rn,Q,sz,(uint64_t)FPRecipEstimate_jit);
+}
+
+void frsqrte_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
+{
+	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
+	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
+	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
+	ir_operand result = FPRSqrtEstimate_jit(ctx,operand,fpcr_state,esize);
+	if ((((uint64_t)esize == (uint64_t)32ULL)))
+	{
+		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, result, ir_operand::create_con(4294967295ULL, int64));
+	}
+	V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
+}
+
+void fmov_scalar_immediate_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
+{
+	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
+	ir_operand imm = ir_operand::create_con(vfp_expand_imm_jit(ctx,imm8,fltsize), int64);
+	V_jit(ctx,Rd,copy_new_raw_size(ctx, imm, int128));
+}
+
 ir_operand _compare_and_swap_jit(ssa_emit_context* ctx, ir_operand physical_address, ir_operand expecting, ir_operand to_swap, uint64_t size)
 {
 	return call_jit(ctx,physical_address,expecting,to_swap,ir_operand::create_con(size, int64),ir_operand::create_con(0ULL, int64),ir_operand::create_con(0ULL, int64),(uint64_t)compare_and_swap_interpreter_cpp);
@@ -11495,10 +12709,22 @@ void dup_general_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t imm5, uint64_t 
 	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
 	ir_operand element = X_jit(ctx,Rn);
 	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	for (uint64_t e = 0; e < (elements); e++)
+	ir_operand result;
+	if ((use_x86_sse_jit(ctx)))
 	{
-		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
+		result = sse_coppy_gp_across_lanes_jit(ctx,element,esize);
+		if ((!Q))
+		{
+			ssa_emit_context::vector_insert(ctx,result, 1ULL, 64ULL, ir_operand::create_con(0ULL, int64));
+		}
+	}
+	else
+	{
+		result = ssa_emit_context::vector_zero(ctx);
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			ssa_emit_context::vector_insert(ctx,result, e, esize, element);
+		}
 	}
 	V_jit(ctx,Rd,result);
 }
@@ -11536,12 +12762,12 @@ void move_to_gp_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t imm5, uint64_t U
 	{
 		uint64_t R = datasize == 32ULL ? int32 : datasize == 64ULL ? int64 : 0;
 		{
-			ir_operand working_operand = copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,operand, index, esize), R);
+			ir_operand result = copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,operand, index, esize), R);
 			if ((!U))
 			{
-				working_operand = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, working_operand, S), R);
+				result = ssa_emit_context::emit_ssa(ctx,ir_sign_extend,copy_new_raw_size(ctx, result, S), R);
 			}
-			X_jit(ctx,Rd,copy_new_raw_size(ctx, working_operand, int64));
+			X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
 		}
 	}
 }
@@ -11658,17 +12884,17 @@ void fmov_general_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64
 	uint64_t int_to_float = opcode;
 	if ((int_to_float))
 	{
-		ir_operand src = X_jit(ctx,Rn);
+		ir_operand result = X_jit(ctx,Rn);
 		uint64_t O = size == 32ULL ? int32 : size == 64ULL ? int64 : 0;
 		{
-			VPart_jit(ctx,Rd,part,size,copy_new_raw_size(ctx, copy_new_raw_size(ctx, src, O), int64));
+			VPart_jit(ctx,Rd,part,size,copy_new_raw_size(ctx, copy_new_raw_size(ctx, result, O), int64));
 		}
 	}
 	else
 	{
 		ir_operand v = V_jit(ctx,Rn);
-		ir_operand src = ssa_emit_context::vector_extract(ctx,v, part, size);
-		X_jit(ctx,Rd,src);
+		ir_operand result = ssa_emit_context::vector_extract(ctx,v, part, size);
+		X_jit(ctx,Rd,result);
 	}
 }
 
@@ -11706,83 +12932,6 @@ void convert_to_float_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, 
 			ssa_emit_context::vector_insert(ctx,result, e, esize, working);
 		}
 		V_jit(ctx,Rd,result);
-	}
-}
-
-void floating_point_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t opcode, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	ir_operand operand1 = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	ir_operand operand2 = copy_new_raw_size(ctx, V_jit(ctx,Rm), int64);
-	ir_operand result;
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	if ((((uint64_t)opcode == (uint64_t)0ULL)))
-	{
-		result = FPMul_jit(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)1ULL)))
-	{
-		result = FPDiv_jit(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)2ULL)))
-	{
-		result = FPAdd_jit(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)3ULL)))
-	{
-		result = FPSub_jit(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)4ULL)))
-	{
-		result = FPMax_jit(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)5ULL)))
-	{
-		result = FPMin_jit(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)6ULL)))
-	{
-		result = FPMaxNum_jit(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)7ULL)))
-	{
-		result = FPMinNum_jit(ctx,operand1,operand2,fpcr_state,fltsize);
-	}
-	else if ((((uint64_t)opcode == (uint64_t)8ULL)))
-	{
-		result = FPMul_jit(ctx,operand1,operand2,fpcr_state,fltsize);
-		result = FPNeg_jit(ctx,result,fpcr_state,fltsize);
-	}
-	else
-	{
-		undefined_with_jit(ctx,opcode);
-	}
-	ir_operand vector = ssa_emit_context::vector_zero(ctx);
-	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
-	V_jit(ctx,Rd,vector);
-}
-
-void conversion_between_floating_point_and_fixed_point_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t S, uint64_t ftype, uint64_t rmode, uint64_t opcode, uint64_t scale, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t intsize = ((uint64_t)32ULL << (uint64_t)sf);
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	uint64_t fracbits = ((uint64_t)64ULL - (uint64_t)scale);
-	ir_operand result;
-	if ((((uint64_t)rmode == (uint64_t)0ULL)))
-	{
-		ir_operand source = X_jit(ctx,Rn);
-		result = FixedToFP_jit(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)3ULL),fltsize,intsize);
-		V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
-	}
-	else if ((((uint64_t)rmode == (uint64_t)3ULL)))
-	{
-		ir_operand source = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-		result = FPToFixed_jit(ctx,source,fracbits,((uint64_t)opcode == (uint64_t)1ULL),(uint64_t)FPRounding_ZERO,intsize,fltsize);
-		X_jit(ctx,Rd,result);
-	}
-	else
-	{
-		undefined_with_jit(ctx,100ULL);
 	}
 }
 
@@ -12175,23 +13324,30 @@ void cnt_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint
 
 void orr_orn_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t invert, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t esize = 64ULL;
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	for (uint64_t e = 0; e < (elements); e++)
+	if ((use_x86_sse_jit(ctx)))
 	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		if ((invert))
-		{
-			element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
-		}
-		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, element1, element2));
+		x86_sse_logic_vector_jit(ctx,Rd,Rn,Rm,Q,invert,(uint64_t)x86_orps);
 	}
-	V_jit(ctx,Rd,result);
+	else
+	{
+		uint64_t esize = 64ULL;
+		uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+		uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+		ir_operand operand1 = V_jit(ctx,Rn);
+		ir_operand operand2 = V_jit(ctx,Rm);
+		ir_operand result = ssa_emit_context::vector_zero(ctx);
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+			ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+			if ((invert))
+			{
+				element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
+			}
+			ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, element1, element2));
+		}
+		V_jit(ctx,Rd,result);
+	}
 }
 
 void bsl_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t Rn, uint64_t Rd)
@@ -12215,40 +13371,61 @@ void bsl_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t Rn,
 
 void and_bic_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t invert, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t esize = 64ULL;
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	for (uint64_t e = 0; e < (elements); e++)
+	if ((use_x86_sse2_jit(ctx)))
 	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
 		if ((invert))
 		{
-			element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
+			x86_sse_logic_vector_jit(ctx,Rd,Rm,Rn,Q,0ULL,(uint64_t)x86_pandn);
 		}
-		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, element1, element2));
+		else
+		{
+			x86_sse_logic_vector_jit(ctx,Rd,Rn,Rm,Q,0ULL,(uint64_t)x86_pand);
+		}
 	}
-	V_jit(ctx,Rd,result);
+	else
+	{
+		uint64_t esize = 64ULL;
+		uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+		uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+		ir_operand operand1 = V_jit(ctx,Rn);
+		ir_operand operand2 = V_jit(ctx,Rm);
+		ir_operand result = ssa_emit_context::vector_zero(ctx);
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+			ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+			if ((invert))
+			{
+				element2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, element2);
+			}
+			ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, element1, element2));
+		}
+		V_jit(ctx,Rd,result);
+	}
 }
 
 void eor_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t Rn, uint64_t Rd)
 {
-	uint64_t esize = 64ULL;
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	for (uint64_t e = 0; e < (elements); e++)
+	if ((use_x86_sse_jit(ctx)))
 	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, element1, element2));
+		x86_sse_logic_vector_jit(ctx,Rd,Rn,Rm,Q,0ULL,(uint64_t)x86_xorps);
 	}
-	V_jit(ctx,Rd,result);
+	else
+	{
+		uint64_t esize = 64ULL;
+		uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
+		uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
+		ir_operand operand1 = V_jit(ctx,Rn);
+		ir_operand operand2 = V_jit(ctx,Rm);
+		ir_operand result = ssa_emit_context::vector_zero(ctx);
+		for (uint64_t e = 0; e < (elements); e++)
+		{
+			ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
+			ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
+			ssa_emit_context::vector_insert(ctx,result, e, esize, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, element1, element2));
+		}
+		V_jit(ctx,Rd,result);
+	}
 }
 
 void xnt_xnt2_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint64_t Rd)
@@ -12419,108 +13596,6 @@ void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype
 	}
 }
 
-void fmov_scalar_immediate_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t imm8, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	ir_operand imm = ir_operand::create_con(vfp_expand_imm_jit(ctx,imm8,fltsize), int64);
-	V_jit(ctx,Rd,copy_new_raw_size(ctx, imm, int128));
-}
-
-void fcvt_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t opc, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t srcsize = get_flt_size_jit(ctx,ftype);
-	uint64_t dstsize = get_flt_size_jit(ctx,opc);
-	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	V_jit(ctx,Rd,copy_new_raw_size(ctx, FPConvert_jit(ctx,operand,dstsize,srcsize), int128));
-}
-
-void fabs_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	ir_operand result = ir_operand::create_con(0ULL, int64);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	result = FPAbs_jit(ctx,operand,fpcr_state,fltsize);
-	ir_operand vector = ssa_emit_context::vector_zero(ctx);
-	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
-	V_jit(ctx,Rd,vector);
-}
-
-void fneg_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	ir_operand result = ir_operand::create_con(0ULL, int64);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	result = FPNeg_jit(ctx,operand,fpcr_state,fltsize);
-	ir_operand vector = ssa_emit_context::vector_zero(ctx);
-	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
-	V_jit(ctx,Rd,vector);
-}
-
-void fneg_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand = V_jit(ctx,Rn);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
-		ir_operand working = FPNeg_jit(ctx,element,fpcr_state,esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fsqrt_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t fltsize = get_flt_size_jit(ctx,ftype);
-	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	ir_operand result = ir_operand::create_con(0ULL, int64);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	result = FPSqrt_jit(ctx,operand,fpcr_state,fltsize);
-	ir_operand vector = ssa_emit_context::vector_zero(ctx);
-	ssa_emit_context::vector_insert(ctx,vector, 0ULL, fltsize, result);
-	V_jit(ctx,Rd,vector);
-}
-
-void fsqrt_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand = V_jit(ctx,Rn);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
-		ir_operand working = FPSqrt_jit(ctx,element,fpcr_state,esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void frecpe_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand = V_jit(ctx,Rn);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
-		ir_operand working = FPRecipEstimate_jit(ctx,element,fpcr_state,esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, working);
-	}
-	V_jit(ctx,Rd,result);
-}
-
 void fcmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc)
 {
 	uint64_t datasize = get_flt_size_jit(ctx,ftype);
@@ -12576,380 +13651,5 @@ void fccmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond
 	
 	    ir_operation_block::mark_label(ctx->ir, end);
 	}
-}
-
-void fcvtz_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_ZERO,U,0ULL);
-}
-
-void fcvtn_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEEVEN,U,0ULL);
-}
-
-void fcvta_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_TIEAWAY,U,0ULL);
-}
-
-void fcvtm_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_NEGINF,U,0ULL);
-}
-
-void fadd_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPAdd_jit(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fmul_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPMul_jit(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fsub_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPSub_jit(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fdiv_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPDiv_jit(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fmul_accumulate_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t neg, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand operand3 = V_jit(ctx,Rd);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ir_operand element3 = ssa_emit_context::vector_extract(ctx,operand3, e, esize);
-		if ((neg))
-		{
-			element1 = FPNeg_jit(ctx,element1,fpcr_state,esize);
-		}
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPMulAdd_jit(ctx,element3,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void faddp_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	ir_operand lo = V_jit(ctx,Rn);
-	ir_operand hi = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = get_from_concacted_vector_jit(ctx,hi,lo,((uint64_t)2ULL * (uint64_t)e),((uint64_t)datasize / (uint64_t)esize),esize);
-		ir_operand element2 = get_from_concacted_vector_jit(ctx,hi,lo,((uint64_t)(((uint64_t)2ULL * (uint64_t)e)) + (uint64_t)1ULL),((uint64_t)datasize / (uint64_t)esize),esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPAdd_jit(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void frsqrte_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	ir_operand operand = copy_new_raw_size(ctx, V_jit(ctx,Rn), int64);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	ir_operand result = FPRSqrtEstimate_jit(ctx,operand,fpcr_state,esize);
-	if ((((uint64_t)esize == (uint64_t)32ULL)))
-	{
-		result = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, result, ir_operand::create_con(4294967295ULL, int64));
-	}
-	V_jit(ctx,Rd,copy_new_raw_size(ctx, result, int128));
-}
-
-void frsqrte_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand = V_jit(ctx,Rn);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element = ssa_emit_context::vector_extract(ctx,operand, e, esize);
-		element = FPRSqrtEstimate_jit(ctx,element,fpcr_state,esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void frsqrts_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPRSqrtStepFused_jit(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void frecps_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,Rm);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, e, esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPRecipStepFused_jit(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fmul_scalar_by_element_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
-	uint64_t index;
-	uint64_t rm_hi = M;
-	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
-	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
-	{
-		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
-	}
-	else if ((((uint64_t)test == (uint64_t)2ULL)))
-	{
-		index = H;
-	}
-	else
-	{
-		undefined_jit(ctx);
-	}
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	ir_operand product = FPMul_jit(ctx,copy_new_raw_size(ctx, operand1, int64),ssa_emit_context::vector_extract(ctx,operand2, index, esize),fpcr_state,esize);
-	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, product);
-	V_jit(ctx,Rd,result);
-}
-
-void fmul_vector_by_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t H, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
-	uint64_t index;
-	uint64_t rm_hi = M;
-	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
-	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
-	{
-		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
-	}
-	else if ((((uint64_t)test == (uint64_t)2ULL)))
-	{
-		index = H;
-	}
-	else
-	{
-		undefined_jit(ctx);
-	}
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, index, esize);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPMul_jit(ctx,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void fmul_accumulate_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
-	uint64_t index;
-	uint64_t rm_hi = M;
-	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
-	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
-	{
-		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
-	}
-	else if ((((uint64_t)test == (uint64_t)2ULL)))
-	{
-		index = H;
-	}
-	else
-	{
-		undefined_jit(ctx);
-	}
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
-	ir_operand operand3 = V_jit(ctx,Rd);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	ir_operand element1 = copy_new_raw_size(ctx, operand1, int64);
-	if ((neg))
-	{
-		element1 = FPNeg_jit(ctx,element1,fpcr_state,esize);
-	}
-	ir_operand product_accumalant = FPMulAdd_jit(ctx,copy_new_raw_size(ctx, operand3, int64),element1,ssa_emit_context::vector_extract(ctx,operand2, index, esize),fpcr_state,esize);
-	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, product_accumalant);
-	V_jit(ctx,Rd,result);
-}
-
-void fmul_accumulate_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t idxdsize = ((uint64_t)64ULL << (uint64_t)H);
-	uint64_t index;
-	uint64_t rm_hi = M;
-	uint64_t test = ((uint64_t)(((uint64_t)sz << (uint64_t)1ULL)) | (uint64_t)L);
-	if ((((uint64_t)(((uint64_t)test >> (uint64_t)1ULL)) == (uint64_t)0ULL)))
-	{
-		index = ((uint64_t)L | (uint64_t)(((uint64_t)H << (uint64_t)1ULL)));
-	}
-	else if ((((uint64_t)test == (uint64_t)2ULL)))
-	{
-		index = H;
-	}
-	else
-	{
-		undefined_jit(ctx);
-	}
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand operand2 = V_jit(ctx,((uint64_t)Rm | (uint64_t)(((uint64_t)rm_hi << (uint64_t)4ULL))));
-	ir_operand operand3 = V_jit(ctx,Rd);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)64ULL << (uint64_t)Q);
-	uint64_t elements = ((uint64_t)datasize / (uint64_t)esize);
-	ir_operand element2 = ssa_emit_context::vector_extract(ctx,operand2, index, esize);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	for (uint64_t e = 0; e < (elements); e++)
-	{
-		ir_operand element1 = ssa_emit_context::vector_extract(ctx,operand1, e, esize);
-		ir_operand element3 = ssa_emit_context::vector_extract(ctx,operand3, e, esize);
-		if ((neg))
-		{
-			element1 = FPNeg_jit(ctx,element1,fpcr_state,esize);
-		}
-		ssa_emit_context::vector_insert(ctx,result, e, esize, FPMulAdd_jit(ctx,element3,element1,element2,fpcr_state,esize));
-	}
-	V_jit(ctx,Rd,result);
-}
-
-void frint_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd, uint64_t rounding)
-{
-	ir_operand operand1 = V_jit(ctx,Rn);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	uint64_t esize = get_flt_size_jit(ctx,ftype);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	ir_operand working = FPRoundInt_jit(ctx,copy_new_raw_size(ctx, operand1, int64),fpcr_state,rounding,esize);
-	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, working);
-	V_jit(ctx,Rd,result);
-}
-
-void frintp_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	frint_jit(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_POSINF);
-}
-
-void frintm_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rn, uint64_t Rd)
-{
-	frint_jit(ctx,ftype,Rn,Rd,(uint64_t)FPRounding_NEGINF);
-}
-
-void fcvtp_scalar_integer_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t U, uint64_t Rn, uint64_t Rd)
-{
-	convert_to_int_jit(ctx,sf,ftype,Rd,Rn,(uint64_t)FPRounding_POSINF,U,0ULL);
-}
-
-void faddp_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd)
-{
-	uint64_t esize = ((uint64_t)32ULL << (uint64_t)sz);
-	uint64_t datasize = ((uint64_t)esize * (uint64_t)2ULL);
-	ir_operand operand = V_jit(ctx,Rn);
-	ir_operand result = ssa_emit_context::vector_zero(ctx);
-	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
-	ir_operand bottom = ssa_emit_context::vector_extract(ctx,operand, 0ULL, esize);
-	ir_operand top = ssa_emit_context::vector_extract(ctx,operand, 1ULL, esize);
-	ssa_emit_context::vector_insert(ctx,result, 0ULL, esize, FPAdd_jit(ctx,bottom,top,fpcr_state,esize));
-	V_jit(ctx,Rd,result);
 }
 

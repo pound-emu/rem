@@ -124,6 +124,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		{
 		case ir_negate:						c.neg(create_operand(working_operation.destinations[0])); 	assert_valid_unary_operation(&working_operation); 	break;
 		case ir_incrament:					c.inc(create_operand(working_operation.destinations[0])); 	assert_valid_unary_operation(&working_operation); 	break;
+		case ir_decrament:					c.dec(create_operand(working_operation.destinations[0])); 	assert_valid_unary_operation(&working_operation); 	break;
 		case ir_bitwise_not:				c.not_(create_operand(working_operation.destinations[0])); 	assert_valid_unary_operation(&working_operation); 	break;
 
 		case x86_cwd:						c.cwd(); 													assert_valid_c_operation(&working_operation); 		break;
@@ -648,6 +649,17 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			c.xorps(d, d);
 		}; break;
 
+		case ir_vector_one:
+		{
+			ir_operand destination = working_operation.destinations[0];
+
+			assert_is_size(destination, int128);
+
+			auto d = create_operand<Xbyak::Xmm>(destination);
+
+			c.pcmpeqd(d, d);
+		}; break;
+
 		case ir_vector_extract:
 		{
 			ir_operand destination = working_operation.destinations[0];
@@ -769,6 +781,33 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 
 		}; break;
 
+		case x86_shufps:
+		case x86_shufpd:
+		{
+			ir_operand d = working_operation.destinations[0];
+			
+			ir_operand s0 = working_operation.sources[0];
+			ir_operand s1 = working_operation.sources[1];
+			int index = working_operation.sources[2].value;
+
+			assert_operand_count(&working_operation, 1, 3);
+
+			assert(ir_operand::is_vector(&d));
+			assert(ir_operand::is_vector(&s0));
+			assert(ir_operand::is_vector(&s1));
+			assert_is_constant(working_operation.sources[2]);
+			
+			assert_same_registers(d, s0);
+
+			switch (instruction)
+			{
+				case x86_shufps: c.shufps(create_operand<Xbyak::Xmm>(d), create_operand<Xbyak::Xmm>(s1), index); break;
+				case x86_shufpd: c.shufpd(create_operand<Xbyak::Xmm>(d), create_operand<Xbyak::Xmm>(s1), index); break;
+				default: throw_error();
+			}
+
+		}; break;
+
 		case x86_addpd: assert_valid_binary_float_operation(&working_operation); c.addpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_addps: assert_valid_binary_float_operation(&working_operation); c.addps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_addsd: assert_valid_binary_float_operation(&working_operation); c.addsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
@@ -789,6 +828,12 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		case x86_subps: assert_valid_binary_float_operation(&working_operation); c.subps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_subsd: assert_valid_binary_float_operation(&working_operation); c.subsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_subss: assert_valid_binary_float_operation(&working_operation); c.subss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+
+		case x86_orps: 	assert_valid_binary_float_operation(&working_operation); c.orps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_xorps: assert_valid_binary_float_operation(&working_operation); c.xorps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_pand: 	assert_valid_binary_float_operation(&working_operation); c.pand(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_pandn:	assert_valid_binary_float_operation(&working_operation); c.pandn(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+
 
 		case x86_sqrtss:	c.sqrtss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;
 		case x86_sqrtsd:	c.sqrtsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;

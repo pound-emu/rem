@@ -178,6 +178,10 @@ static bool instruction_is_commutative(uint64_t instruction)
 		case ir_bitwise_and:
 		case ir_bitwise_or:
 		case ir_bitwise_exclusive_or:
+		case x86_addps:
+		case x86_addpd:
+		case x86_addss:
+		case x86_addsd:
 		{
 			return true;
 		};
@@ -203,7 +207,7 @@ static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, ir_instructions 
 		swap(&source_0, &source_1);	
 	}
 
-	if ((ir_operand::is_constant(&source_1) && source_1.value < INT32_MAX) && !ir_operand::is_constant(&source_0))
+	if ((ir_operand::is_constant(&source_1) && source_1.value < INT32_MAX) && !ir_operand::is_constant(&source_0) && instruction != ir_multiply)
 	{
 		if (!ir_operand::are_equal(destination, source_0))
 		{
@@ -218,6 +222,11 @@ static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, ir_instructions 
 	ir_operand working_destination = destination;
 	ir_operand working_source_0 = register_or_constant(result, &source_0);
 	ir_operand working_source_1 = register_or_constant(result, &source_1);
+
+	if (instruction_is_commutative(instruction) && ir_operand::are_equal(working_destination, working_source_1) && !ir_operand::are_equal(working_destination, working_source_0))
+	{
+		swap(&source_0, &source_1);	
+	}
 
 	if (ir_operand::are_equal(working_destination, working_source_0))
 	{
@@ -709,9 +718,7 @@ static void emit_convert_to_float(x86_pre_allocator_context* result, ir_operatio
 
 			emit_move(result, temp, ir_operand::copy_new_raw_size(source, source.meta_data));
 
-			temp = ir_operand::copy_new_raw_size(source, int64);
-
-			source = temp;
+			source = ir_operand::copy_new_raw_size(temp, int64);
 		}
 
 		if (d_size == int64)
@@ -762,6 +769,30 @@ static void emit_convert_to_float(x86_pre_allocator_context* result, ir_operatio
 	}
 }
 
+static void emit_shuf(x86_pre_allocator_context* result, ir_operation* operation)
+{
+	assert_operand_count(operation, 1, 3);
+
+	ir_operand destination = operation->destinations[0];
+	ir_operand source0 = operation->sources[0];
+	ir_operand source1 = operation->sources[1];
+	ir_operand control = operation->sources[2];
+
+	assert(ir_operand::is_vector(&destination));
+	assert(ir_operand::is_vector(&source0));
+	assert(ir_operand::is_vector(&source1));
+	assert_is_constant(control);
+
+	ir_operand working = create_scrap_operand(result, int128);
+
+	emit_move(result, working, source0);
+
+	ir_operation_block::emitds(result->ir, operation->instruction, working, working, source1, control);
+
+	emit_move(result, destination, working);
+
+}
+
 static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_allocator_context, ir_operation* operation, os_information os)
 {
 	ir_instructions working_instruction = (ir_instructions)operation->instruction;
@@ -775,6 +806,31 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case ir_bitwise_or:
 		case ir_bitwise_exclusive_or:
 		case ir_multiply:
+		case x86_addpd:
+		case x86_addps:
+		case x86_addsd:
+		case x86_addss:
+		case x86_divpd:
+		case x86_divps:
+		case x86_divsd:
+		case x86_divss:
+		case x86_maxsd:
+		case x86_maxss:
+		case x86_minsd:
+		case x86_minss:
+		case x86_mulpd:
+		case x86_mulps:
+		case x86_mulsd:
+		case x86_mulss:
+		case x86_subpd:
+		case x86_subps:
+		case x86_subsd:
+		case x86_subss:
+		
+		case x86_xorps:
+		case x86_pand:
+		case x86_orps:
+		case x86_pandn:
 		{
 			assert_operand_count(operation, 1, 2);
 			assert_is_register(operation->destinations[0]);
@@ -878,6 +934,7 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 
 		case ir_bitwise_not:
 		case ir_incrament: 
+		case ir_decrament:
 		case ir_negate:
 		case ir_logical_not:
 		{
@@ -930,8 +987,15 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case ir_load:
 		case ir_jump_if:
 		case ir_vector_zero:
+		case ir_vector_one:
 		{
 			emit_as_is(pre_allocator_context, operation);
+		}; break;
+
+		case x86_shufpd:
+		case x86_shufps:
+		{
+			emit_shuf(pre_allocator_context, operation);
 		}; break;
 
 		case ir_assert_false:

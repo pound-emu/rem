@@ -24,6 +24,12 @@ struct uint128_t
         d0 = source;
         d1 = 0;
     }
+
+    uint128_t (uint64_t source_0, uint64_t source_1)
+    {
+        d0 = source_0;
+        d1 = source_1;
+    }
     
     static void insert(uint128_t* data, int index, int size, uint64_t value)
     {

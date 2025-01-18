@@ -57,6 +57,7 @@ enum ir_instructions : uint64_t
 
 	ir_bitwise_not,
 	ir_incrament,
+	ir_decrament,
 	ir_move,
 	ir_negate,
 	ir_sign_extend, 
@@ -101,6 +102,7 @@ enum ir_instructions : uint64_t
 	ir_vector_extract,
 	ir_vector_insert,
 	ir_vector_zero,
+	ir_vector_one,
 
 	//Asserts
 	ir_assert_false,
@@ -137,6 +139,14 @@ enum ir_instructions : uint64_t
 	x86_subsd,
 	x86_subss,
 
+	x86_xorps,
+	x86_pand,
+	x86_orps,
+	x86_pandn,
+
+	x86_shufps,
+	x86_shufpd,
+
 	x86_sqrtss,
 	x86_sqrtsd,	
 	x86_sqrtps,
@@ -148,7 +158,7 @@ enum ir_instructions : uint64_t
 };
 
 static std::string instruction_names[] = {
-	//Binary Operations
+		//Binary Operations
 	"ir_binary_start",
 
 	"ir_add",
@@ -194,6 +204,7 @@ static std::string instruction_names[] = {
 
 	"ir_bitwise_not",
 	"ir_incrament",
+	"ir_decrament",
 	"ir_move",
 	"ir_negate",
 	"ir_sign_extend", 
@@ -243,7 +254,7 @@ static std::string instruction_names[] = {
 	"ir_assert_false",
 	"ir_assert_true",
 
-	//x86
+	//X86
 	"x86_cqo",
 	"x86_cdq",
 	"x86_cwd",

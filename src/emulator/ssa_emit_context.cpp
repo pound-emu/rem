@@ -46,22 +46,28 @@ ir_operand ssa_emit_context::emit_ssa(ssa_emit_context* ctx, ir_instructions ins
     return result;
 }
 
-ir_operand ssa_emit_context::emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x, ir_operand y)
+ir_operand ssa_emit_context::emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x, ir_operand y, bool check_size)
 {
     ir_operand result = create_local(ctx, x.meta_data);
 
-    assert_same_size({x, y});
+    if (check_size)
+    {
+        assert_same_size({x, y});
+    }
 
     ir_operation_block::emitds(ctx->ir, instruction, result, x, y);
 
     return result;
 }
 
-ir_operand ssa_emit_context::emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x, ir_operand y, ir_operand z)
+ir_operand ssa_emit_context::emit_ssa(ssa_emit_context* ctx, ir_instructions instruction, ir_operand x, ir_operand y, ir_operand z, bool check_size)
 {
     ir_operand result = create_local(ctx, x.meta_data);
 
-    assert_same_size({x, y, z});
+    if (check_size)
+    {
+        assert_same_size({x, y, z});
+    }
 
     ir_operation_block::emitds(ctx->ir, instruction, result, x, y, z);
 
@@ -107,6 +113,11 @@ ir_operand ssa_emit_context::vector_extract(ssa_emit_context* ctx, ir_operand so
 ir_operand ssa_emit_context::vector_zero(ssa_emit_context* ctx)
 {
     return ssa_emit_context::emit_ssa(ctx, ir_vector_zero, int128);
+}
+
+ir_operand ssa_emit_context::vector_one(ssa_emit_context* ctx)
+{
+    return ssa_emit_context::emit_ssa(ctx, ir_vector_one, int128);
 }
 
 ir_operand ssa_emit_context::convert_to_float(ssa_emit_context* ctx, ir_operand source, uint64_t result_size, uint64_t source_size, bool is_signed)

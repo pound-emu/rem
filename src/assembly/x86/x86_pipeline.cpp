@@ -36,7 +36,7 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 	}
 	
 	x86_pre_allocator_context::run_pass(&pre_allocation_data, pre_allocated_code, source_ir, working_abi.cpu,working_abi.os);
-	
+
 	basic_register_allocator_context::run_pass(
 		&register_allocation_data,
 		register_allocated_code,
