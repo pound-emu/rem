@@ -3,6 +3,7 @@
 
 #include "ir/ir.h"
 #include "emulator/guest_register_store.h"
+#include "emulator/guest_compiler_optimization_flags.h"
 #include "emulator/branch_type.h"
 #include <unordered_set>
 #include <unordered_map>
@@ -24,12 +25,14 @@ struct aarch64_emit_context
     uint64_t                                                    current_instruction_address;
     uint32_t                                                    current_raw_instruction;
 
+    guest_compiler_optimization_flags                           optimization_flags;
+
     guest_register_store                                        registers;
     std::vector<intrusive_linked_list_element<ir_operation>*>   context_movement;    
                     
     ir_operand                                                  context_pointer;
                     
-    static void                                                 create(guest_process* process, aarch64_emit_context* result, ssa_emit_context* ir);
+    static void                                                 create(guest_process* process, aarch64_emit_context* result, ssa_emit_context* ir, guest_compiler_optimization_flags flags);
     static void                                                 init_context(aarch64_emit_context* ctx);
     static void                                                 emit_load_context(aarch64_emit_context* ctx);
     static void                                                 emit_store_context(aarch64_emit_context* ctx);

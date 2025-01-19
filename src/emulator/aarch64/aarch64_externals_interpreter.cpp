@@ -201,3 +201,8 @@ uint64_t use_fast_float_interpreter(interpreter_data* ctx)
 {
     return false;
 }
+
+uint64_t use_x86_sse41_interpreter(interpreter_data* ctx)
+{
+    return true;
+}

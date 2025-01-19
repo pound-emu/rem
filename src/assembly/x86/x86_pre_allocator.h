@@ -17,6 +17,8 @@
 #define R8(size) 	ir_operand::create_hardware_reg(8, size)
 #define R9(size) 	ir_operand::create_hardware_reg(9, size)
 
+#define XMM(index)	ir_operand::create_hardware_reg(index, int128)
+
 struct x86_pre_allocator_context
 {
 	uint64_t																scrap_index;

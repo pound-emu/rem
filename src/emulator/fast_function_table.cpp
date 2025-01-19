@@ -10,7 +10,7 @@ bool fast_function_table::is_open(fast_function_table* table)
 bool fast_function_table::insert_function(fast_function_table* table, uint64_t guest_address, uint32_t jit_offset)
 {
     if (!is_open(table))
-    {
+    {        
         init(table, guest_address);
     }
 

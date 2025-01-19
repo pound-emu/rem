@@ -3,7 +3,71 @@
 #include "guest_process.h"
 #include "jit/jit_memory.h"
 
-guest_function guest_function_store::get_or_translate_function(guest_function_store* context, uint64_t address, translate_request_data* process_context)
+void guest_function_store::request_retranslate_function(guest_function_store* context, uint64_t address, guest_compiler_optimization_flags flags, translate_request_data process_context)
+{
+    context->retranslate_lock.lock();
+
+    retranslate_request request;
+
+    request.address = address;
+    request.flags = flags;
+    request.process_context = process_context;
+
+    context->retranslate_requests.push_back(request);
+
+    context->retranslate_lock.unlock();
+
+    if (!context->retranslator_is_running)
+    {
+        context->retranslator_is_running = true;
+
+        std::thread(guest_function_store::retranslate_functions, context).detach();
+    }
+}
+
+void guest_function_store::retranslate_functions(guest_function_store* context)
+{ 
+    context->retranslator_is_running = true;
+
+    while (1)
+    {
+        context->retranslate_lock.lock();
+
+        auto to_retranslate = context->retranslate_requests;
+        context->retranslate_requests = std::vector<retranslate_request>();
+
+        context->retranslate_lock.unlock();
+
+        if (to_retranslate.size() == 0)
+        {
+            break;
+        }
+
+        for (auto i : to_retranslate)
+        {
+            translate_request_data process_context = i.process_context;
+
+            guest_function result = process_context.translate_function(&process_context,i.flags);
+
+            result.optimizations = i.flags;
+
+            if (i.flags & guest_compiler_optimization_flags::use_flt)
+            {   
+                fast_function_table::insert_function(&context->native_function_table, i.address, result.jit_offset);
+            }
+
+            context->main_translate_lock.lock();
+
+            context->functions[i.address] = result;
+
+            context->main_translate_lock.unlock();
+        }
+    }  
+
+    context->retranslator_is_running = false;
+}
+
+guest_function guest_function_store::get_or_translate_function(guest_function_store* context, uint64_t address, translate_request_data* process_context, bool incrament_usage_counter)
 {
     auto function_table = &context->native_function_table;
 
@@ -27,25 +91,28 @@ guest_function guest_function_store::get_or_translate_function(guest_function_st
             return result;
         }
     }
+    else if (context->use_flt)
+    {
+        fast_function_table::init(function_table, address);
+    }
 
-    context->lock.lock();
+    context->main_translate_lock.lock();
 
     if (context->functions.find(address) == context->functions.end())
     {
-        context->lock.unlock();
+        guest_compiler_optimization_flags entry_optimization = guest_compiler_optimization_flags::level_zero;
 
-        guest_function result = process_context->translate_function(process_context);
+        context->main_translate_lock.unlock();
 
-        context->lock.lock();
+        guest_function result = process_context->translate_function(process_context, entry_optimization);
 
-        if (context->use_flt)
-        {
-            fast_function_table::insert_function(function_table, address, result.jit_offset);
-        }
+        result.optimizations = entry_optimization;
+
+        context->main_translate_lock.lock();
 
         context->functions[address] = result;
 
-        context->lock.unlock();
+        context->main_translate_lock.unlock();
 
         return result;
     }
@@ -53,7 +120,12 @@ guest_function guest_function_store::get_or_translate_function(guest_function_st
     {
         guest_function result = context->functions[address];
 
-        context->lock.unlock();
+        if (incrament_usage_counter)
+        {
+            context->functions[address].times_executed++;
+        }
+
+        context->main_translate_lock.unlock();
 
         return result;
     }

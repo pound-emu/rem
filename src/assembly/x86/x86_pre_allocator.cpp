@@ -182,6 +182,13 @@ static bool instruction_is_commutative(uint64_t instruction)
 		case x86_addpd:
 		case x86_addss:
 		case x86_addsd:
+		case x86_xorps:
+		case x86_pand:
+		case x86_orps:
+		case x86_mulps:
+		case x86_mulpd:
+		case x86_mulss:
+		case x86_mulsd:
 		{
 			return true;
 		};
@@ -696,6 +703,50 @@ static uint64_t create_float(double source, uint64_t size)
 	}
 }
 
+static void emit_convert_to_int(x86_pre_allocator_context* result, ir_operation* operation)
+{
+	assert_operand_count(operation, 1, 1);
+
+	ir_operand destination = operation->destinations[0];
+	ir_operand source = register_or_constant(result,operation->sources[0]);
+
+	uint64_t d_size = ir_operand::get_raw_size(&destination);
+	uint64_t s_size = ir_operand::get_raw_size(&source);
+
+	ir_operand vector_source = vector_from_register(result, source);
+
+	bool is_signed = operation->instruction == ir_convert_to_integer_signed;
+
+	if (is_signed)
+	{
+		int working_instruction;
+
+		if (s_size == int32)
+		{
+			working_instruction = x86_cvtss2si;
+		}
+		else if (s_size == int64)
+		{
+			working_instruction = x86_cvtsd2si;
+		}
+		else
+		{
+			throw_error();
+		}
+
+		ir_operation_block::emitds(result->ir, working_instruction, destination, vector_source);
+	}
+	else
+	{
+		throw_error();
+	}
+
+	if (d_size <= int32)
+	{
+		emit_move(result, destination, destination);
+	}
+}
+
 static void emit_convert_to_float(x86_pre_allocator_context* result, ir_operation* operation)
 {
 	assert_operand_count(operation, 1, 1);
@@ -790,7 +841,6 @@ static void emit_shuf(x86_pre_allocator_context* result, ir_operation* operation
 	ir_operation_block::emitds(result->ir, operation->instruction, working, working, source1, control);
 
 	emit_move(result, destination, working);
-
 }
 
 static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_allocator_context, ir_operation* operation, os_information os)
@@ -851,9 +901,10 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 			emit_floating_point_binary(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0], operation->sources[1]);
 		}; break;
 
+		case ir_floating_point_compare_not_equal:
 		case ir_floating_point_compare_equal:
 		case ir_floating_point_compare_less:
-		case ir_floating_point_compare_not_equal:
+		case ir_floating_point_compare_less_equal:
 		case ir_floating_point_compare_greater:
 		case ir_floating_point_compare_greater_equal:
 		{
@@ -988,6 +1039,8 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case ir_jump_if:
 		case ir_vector_zero:
 		case ir_vector_one:
+		case x86_roundss:
+		case x86_roundsd:
 		{
 			emit_as_is(pre_allocator_context, operation);
 		}; break;
@@ -1053,6 +1106,12 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case ir_convert_to_float_unsigned:
 		{
 			emit_convert_to_float(pre_allocator_context, operation);
+		}; break;
+
+		case ir_convert_to_integer_unsigned:
+		case ir_convert_to_integer_signed:
+		{
+			emit_convert_to_int(pre_allocator_context, operation);
 		}; break;
 
 		default: 

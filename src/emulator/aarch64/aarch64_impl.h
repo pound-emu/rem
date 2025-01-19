@@ -115,6 +115,7 @@ template <typename O>
 O add_subtract_carry_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_flags, uint64_t is_add, O carry);
 uint8_t condition_holds_interpreter(interpreter_data* ctx, uint64_t cond);
 void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint64_t link);
+uint64_t create_mask_interpreter(interpreter_data* ctx, uint64_t bits);
 uint64_t shift_left_check_interpreter(interpreter_data* ctx, uint64_t to_shift, uint64_t shift, uint64_t size);
 uint64_t shift_right_check_interpreter(interpreter_data* ctx, uint64_t to_shift, uint64_t shift, uint64_t size, uint64_t is_unsigned);
 uint64_t reverse_interpreter(interpreter_data* ctx, uint128_t word, uint64_t M, uint64_t N);
@@ -338,6 +339,7 @@ void load_context_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEF
 uint64_t use_fast_float_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t use_x86_sse_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t use_x86_sse2_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_sse41_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t _get_pc_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address);//THIS FUNCTION IS USER DEFINED
 void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED
@@ -374,6 +376,7 @@ ir_operand add_subtract_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n,
 ir_operand add_subtract_carry_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add, ir_operand carry);
 ir_operand condition_holds_jit(ssa_emit_context* ctx, uint64_t cond);
 void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link);
+ir_operand create_mask_jit(ssa_emit_context* ctx, uint64_t bits);
 ir_operand shift_left_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_operand shift, uint64_t size);
 ir_operand shift_right_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_operand shift, uint64_t size, uint64_t is_unsigned);
 ir_operand reverse_jit(ssa_emit_context* ctx, ir_operand word, uint64_t M, uint64_t N);
@@ -594,6 +597,7 @@ void load_context_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t use_fast_float_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t use_x86_sse_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t use_x86_sse2_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_sse41_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t _get_pc_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address);//THIS FUNCTION IS USER DEFINED
 void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED

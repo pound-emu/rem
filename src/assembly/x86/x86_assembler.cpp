@@ -715,6 +715,50 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 
 		}; break;
 
+		case x86_cvtss2si:
+		case x86_cvtsd2si:
+		{
+			assert_operand_count(&working_operation, 1, 1);
+			
+			ir_operand d = working_operation.destinations[0];
+			ir_operand s = working_operation.sources[0];
+
+			assert_is_size(s, int128);
+			assert_is_register(d);
+
+			Xbyak::Reg des = (d.meta_data == int64 ? (Xbyak::Reg)create_operand<Xbyak::Reg64>(d) : (Xbyak::Reg)create_operand<Xbyak::Reg32>(d));
+			auto src = create_operand<Xbyak::Xmm>(s); 
+
+			switch (instruction)
+			{
+				case x86_cvtss2si: c.cvtss2si(des, src); break;
+				case x86_cvtsd2si: c.cvtsd2si(des, src); break;
+			}
+
+		}; break;
+
+		case x86_roundss:
+		case x86_roundsd:
+		{
+			assert_operand_count(&working_operation, 1, 2);		
+
+			ir_operand d = working_operation.destinations[0];
+			ir_operand s = working_operation.sources[0];
+			ir_operand control = working_operation.sources[1];
+
+			assert_is_constant(control);
+
+			assert(ir_operand::is_vector(&d));
+			assert(ir_operand::is_vector(&s));
+
+			switch (instruction)
+			{
+				case x86_roundss: c.roundss(create_operand<Xbyak::Xmm>(d), create_operand<Xbyak::Xmm>(s), control.value); break;
+				case x86_roundsd: c.roundsd(create_operand<Xbyak::Xmm>(d), create_operand<Xbyak::Xmm>(s), control.value); break;
+			}
+
+		}; break;
+
 		case x86_cvtsi2ss:
 		case x86_cvtsi2sd:
 		{
@@ -843,6 +887,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		case ir_floating_point_compare_not_equal:
 		case ir_floating_point_compare_greater:
 		case ir_floating_point_compare_greater_equal:
+		case ir_floating_point_compare_less_equal:
 		{
 			ir_operand destination = working_operation.destinations[0];
 			ir_operand source_0 = working_operation.sources[0];
@@ -870,7 +915,10 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			{
 				case ir_floating_point_compare_equal: 			c.sete(create_operand<Xbyak::Reg8>(destination)); break;
 				case ir_floating_point_compare_not_equal: 		c.setne(create_operand<Xbyak::Reg8>(destination)); break;
+
 				case ir_floating_point_compare_less:			c.setb(create_operand<Xbyak::Reg8>(destination)); break;
+				case ir_floating_point_compare_less_equal:		c.setbe(create_operand<Xbyak::Reg8>(destination)); break;
+
 				case ir_floating_point_compare_greater:			c.seta(create_operand<Xbyak::Reg8>(destination)); break;
 				case ir_floating_point_compare_greater_equal:	c.setae(create_operand<Xbyak::Reg8>(destination)); break;
 				default: throw_error();

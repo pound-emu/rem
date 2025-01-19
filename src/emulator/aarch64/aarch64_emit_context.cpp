@@ -3,12 +3,13 @@
 #include "emulator/guest_process.h"
 #include "jit/jit_memory.h"
 
-void aarch64_emit_context::create(guest_process* process, aarch64_emit_context* result, ssa_emit_context* ssa)
+void aarch64_emit_context::create(guest_process* process, aarch64_emit_context* result, ssa_emit_context* ssa, guest_compiler_optimization_flags flags)
 {
     result->ssa = ssa;
     result->raw_ir = ssa->ir;
     result->process = process;
     result->translate_functions = false;
+    result->optimization_flags = flags;
 
     guest_register_store::create(&result->registers, ssa, process->guest_context_offset_data.context_size);
 }
@@ -103,7 +104,7 @@ void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new
         emit_store_context(ctx);
     }
 
-    if (allow_table_branch)
+    if (allow_table_branch && (ctx->optimization_flags & guest_compiler_optimization_flags::use_flt))
     {
         table_branch(ctx, new_location);
     }

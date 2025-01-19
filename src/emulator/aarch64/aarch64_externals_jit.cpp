@@ -230,6 +230,10 @@ uint64_t use_x86_sse2_jit(ssa_emit_context* ctx)
     return 1;
 }
 
+uint64_t use_x86_sse41_jit(ssa_emit_context* ctx)
+{
+    return 1;
+}
 
 ir_operand intrinsic_unary_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source)
 {

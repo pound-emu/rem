@@ -24,5 +24,8 @@ Accomplishments:
 ![alt text](image_1.png)    
 ![alt text](image_2.png)    
 ![alt text](image_3.png)
+![alt text](<Screenshot from 2025-01-18 02-34-10.png>)
+![alt text](<Screenshot from 2025-01-19 03-12-47.png>)
+![alt text](<Screenshot from 2025-01-19 03-17-09.png>)
 
     Possible nintendo switch emulator written from the ground up in the works??????

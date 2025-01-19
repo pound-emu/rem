@@ -3,10 +3,11 @@
 
 #include <inttypes.h>
 #include "guest_function.h"
+#include "guest_compiler_optimization_flags.h"
 
 struct translate_request_data;
 
-typedef guest_function (*translate_guest_function)(translate_request_data*);
+typedef guest_function (*translate_guest_function)(translate_request_data*, guest_compiler_optimization_flags);
 
 struct translate_request_data
 {

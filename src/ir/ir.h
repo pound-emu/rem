@@ -47,6 +47,7 @@ enum ir_instructions : uint64_t
 	ir_floating_point_compare_equal,
 	ir_floating_point_compare_not_equal,
 	ir_floating_point_compare_less,
+	ir_floating_point_compare_less_equal,
 	ir_floating_point_compare_greater,
 	ir_floating_point_compare_greater_equal,
 
@@ -64,6 +65,8 @@ enum ir_instructions : uint64_t
 	ir_logical_not,
 	ir_convert_to_float_signed,
 	ir_convert_to_float_unsigned,
+	ir_convert_to_integer_signed,
+	ir_convert_to_integer_unsigned,
 	ir_floating_point_square_root,
 
 	ir_unary_end,
@@ -115,6 +118,8 @@ enum ir_instructions : uint64_t
 	x86_lea,
 	x86_cvtsi2ss,
 	x86_cvtsi2sd,
+	x86_cvtsd2si,
+	x86_cvtss2si,
 	x86_movq_to_gp,
 	x86_movq_to_vec,
 
@@ -146,6 +151,8 @@ enum ir_instructions : uint64_t
 
 	x86_shufps,
 	x86_shufpd,
+	x86_roundss,
+	x86_roundsd,
 
 	x86_sqrtss,
 	x86_sqrtsd,	
@@ -158,7 +165,7 @@ enum ir_instructions : uint64_t
 };
 
 static std::string instruction_names[] = {
-		//Binary Operations
+	//Binary Operations
 	"ir_binary_start",
 
 	"ir_add",
@@ -194,6 +201,7 @@ static std::string instruction_names[] = {
 	"ir_floating_point_compare_equal",
 	"ir_floating_point_compare_not_equal",
 	"ir_floating_point_compare_less",
+	"ir_floating_point_compare_less_equal",
 	"ir_floating_point_compare_greater",
 	"ir_floating_point_compare_greater_equal",
 
@@ -211,6 +219,8 @@ static std::string instruction_names[] = {
 	"ir_logical_not",
 	"ir_convert_to_float_signed",
 	"ir_convert_to_float_unsigned",
+	"ir_convert_to_integer_signed",
+	"ir_convert_to_integer_unsigned",
 	"ir_floating_point_square_root",
 
 	"ir_unary_end",
@@ -249,6 +259,7 @@ static std::string instruction_names[] = {
 	"ir_vector_extract",
 	"ir_vector_insert",
 	"ir_vector_zero",
+	"ir_vector_one",
 
 	//Asserts
 	"ir_assert_false",
@@ -261,6 +272,8 @@ static std::string instruction_names[] = {
 	"x86_lea",
 	"x86_cvtsi2ss",
 	"x86_cvtsi2sd",
+	"x86_cvtsd2si",
+	"x86_cvtss2si",
 	"x86_movq_to_gp",
 	"x86_movq_to_vec",
 
@@ -284,6 +297,16 @@ static std::string instruction_names[] = {
 	"x86_subps",
 	"x86_subsd",
 	"x86_subss",
+
+	"x86_xorps",
+	"x86_pand",
+	"x86_orps",
+	"x86_pandn",
+
+	"x86_shufps",
+	"x86_shufpd",
+	"x86_roundss",
+	"x86_roundsd",
 
 	"x86_sqrtss",
 	"x86_sqrtsd",	

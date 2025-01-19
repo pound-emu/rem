@@ -79,8 +79,23 @@ struct fixed_length_decoder;
 template <typename T>
 struct fixed_length_decoder
 {
-    std::vector<fixed_length_decoder_entry<T>>  entries;
-    std::unordered_map<std::string, int>        entry_map;
+    std::vector<fixed_length_decoder_entry<T>>              entries;
+    std::vector<std::vector<fixed_length_decoder_entry<T>>> fast_entries;
+    std::unordered_map<std::string, int>                    entry_map;
+    std::mutex                                              append_lock;
+
+    static uint32_t fast_table_lookup(uint32_t instruction) 
+    {
+        return ((instruction >> 10) & 0x00F) | ((instruction >> 18) & 0xFF0);
+    }
+
+    fixed_length_decoder()
+    {
+        for (int i = 0; i < 4096; ++i)
+        {
+            fast_entries.push_back(std::vector<fixed_length_decoder_entry<T>>());
+        }
+    }
 
     static fixed_length_decoder_entry<T>* decode_slow(fixed_length_decoder<T>* decoder, T instruction)
     {
@@ -93,6 +108,34 @@ struct fixed_length_decoder
         }
         
         return nullptr;
+    }
+
+    static fixed_length_decoder_entry<T>* decode_fast(fixed_length_decoder<T>* decoder, T instruction)
+    {
+        int index = fast_table_lookup(instruction);
+
+        auto entries = &decoder->fast_entries[index];
+
+        for (int i = 0; i < entries->size(); ++i)
+        {
+            if (fixed_length_decoder_entry<T>::test(&(*entries)[i], instruction))
+            {
+                return &(*entries)[i];
+            }
+        }
+
+        auto result = decode_slow(decoder, instruction);
+
+        decoder->append_lock.lock();
+
+        if (result != nullptr)
+        {
+            entries->push_back(*result);
+        }
+
+        decoder->append_lock.unlock();
+
+        return result;
     }
 
     static void insert_entry(fixed_length_decoder* decoder, T instruction, T mask, void* emit, void* interpret,void* decoder_helper, std::string name)

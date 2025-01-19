@@ -25,6 +25,7 @@ struct ssa_emit_context
     static ir_operand       vector_zero(ssa_emit_context* ctx);
     static ir_operand       vector_one(ssa_emit_context* ctx);
     static ir_operand       convert_to_float(ssa_emit_context* ctx, ir_operand source, uint64_t result_size,uint64_t source_size, bool is_signed);
+    static ir_operand       convert_to_integer(ssa_emit_context* ctx, ir_operand source, uint64_t result_size,uint64_t source_size, bool is_signed);
     static void             move(ssa_emit_context* ctx, ir_operand result, ir_operand source);
     static void             store(ssa_emit_context* ctx, ir_operand physical_address, ir_operand value);
     static void             vector_insert(ssa_emit_context* ctx, ir_operand result, int index, int size, ir_operand value);

@@ -131,3 +131,15 @@ ir_operand ssa_emit_context::convert_to_float(ssa_emit_context* ctx, ir_operand 
 
     return result;
 }
+
+ir_operand ssa_emit_context::convert_to_integer(ssa_emit_context* ctx, ir_operand source, uint64_t result_size,uint64_t source_size, bool is_signed)
+{
+    uint64_t instruction = is_signed ? ir_convert_to_integer_signed : ir_convert_to_integer_unsigned;
+
+    source = ir_operand::copy_new_raw_size(source, source_size);
+    ir_operand result = ssa_emit_context::create_local(ctx, result_size);
+
+    ir_operation_block::emitds(ctx->ir, instruction, result, source);
+
+    return result;
+}

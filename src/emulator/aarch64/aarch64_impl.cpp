@@ -3233,6 +3233,13 @@ void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint6
 	_branch_long_interpreter(ctx,branch_location);
 }
 
+uint64_t create_mask_interpreter(interpreter_data* ctx, uint64_t bits)
+{
+	if ((((uint64_t)bits >= (uint64_t)64ULL)))
+	return -1ULL;
+	return ((uint64_t)(((uint64_t)1ULL << (uint64_t)bits)) - (uint64_t)1ULL);
+}
+
 uint64_t shift_left_check_interpreter(interpreter_data* ctx, uint64_t to_shift, uint64_t shift, uint64_t size)
 {
 	uint64_t result = 0ULL;
@@ -4755,25 +4762,417 @@ uint64_t FixedToFP_interpreter(interpreter_data* ctx, uint64_t source, uint64_t 
 
 uint64_t FPToFixed_interpreter(interpreter_data* ctx, uint64_t source, uint64_t fracbits, uint64_t is_unsigned, uint64_t round, uint64_t to, uint64_t from)
 {
-	if ((((uint64_t)((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)((uint64_t)to != (uint64_t)16ULL)) && (uint64_t)((uint64_t)from != (uint64_t)16ULL))))
+	if ((((uint64_t)((uint64_t)((uint64_t)use_fast_float_interpreter(ctx) && (uint64_t)((uint64_t)to != (uint64_t)16ULL)) && (uint64_t)((uint64_t)from != (uint64_t)16ULL)) && (uint64_t)((uint64_t)round != (uint64_t)FPRounding_ODD))))
 	{
-		if (to == 32ULL)
+		if (from == 32ULL)
 		{
-			if (from == 32ULL)
+			if (to == 32ULL)
 			{
+				uint64_t max_i;
+				uint64_t min_i;
+				uint32_t max;
+				uint32_t min;
+				if ((is_unsigned))
+				{
+					min = 0ULL;
+					max = convert_to_float<uint32_t, uint64_t>(create_mask_interpreter(ctx,to), 0);
+					min_i = 0ULL;
+					max_i = create_mask_interpreter(ctx,to);
+				}
+				else
+				{
+					min = convert_to_float<uint32_t, uint32_t>((uint32_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL)))), 1);
+					max = convert_to_float<uint32_t, uint32_t>((uint32_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL))), 1);
+					min_i = (uint32_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL))));
+					max_i = (uint32_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL)));
+				}
+				uint32_t working = source;
+				if ((((uint64_t)fracbits != (uint64_t)0ULL)))
+				{
+					uint32_t power = create_fixed_from_fbits_interpreter<uint32_t>(ctx,fracbits,from);
+					working = (undefined_value());
+				}
+				if ((use_x86_sse41_interpreter(ctx)))
+				{
+					uint64_t rounding_control;
+					if ((((uint64_t)round == (uint64_t)FPRounding_TIEEVEN)))
+					{
+						rounding_control = 0ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_NEGINF)))
+					{
+						rounding_control = 1ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_POSINF)))
+					{
+						rounding_control = 2ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_ZERO)))
+					{
+						rounding_control = 3ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_TIEAWAY)))
+					{
+						rounding_control = 2ULL;
+						if (((undefined_value())))
+						{
+							working = ((undefined_value()));
+						}
+					}
+					else
+					{
+						undefined_interpreter(ctx);
+					}
+					if ((((uint64_t)from == (uint64_t)32ULL)))
+					{
+						working = intrinsic_binary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_roundss,(uint128_t)working,rounding_control);
+					}
+					else
+					{
+						working = intrinsic_binary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_roundsd,(uint128_t)working,rounding_control);
+					}
+				}
+				else
+				{
+					undefined_interpreter(ctx);
+				}
+				uint32_t result = 0ULL;
+				if (((undefined_value())))
+				{
+					result = (uint32_t)max_i;
+				}
+				else if (((undefined_value())))
+				{
+					result = (uint32_t)min_i;
+				}
+				else if ((is_unsigned))
+				{
+					uint32_t s_max_i = (uint32_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL)));
+					uint32_t s_max = convert_to_float<uint32_t, uint32_t>(s_max_i, 1);
+					if ((((uint32_t)(sign_extend((uint32_t)working) > sign_extend((uint32_t)s_max)))))
+					{
+						uint32_t difference = (undefined_value());
+						working = (undefined_value());
+						result = (uint32_t)(convert_to_float<uint32_t, uint32_t>(difference, 1));
+						result = ((uint32_t)result + (uint32_t)(convert_to_float<uint32_t, uint32_t>(working, 1)));
+					}
+					else
+					{
+						result = (uint32_t)(convert_to_float<uint32_t, uint32_t>(working, 1));
+					}
+				}
+				else
+				{
+					result = (uint32_t)(convert_to_float<uint32_t, uint32_t>(working, 1));
+				}
+				return result;
 			}
-			if (from == 64ULL)
+			if (to == 64ULL)
 			{
+				uint64_t max_i;
+				uint64_t min_i;
+				uint32_t max;
+				uint32_t min;
+				if ((is_unsigned))
+				{
+					min = 0ULL;
+					max = convert_to_float<uint32_t, uint64_t>(create_mask_interpreter(ctx,to), 0);
+					min_i = 0ULL;
+					max_i = create_mask_interpreter(ctx,to);
+				}
+				else
+				{
+					min = convert_to_float<uint32_t, uint64_t>((uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL)))), 1);
+					max = convert_to_float<uint32_t, uint64_t>((uint64_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL))), 1);
+					min_i = (uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL))));
+					max_i = (uint64_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL)));
+				}
+				uint32_t working = source;
+				if ((((uint64_t)fracbits != (uint64_t)0ULL)))
+				{
+					uint32_t power = create_fixed_from_fbits_interpreter<uint32_t>(ctx,fracbits,from);
+					working = (undefined_value());
+				}
+				if ((use_x86_sse41_interpreter(ctx)))
+				{
+					uint64_t rounding_control;
+					if ((((uint64_t)round == (uint64_t)FPRounding_TIEEVEN)))
+					{
+						rounding_control = 0ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_NEGINF)))
+					{
+						rounding_control = 1ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_POSINF)))
+					{
+						rounding_control = 2ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_ZERO)))
+					{
+						rounding_control = 3ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_TIEAWAY)))
+					{
+						rounding_control = 2ULL;
+						if (((undefined_value())))
+						{
+							working = ((undefined_value()));
+						}
+					}
+					else
+					{
+						undefined_interpreter(ctx);
+					}
+					if ((((uint64_t)from == (uint64_t)32ULL)))
+					{
+						working = intrinsic_binary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_roundss,(uint128_t)working,rounding_control);
+					}
+					else
+					{
+						working = intrinsic_binary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_roundsd,(uint128_t)working,rounding_control);
+					}
+				}
+				else
+				{
+					undefined_interpreter(ctx);
+				}
+				uint64_t result = 0ULL;
+				if (((undefined_value())))
+				{
+					result = (uint64_t)max_i;
+				}
+				else if (((undefined_value())))
+				{
+					result = (uint64_t)min_i;
+				}
+				else if ((is_unsigned))
+				{
+					uint64_t s_max_i = (uint64_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL)));
+					uint32_t s_max = convert_to_float<uint32_t, uint64_t>(s_max_i, 1);
+					if ((((uint32_t)(sign_extend((uint32_t)working) > sign_extend((uint32_t)s_max)))))
+					{
+						uint32_t difference = (undefined_value());
+						working = (undefined_value());
+						result = (uint64_t)(convert_to_float<uint64_t, uint32_t>(difference, 1));
+						result = ((uint64_t)result + (uint64_t)(convert_to_float<uint64_t, uint32_t>(working, 1)));
+					}
+					else
+					{
+						result = (uint64_t)(convert_to_float<uint64_t, uint32_t>(working, 1));
+					}
+				}
+				else
+				{
+					result = (uint64_t)(convert_to_float<uint64_t, uint32_t>(working, 1));
+				}
+				return result;
 			}
 			
 		}
-		if (to == 64ULL)
+		if (from == 64ULL)
 		{
-			if (from == 32ULL)
+			if (to == 32ULL)
 			{
+				uint64_t max_i;
+				uint64_t min_i;
+				uint64_t max;
+				uint64_t min;
+				if ((is_unsigned))
+				{
+					min = 0ULL;
+					max = convert_to_float<uint64_t, uint64_t>(create_mask_interpreter(ctx,to), 0);
+					min_i = 0ULL;
+					max_i = create_mask_interpreter(ctx,to);
+				}
+				else
+				{
+					min = convert_to_float<uint64_t, uint32_t>((uint32_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL)))), 1);
+					max = convert_to_float<uint64_t, uint32_t>((uint32_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL))), 1);
+					min_i = (uint32_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL))));
+					max_i = (uint32_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL)));
+				}
+				uint64_t working = source;
+				if ((((uint64_t)fracbits != (uint64_t)0ULL)))
+				{
+					uint64_t power = create_fixed_from_fbits_interpreter<uint64_t>(ctx,fracbits,from);
+					working = (undefined_value());
+				}
+				if ((use_x86_sse41_interpreter(ctx)))
+				{
+					uint64_t rounding_control;
+					if ((((uint64_t)round == (uint64_t)FPRounding_TIEEVEN)))
+					{
+						rounding_control = 0ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_NEGINF)))
+					{
+						rounding_control = 1ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_POSINF)))
+					{
+						rounding_control = 2ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_ZERO)))
+					{
+						rounding_control = 3ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_TIEAWAY)))
+					{
+						rounding_control = 2ULL;
+						if (((undefined_value())))
+						{
+							working = ((undefined_value()));
+						}
+					}
+					else
+					{
+						undefined_interpreter(ctx);
+					}
+					if ((((uint64_t)from == (uint64_t)32ULL)))
+					{
+						working = intrinsic_binary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_roundss,(uint128_t)working,rounding_control);
+					}
+					else
+					{
+						working = intrinsic_binary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_roundsd,(uint128_t)working,rounding_control);
+					}
+				}
+				else
+				{
+					undefined_interpreter(ctx);
+				}
+				uint32_t result = 0ULL;
+				if (((undefined_value())))
+				{
+					result = (uint32_t)max_i;
+				}
+				else if (((undefined_value())))
+				{
+					result = (uint32_t)min_i;
+				}
+				else if ((is_unsigned))
+				{
+					uint32_t s_max_i = (uint32_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL)));
+					uint64_t s_max = convert_to_float<uint64_t, uint32_t>(s_max_i, 1);
+					if ((((uint64_t)(sign_extend((uint64_t)working) > sign_extend((uint64_t)s_max)))))
+					{
+						uint64_t difference = (undefined_value());
+						working = (undefined_value());
+						result = (uint32_t)(convert_to_float<uint32_t, uint64_t>(difference, 1));
+						result = ((uint32_t)result + (uint32_t)(convert_to_float<uint32_t, uint64_t>(working, 1)));
+					}
+					else
+					{
+						result = (uint32_t)(convert_to_float<uint32_t, uint64_t>(working, 1));
+					}
+				}
+				else
+				{
+					result = (uint32_t)(convert_to_float<uint32_t, uint64_t>(working, 1));
+				}
+				return result;
 			}
-			if (from == 64ULL)
+			if (to == 64ULL)
 			{
+				uint64_t max_i;
+				uint64_t min_i;
+				uint64_t max;
+				uint64_t min;
+				if ((is_unsigned))
+				{
+					min = 0ULL;
+					max = convert_to_float<uint64_t, uint64_t>(create_mask_interpreter(ctx,to), 0);
+					min_i = 0ULL;
+					max_i = create_mask_interpreter(ctx,to);
+				}
+				else
+				{
+					min = convert_to_float<uint64_t, uint64_t>((uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL)))), 1);
+					max = convert_to_float<uint64_t, uint64_t>((uint64_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL))), 1);
+					min_i = (uint64_t)(((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL))));
+					max_i = (uint64_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL)));
+				}
+				uint64_t working = source;
+				if ((((uint64_t)fracbits != (uint64_t)0ULL)))
+				{
+					uint64_t power = create_fixed_from_fbits_interpreter<uint64_t>(ctx,fracbits,from);
+					working = (undefined_value());
+				}
+				if ((use_x86_sse41_interpreter(ctx)))
+				{
+					uint64_t rounding_control;
+					if ((((uint64_t)round == (uint64_t)FPRounding_TIEEVEN)))
+					{
+						rounding_control = 0ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_NEGINF)))
+					{
+						rounding_control = 1ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_POSINF)))
+					{
+						rounding_control = 2ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_ZERO)))
+					{
+						rounding_control = 3ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_TIEAWAY)))
+					{
+						rounding_control = 2ULL;
+						if (((undefined_value())))
+						{
+							working = ((undefined_value()));
+						}
+					}
+					else
+					{
+						undefined_interpreter(ctx);
+					}
+					if ((((uint64_t)from == (uint64_t)32ULL)))
+					{
+						working = intrinsic_binary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_roundss,(uint128_t)working,rounding_control);
+					}
+					else
+					{
+						working = intrinsic_binary_imm_interpreter<uint128_t>(ctx,(uint64_t)x86_roundsd,(uint128_t)working,rounding_control);
+					}
+				}
+				else
+				{
+					undefined_interpreter(ctx);
+				}
+				uint64_t result = 0ULL;
+				if (((undefined_value())))
+				{
+					result = (uint64_t)max_i;
+				}
+				else if (((undefined_value())))
+				{
+					result = (uint64_t)min_i;
+				}
+				else if ((is_unsigned))
+				{
+					uint64_t s_max_i = (uint64_t)(create_mask_interpreter(ctx,((uint64_t)to - (uint64_t)1ULL)));
+					uint64_t s_max = convert_to_float<uint64_t, uint64_t>(s_max_i, 1);
+					if ((((uint64_t)(sign_extend((uint64_t)working) > sign_extend((uint64_t)s_max)))))
+					{
+						uint64_t difference = (undefined_value());
+						working = (undefined_value());
+						result = (uint64_t)(convert_to_float<uint64_t, uint64_t>(difference, 1));
+						result = ((uint64_t)result + (uint64_t)(convert_to_float<uint64_t, uint64_t>(working, 1)));
+					}
+					else
+					{
+						result = (uint64_t)(convert_to_float<uint64_t, uint64_t>(working, 1));
+					}
+				}
+				else
+				{
+					result = (uint64_t)(convert_to_float<uint64_t, uint64_t>(working, 1));
+				}
+				return result;
 			}
 			
 		}
@@ -9517,6 +9916,13 @@ void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link
 	_branch_long_jit(ctx,branch_location);
 }
 
+ir_operand create_mask_jit(ssa_emit_context* ctx, uint64_t bits)
+{
+	if ((((uint64_t)bits >= (uint64_t)64ULL)))
+	return ir_operand::create_con(-1ULL, int64);
+	return ir_operand::create_con(((uint64_t)(((uint64_t)1ULL << (uint64_t)bits)) - (uint64_t)1ULL), int64);
+}
+
 ir_operand shift_left_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_operand shift, uint64_t size)
 {
 	ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, int64));
@@ -10563,12 +10969,162 @@ ir_operand FixedToFP_jit(ssa_emit_context* ctx, ir_operand source, uint64_t frac
 
 ir_operand FPToFixed_jit(ssa_emit_context* ctx, ir_operand source, uint64_t fracbits, uint64_t is_unsigned, uint64_t round, uint64_t to, uint64_t from)
 {
-	if ((((uint64_t)((uint64_t)use_fast_float_jit(ctx) && (uint64_t)((uint64_t)to != (uint64_t)16ULL)) && (uint64_t)((uint64_t)from != (uint64_t)16ULL))))
+	if ((((uint64_t)((uint64_t)((uint64_t)use_fast_float_jit(ctx) && (uint64_t)((uint64_t)to != (uint64_t)16ULL)) && (uint64_t)((uint64_t)from != (uint64_t)16ULL)) && (uint64_t)((uint64_t)round != (uint64_t)FPRounding_ODD))))
 	{
-		uint64_t F = to == 32ULL ? int32 : to == 64ULL ? int64 : 0;
+		uint64_t F = from == 32ULL ? int32 : from == 64ULL ? int64 : 0;
 		{
-			uint64_t I = from == 32ULL ? int32 : from == 64ULL ? int64 : 0;
+			uint64_t I = to == 32ULL ? int32 : to == 64ULL ? int64 : 0;
 			{
+				ir_operand max_i;
+				ir_operand min_i;
+				ir_operand max;
+				ir_operand min;
+				if ((is_unsigned))
+				{
+					min = ir_operand::create_con(0ULL, F);
+					max = ssa_emit_context::convert_to_float(ctx,create_mask_jit(ctx,to),F,int64, 0);
+					min_i = ir_operand::create_con(0ULL, int64);
+					max_i = create_mask_jit(ctx,to);
+				}
+				else
+				{
+					min = ssa_emit_context::convert_to_float(ctx,ir_operand::create_con((((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL)))), I),F,I, 1);
+					max = ssa_emit_context::convert_to_float(ctx,copy_new_raw_size(ctx, create_mask_jit(ctx,((uint64_t)to - (uint64_t)1ULL)), I),F,I, 1);
+					min_i = copy_new_raw_size(ctx, ir_operand::create_con((((uint64_t)1ULL << (uint64_t)(((uint64_t)to - (uint64_t)1ULL)))), I), int64);
+					max_i = copy_new_raw_size(ctx, copy_new_raw_size(ctx, create_mask_jit(ctx,((uint64_t)to - (uint64_t)1ULL)), I), int64);
+				}
+				ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_move, copy_new_raw_size(ctx, source, F));
+				if ((((uint64_t)fracbits != (uint64_t)0ULL)))
+				{
+					ir_operand power = copy_new_raw_size(ctx, create_fixed_from_fbits_jit(ctx,F,fracbits,from), F);
+					working = ssa_emit_context::emit_ssa(ctx, ir_floating_point_multiply, power, working);
+				}
+				if ((use_x86_sse41_jit(ctx)))
+				{
+					uint64_t rounding_control;
+					if ((((uint64_t)round == (uint64_t)FPRounding_TIEEVEN)))
+					{
+						rounding_control = 0ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_NEGINF)))
+					{
+						rounding_control = 1ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_POSINF)))
+					{
+						rounding_control = 2ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_ZERO)))
+					{
+						rounding_control = 3ULL;
+					}
+					else if ((((uint64_t)round == (uint64_t)FPRounding_TIEAWAY)))
+					{
+						rounding_control = 2ULL;
+						{
+						    ir_operand end = ir_operation_block::create_label(ctx->ir);
+						    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+						
+						    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_less_equal, working, ir_operand::create_con(0ULL, F));
+						
+						    ir_operation_block::jump_if(ctx->ir,yes, condition);
+							/* TODO if statements without a no should not have this*/
+						    
+						    ir_operation_block::jump(ctx->ir,end);
+						    ir_operation_block::mark_label(ctx->ir, yes);
+						
+							{
+								ssa_emit_context::move(ctx,working,ssa_emit_context::emit_ssa(ctx, ir_floating_point_subtract, working, copy_new_raw_size(ctx, float_imm_jit(ctx,ir_operand::create_con(1ULL, int64),from), F)));
+							}
+						
+						    ir_operation_block::mark_label(ctx->ir, end);
+						}
+					}
+					else
+					{
+						undefined_jit(ctx);
+					}
+					if ((((uint64_t)from == (uint64_t)32ULL)))
+					{
+						working = copy_new_raw_size(ctx, intrinsic_binary_imm_jit(ctx,int128,(uint64_t)x86_roundss,copy_new_raw_size(ctx, working, int128),rounding_control), F);
+					}
+					else
+					{
+						working = copy_new_raw_size(ctx, intrinsic_binary_imm_jit(ctx,int128,(uint64_t)x86_roundsd,copy_new_raw_size(ctx, working, int128),rounding_control), F);
+					}
+				}
+				else
+				{
+					undefined_jit(ctx);
+				}
+				ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, I));
+				{
+				    ir_operand end = ir_operation_block::create_label(ctx->ir);
+				    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+				
+				    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_greater_equal, working, max);
+				
+				    ir_operation_block::jump_if(ctx->ir,yes, condition);
+					{
+					    ir_operand end = ir_operation_block::create_label(ctx->ir);
+					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					
+					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_less_equal, working, min);
+					
+					    ir_operation_block::jump_if(ctx->ir,yes, condition);
+						if ((is_unsigned))
+						{
+							ir_operand s_max_i = copy_new_raw_size(ctx, create_mask_jit(ctx,((uint64_t)to - (uint64_t)1ULL)), I);
+							ir_operand s_max = ssa_emit_context::convert_to_float(ctx,s_max_i,F,I, 1);
+							{
+							    ir_operand end = ir_operation_block::create_label(ctx->ir);
+							    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+							
+							    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_signed, working, s_max);
+							
+							    ir_operation_block::jump_if(ctx->ir,yes, condition);
+								{
+									ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, ssa_emit_context::convert_to_integer(ctx,working,I,F, 1), I));
+								}
+							    
+							    ir_operation_block::jump(ctx->ir,end);
+							    ir_operation_block::mark_label(ctx->ir, yes);
+							
+								{
+									ir_operand difference = ssa_emit_context::emit_ssa(ctx, ir_floating_point_subtract, working, s_max);
+									ssa_emit_context::move(ctx,working,ssa_emit_context::emit_ssa(ctx, ir_floating_point_subtract, working, difference));
+									ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, ssa_emit_context::convert_to_integer(ctx,difference,I,F, 1), I));
+									ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_add, result, copy_new_raw_size(ctx, ssa_emit_context::convert_to_integer(ctx,working,I,F, 1), I)));
+								}
+							
+							    ir_operation_block::mark_label(ctx->ir, end);
+							}
+						}
+						else
+						{
+							ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, ssa_emit_context::convert_to_integer(ctx,working,I,F, 1), I));
+						}
+					    
+					    ir_operation_block::jump(ctx->ir,end);
+					    ir_operation_block::mark_label(ctx->ir, yes);
+					
+						{
+							ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, min_i, I));
+						}
+					
+					    ir_operation_block::mark_label(ctx->ir, end);
+					}
+				    
+				    ir_operation_block::jump(ctx->ir,end);
+				    ir_operation_block::mark_label(ctx->ir, yes);
+				
+					{
+						ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, max_i, I));
+					}
+				
+				    ir_operation_block::mark_label(ctx->ir, end);
+				}
+				return copy_new_raw_size(ctx, result, int64);
 			}
 		}
 	}

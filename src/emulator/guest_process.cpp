@@ -22,6 +22,8 @@ void guest_process::create(guest_process* result, guest_memory guest_memory_cont
     result->debug_mode = false;
     result->guest_functions.use_flt = true;
 
+    result->guest_functions.retranslator_is_running = false;
+
     init_aarch64_decoder(result);
 }
 
@@ -34,10 +36,20 @@ uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_func
         guest_process::translate_function
     };
     
-    guest_function function_to_execute = guest_function_store::get_or_translate_function(&process->guest_functions, guest_function_address, &translator_request);
+    guest_function function_to_execute = guest_function_store::get_or_translate_function(&process->guest_functions, guest_function_address, &translator_request, true);
 
     void* arguments[] = { arm_context };
-    
+
+    if (function_to_execute.times_executed == 100 && !process->debug_mode)
+    {
+        switch (function_to_execute.optimizations)
+        {
+            case level_zero: guest_function_store::request_retranslate_function(&process->guest_functions,guest_function_address, level_one, translator_request); break;
+            case level_one: guest_function_store::request_retranslate_function(&process->guest_functions,guest_function_address, level_two, translator_request); break;
+            case level_two: guest_function_store::request_retranslate_function(&process->guest_functions,guest_function_address, level_three, translator_request); break;
+        }
+    }
+
     return jit_context::call_jitted_function(process->host_jit_context, (void*)function_to_execute.raw_function, (uint64_t*)arguments);
 }
 
@@ -59,7 +71,7 @@ static uint64_t undefined_instruction_error(guest_process* process, void* contex
     }
 }
 
-guest_function guest_process::translate_function(translate_request_data* data)
+guest_function guest_process::translate_function(translate_request_data* data, guest_compiler_optimization_flags flags)
 {
     uint64_t entry_address = data->address;
     guest_process* process = (guest_process*)data->process;
@@ -73,7 +85,7 @@ guest_function guest_process::translate_function(translate_request_data* data)
     ssa_emit_context::create(&ssa_emit, raw_ir);
 
     aarch64_emit_context aarch64_emit;
-    aarch64_emit_context::create(process,&aarch64_emit, &ssa_emit);
+    aarch64_emit_context::create(process,&aarch64_emit, &ssa_emit, flags);
 
     ssa_emit.context_data = &aarch64_emit;
 
@@ -84,6 +96,15 @@ guest_function guest_process::translate_function(translate_request_data* data)
     std::unordered_set<uint64_t> already_translated;
 
     aarch64_emit.translate_functions = true;
+
+    int instruction_limit = INT32_MAX;
+
+    if (!(flags & guest_compiler_optimization_flags::function_wide_translation))
+    {
+        instruction_limit = 100;
+    }
+
+    ssa_emit_context::reset_local(&ssa_emit);
 
     while (true)
     {
@@ -118,9 +139,12 @@ guest_function guest_process::translate_function(translate_request_data* data)
 
                 uint32_t raw_instruction = *(uint32_t*)instruction_address;
 
-                auto instruction_table = fixed_length_decoder<uint32_t>::decode_slow(&process->decoder, raw_instruction);
+                auto instruction_table = fixed_length_decoder<uint32_t>::decode_fast(&process->decoder, raw_instruction);
 
-                //ssa_emit_context::reset_local(&ssa_emit);
+                if (!(flags & guest_compiler_optimization_flags::guest_optimize_ssa))
+                {
+                    ssa_emit_context::reset_local(&ssa_emit);
+                }
 
                 if (instruction_table == nullptr)
                 {
@@ -148,6 +172,15 @@ guest_function guest_process::translate_function(translate_request_data* data)
                 if (aarch64_emit.branch_state == no_branch)
                 {
                     working_address += 4;
+
+                    instruction_limit--;
+
+                    if (instruction_limit < 0)
+                    {
+                        aarch64_emit_context::branch_long(&aarch64_emit, ir_operand::create_con(working_address));
+
+                        break;
+                    }
                 }
                 else
                 {
@@ -159,7 +192,19 @@ guest_function guest_process::translate_function(translate_request_data* data)
     
     aarch64_emit_context::emit_context_movement(&aarch64_emit);
 
-    void* code = jit_context::compile_code(process->host_jit_context, raw_ir,compiler_flags::optimize_ssa);
+    int backend_compiler_flags = (compiler_flags)0;
+
+    if (flags & guest_compiler_optimization_flags::guest_optimize_ssa)
+    {
+        backend_compiler_flags = compiler_flags::optimize_ssa;
+    }
+    
+    if (flags & guest_compiler_optimization_flags::guest_optimize_mathmatical_fold)
+    {
+        backend_compiler_flags = compiler_flags::optimize_ssa | compiler_flags::mathmatical_fold;
+    }
+
+    void* code = jit_context::compile_code(process->host_jit_context, raw_ir,(compiler_flags)backend_compiler_flags);
 
     guest_function result;
 
@@ -195,7 +240,7 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         interpreter.current_instruction = instruction;
 
-        auto table = fixed_length_decoder<uint32_t>::decode_slow(&process->decoder, instruction);
+        auto table = fixed_length_decoder<uint32_t>::decode_fast(&process->decoder, instruction);
 
         if (table == nullptr)
         {

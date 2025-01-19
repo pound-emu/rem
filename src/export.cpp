@@ -31,7 +31,7 @@ extern "C"
     {
         external_context* result = new external_context;
 
-        jit_context::create(&result->memory, 1ULL * 1024 * 1024 * 1024, get_abi());
+        jit_context::create(&result->memory, 5ULL * 1024 * 1024 * 1024, get_abi());
         guest_process::create(&result->process, {memory, base_plus_va, base_plus_va_jit}, &result->memory, *context_offsets);
 
         result->process.undefined_instruction = undefined_instruction;
