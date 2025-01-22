@@ -85,7 +85,6 @@ enum ir_instructions : uint64_t
 
 	//Abi
 	ir_close_and_return,
-	ir_compare_and_swap,
 	ir_get_argument,
 	ir_external_call,
 	ir_table_jump,
@@ -144,6 +143,18 @@ enum ir_instructions : uint64_t
 	x86_subsd,
 	x86_subss,
 
+	x86_paddb,
+	x86_paddw,
+	x86_paddd,
+	x86_paddq,
+
+	x86_cmpss,
+	x86_cmpsd,
+	x86_cmpps,
+	x86_cmppd,
+	x86_haddps,
+	x86_haddpd,
+
 	x86_xorps,
 	x86_pand,
 	x86_orps,
@@ -158,6 +169,16 @@ enum ir_instructions : uint64_t
 	x86_sqrtsd,	
 	x86_sqrtps,
 	x86_sqrtpd,
+	x86_popcnt,
+	x86_cvtsd2ss,
+	x86_cvtss2sd,
+
+	x86_add_flags,
+	x86_sub_flags,
+
+	x86_cmpxchg,
+	
+	x86_lzcnt,
 
 	//Emulator Helpers
 	ir_guest_store_context,
@@ -239,7 +260,6 @@ static std::string instruction_names[] = {
 
 	//Abi
 	"ir_close_and_return",
-	"ir_compare_and_swap",
 	"ir_get_argument",
 	"ir_external_call",
 	"ir_table_jump",
@@ -298,6 +318,18 @@ static std::string instruction_names[] = {
 	"x86_subsd",
 	"x86_subss",
 
+	"x86_paddb",
+	"x86_paddw",
+	"x86_paddd",
+	"x86_paddq",
+
+	"x86_cmpss",
+	"x86_cmpsd",
+	"x86_cmpps",
+	"x86_cmppd",
+	"x86_haddps",
+	"x86_haddpd",
+
 	"x86_xorps",
 	"x86_pand",
 	"x86_orps",
@@ -312,6 +344,16 @@ static std::string instruction_names[] = {
 	"x86_sqrtsd",	
 	"x86_sqrtps",
 	"x86_sqrtpd",
+	"x86_popcnt",
+	"x86_cvtsd2ss",
+	"x86_cvtss2sd",
+
+	"x86_add_flags",
+	"x86_sub_flags",
+
+	"x86_cmpxchg",
+	
+	"x86_lzcnt",
 
 	//Emulator Helpers
 	"ir_guest_store_context",

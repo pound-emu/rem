@@ -189,6 +189,9 @@ static bool instruction_is_commutative(uint64_t instruction)
 		case x86_mulpd:
 		case x86_mulss:
 		case x86_mulsd:
+		case x86_add_flags:
+		case ir_compare_equal:
+		case ir_compare_not_equal:
 		{
 			return true;
 		};
@@ -205,7 +208,7 @@ static void swap(ir_operand* l, ir_operand* r)
 	*r = tmp;
 }
 
-static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, ir_instructions instruction, ir_operand destination, ir_operand source_0, ir_operand source_1)
+static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, ir_instructions instruction, ir_operand destination, ir_operand source_0, ir_operand source_1, ir_operation* source_operation)
 {
 	assert_same_size({ destination, source_0, source_1 });
 
@@ -214,48 +217,113 @@ static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, ir_instructions 
 		swap(&source_0, &source_1);	
 	}
 
+	if (instruction_is_commutative(instruction) && ir_operand::are_equal(destination, source_1) && !ir_operand::are_equal(destination, source_0))
+	{
+		swap(&source_0, &source_1);	
+	}
+
+	intrusive_linked_list_element<ir_operation>* core_operation = nullptr;
+
 	if ((ir_operand::is_constant(&source_1) && source_1.value < INT32_MAX) && !ir_operand::is_constant(&source_0) && instruction != ir_multiply)
 	{
+		if (instruction == ir_add && ir_operand::get_raw_size(&destination) > int16)
+		{
+			ir_operation_block::emitds(result->ir, x86_lea, destination, source_0, source_1);
+
+			return;
+		}
+
 		if (!ir_operand::are_equal(destination, source_0))
 		{
 			emit_move(result,destination, source_0);
 		}
 
-		ir_operation_block::emitds(result->ir, instruction, destination, destination, source_1);
-
-		return;
-	}
-
-	ir_operand working_destination = destination;
-	ir_operand working_source_0 = register_or_constant(result, &source_0);
-	ir_operand working_source_1 = register_or_constant(result, &source_1);
-
-	if (instruction_is_commutative(instruction) && ir_operand::are_equal(working_destination, working_source_1) && !ir_operand::are_equal(working_destination, working_source_0))
-	{
-		swap(&source_0, &source_1);	
-	}
-
-	if (ir_operand::are_equal(working_destination, working_source_0))
-	{
-		ir_operation_block::emitds(result->ir, instruction, working_destination, working_destination, working_source_1);
-	}
-	else if (instruction == ir_add && ir_operand::get_raw_size(&working_destination) > int16)
-	{
-		ir_operation_block::emitds(result->ir, x86_lea, working_destination, working_source_0, working_source_1);
-	}
-	else if (!ir_operand::are_equal(working_destination, working_source_1))
-	{
-		emit_move(result,destination, source_0);
-		ir_operation_block::emitds(result->ir, instruction, working_destination, working_destination, working_source_1);
+		core_operation = ir_operation_block::emitds(result->ir, instruction, destination, destination, source_1);
 	}
 	else
 	{
-		ir_operand working_scrap = create_scrap_operand(result, destination.meta_data);
+		ir_operand working_destination = destination;
+		ir_operand working_source_0 = register_or_constant(result, &source_0);
+		ir_operand working_source_1 = register_or_constant(result, &source_1);
 
-		emit_move(result, working_scrap, working_source_0);
-		ir_operation_block::emitds(result->ir, instruction, working_scrap, working_scrap, working_source_1);
-		
-		emit_move(result, working_destination, working_scrap);
+		if (ir_operand::are_equal(working_destination, working_source_0))
+		{
+			core_operation = ir_operation_block::emitds(result->ir, instruction, working_destination, working_destination, working_source_1);
+		}
+		else if (instruction == ir_add && ir_operand::get_raw_size(&working_destination) > int16)
+		{
+			ir_operation_block::emitds(result->ir, x86_lea, working_destination, working_source_0, working_source_1);
+		}
+		else if (!ir_operand::are_equal(working_destination, working_source_1))
+		{
+			emit_move(result,destination, source_0);
+			core_operation = ir_operation_block::emitds(result->ir, instruction, working_destination, working_destination, working_source_1);
+		}
+		else
+		{
+			ir_operand working_scrap = create_scrap_operand(result, destination.meta_data);
+
+			emit_move(result, working_scrap, working_source_0);
+			core_operation = ir_operation_block::emitds(result->ir, instruction, working_scrap, working_scrap, working_source_1);
+			
+			emit_move(result, working_destination, working_scrap);
+		}
+	}
+
+	switch (instruction)
+	{
+		case x86_add_flags:
+		case x86_sub_flags:
+		{
+			if (core_operation == nullptr)
+			{
+				throw_error();
+			}
+			
+			ir_operand new_destinations[5];
+			ir_operand* new_sources = core_operation->data.sources.data;
+
+			new_destinations[0] = core_operation->data.destinations[0];
+
+			for (int i = 1; i < 5; ++i)
+			{
+				new_destinations[i] = source_operation->destinations[i];
+			}
+			
+			ir_operation_block::emit_with(result->ir, instruction, new_destinations, 5, new_sources, 2, core_operation);
+
+			core_operation->data.instruction = ir_no_operation;
+			core_operation->data.sources.count = 0;
+			core_operation->data.destinations.count = 0;
+		}; break;
+
+		case x86_cmpss:
+		case x86_cmpsd:
+		case x86_cmpps:
+		case x86_cmppd:
+		{
+			if (core_operation == nullptr)
+			{
+				throw_error();
+			}
+
+			ir_operand sources_with_control[3];
+
+			for (int i = 0; i < 2; ++i)
+			{
+				sources_with_control[i] = core_operation->data.sources[i];
+			}
+
+			sources_with_control[2] = source_operation->sources[2];
+
+			assert_is_constant(sources_with_control[2]);
+
+			ir_operation_block::emit_with(result->ir, instruction, core_operation->data.destinations.data, 1, sources_with_control, 3, core_operation);
+
+			core_operation->data.instruction = ir_no_operation;
+			core_operation->data.sources.count = 0;
+			core_operation->data.destinations.count = 0;
+		}; break;
 	}
 }
 
@@ -327,10 +395,24 @@ static void emit_compare(x86_pre_allocator_context* result, uint64_t instruction
 {
 	assert_same_size({ destination, source_0, source_1 });
 
+	if (ir_operand::is_constant(&source_0) && !ir_operand::is_constant(&source_1) && instruction_is_commutative(instruction))
+	{
+		swap(&source_0, &source_1);
+	}
+
 	ir_operand working_destination = destination;
 
 	ir_operand working_source_0 = register_or_constant(result, &source_0);
-	ir_operand working_source_1 = register_or_constant(result, &source_1);
+	ir_operand working_source_1;
+
+	if (ir_operand::is_constant(&source_1) && source_1.value < INT32_MAX)
+	{
+		working_source_1 = source_1;
+	}
+	else
+	{
+		working_source_1 = register_or_constant(result, &source_1);
+	}
 
 	ir_operation_block::emitds(result->ir, instruction, working_destination, working_source_0, working_source_1);
 }
@@ -679,7 +761,7 @@ static void emit_compare_and_swap(x86_pre_allocator_context* result, ir_operatio
 	ir_operand rax = RAX(expecting.meta_data);
 
 	emit_move(result, rax, expecting);
-	ir_operation_block::emitds(result->ir, ir_compare_and_swap, destination, address, rax, to_swap);
+	ir_operation_block::emitds(result->ir, x86_cmpxchg, destination, address, rax, to_swap);
 
 	ir_operation_block::emits(result->ir, ir_instructions::ir_register_allocator_p_unlock, RAX(int64));
 }
@@ -843,6 +925,91 @@ static void emit_shuf(x86_pre_allocator_context* result, ir_operation* operation
 	emit_move(result, destination, working);
 }
 
+static void emit_store(x86_pre_allocator_context* result, ir_operation* operation)
+{
+	ir_operand source_temp[3];
+
+	ir_operation_block* ir = result->ir;
+
+	for (int i = 0; i < operation->sources.count; ++i)
+	{
+		ir_operand working = operation->sources[i];
+
+		if (ir_operand::is_constant(&working) && working.value > INT32_MAX)
+		{
+			working = register_or_constant(result, working);
+		}
+
+		source_temp[i] = working;
+	}
+
+	if (operation->sources.count == 3)
+	{
+		if (ir_operand::is_constant(&operation->sources[0]) && !ir_operand::is_constant(&operation->sources[1]))
+		{
+			swap(&source_temp[0], &source_temp[1]);
+		}
+	}
+
+	if (ir_operand::is_constant(&source_temp[0]))
+	{
+		source_temp[0] = register_or_constant(result, source_temp[0]);
+	}
+
+	int last = operation->sources.count - 1;
+
+	if (ir_operand::is_constant(&source_temp[last]))
+	{
+		source_temp[last] = register_or_constant(result, source_temp[last]);
+	}
+
+	ir_operation_block::emit_with(
+		ir, 
+		operation->instruction,
+		operation->destinations.data,	operation->destinations.count,
+		source_temp,					operation->sources.count
+	);
+}
+
+static void emit_load(x86_pre_allocator_context* result, ir_operation* operation)
+{
+	ir_operation_block* ir = result->ir;
+
+	ir_operand source_temp[2];
+
+	for (int i = 0; i < operation->sources.count; ++i)
+	{
+		ir_operand working = operation->sources[i];
+
+		if (ir_operand::is_constant(&working) && working.value > INT32_MAX)
+		{
+			working = register_or_constant(result, working);
+		}
+
+		source_temp[i] = working;
+	}
+
+	if (operation->sources.count == 2)
+	{
+		if (ir_operand::is_constant(&operation->sources[0]) && !ir_operand::is_constant(&operation->sources[1]))
+		{
+			swap(&source_temp[0], &source_temp[1]);
+		}
+	}
+
+	if (ir_operand::is_constant(&source_temp[0]))
+	{
+		source_temp[0] = register_or_constant(result, source_temp[0]);
+	}
+
+	ir_operation_block::emit_with(
+		ir, 
+		operation->instruction,
+		operation->destinations.data,	operation->destinations.count,
+		source_temp,					operation->sources.count
+	);
+}
+
 static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_allocator_context, ir_operation* operation, os_information os)
 {
 	ir_instructions working_instruction = (ir_instructions)operation->instruction;
@@ -876,17 +1043,45 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case x86_subps:
 		case x86_subsd:
 		case x86_subss:
+
+		case x86_paddb:
+		case x86_paddw:
+		case x86_paddd:
+		case x86_paddq:
 		
 		case x86_xorps:
 		case x86_pand:
 		case x86_orps:
 		case x86_pandn:
+
+		case x86_haddpd:
+		case x86_haddps:
 		{
 			assert_operand_count(operation, 1, 2);
 			assert_is_register(operation->destinations[0]);
 
-			emit_d_n_f_d_n_m(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0], operation->sources[1]);
+			emit_d_n_f_d_n_m(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0], operation->sources[1], nullptr);
 		};  break;
+
+		case x86_cmpss:
+		case x86_cmpsd:
+		case x86_cmpps:
+		case x86_cmppd:
+		{
+			assert_operand_count(operation, 1, 3);
+			assert_is_register(operation->destinations[0]);
+
+			emit_d_n_f_d_n_m(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0], operation->sources[1], operation);
+		};  break;
+
+		case x86_add_flags:
+		case x86_sub_flags:
+		{
+			assert_operand_count(operation, 5, 2);
+			assert_is_register(operation->destinations[0]);
+
+			emit_d_n_f_d_n_m(pre_allocator_context, operation->instruction, operation->destinations[0], operation->sources[0], operation->sources[1], operation);
+		}; break;
 
 		case ir_floating_point_add:
 		case ir_floating_point_subtract:
@@ -1036,11 +1231,26 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		}; break;
 
 		case ir_load:
+		{
+			emit_load(pre_allocator_context, operation);
+		}; break;
+
+		case ir_store:
+		{
+			emit_store(pre_allocator_context, operation);
+		}; break;
+		
 		case ir_jump_if:
 		case ir_vector_zero:
 		case ir_vector_one:
 		case x86_roundss:
 		case x86_roundsd:
+		case x86_cvtsd2ss:
+		case x86_cvtss2sd:
+		case x86_sqrtps:
+		case x86_sqrtpd:
+		case x86_sqrtss:
+		case x86_sqrtsd:
 		{
 			emit_as_is(pre_allocator_context, operation);
 		}; break;
@@ -1053,7 +1263,9 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 
 		case ir_assert_false:
 		case ir_assert_true:
-		case ir_store:	//TODO this can be optimized
+		
+		case x86_lzcnt:
+		case x86_popcnt:
 		{
 			emit_with_possible_remaps(pre_allocator_context, operation);
 		}; break;
@@ -1097,7 +1309,7 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 			emit_external_call(pre_allocator_context, operation, os);
 		}; break;
 
-		case ir_compare_and_swap:
+		case x86_cmpxchg:
 		{
 			emit_compare_and_swap(pre_allocator_context, operation);
 		}; break;
@@ -1117,6 +1329,24 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		default: 
 		
 		throw_error();
+	}
+
+	switch (operation->instruction)
+	{
+		case ir_compare_equal:
+		case ir_compare_greater_equal_signed:
+		case ir_compare_greater_equal_unsigned:
+		case ir_compare_greater_signed:
+		case ir_compare_greater_unsigned:
+		case ir_compare_less_equal_signed:
+		case ir_compare_less_equal_unsigned:
+		case ir_compare_less_signed:
+		case ir_compare_less_unsigned:
+		case ir_compare_not_equal:
+			return;
+	
+	default:
+		break;
 	}
 
 	for (int i = 0; i < operation->destinations.count; ++i)

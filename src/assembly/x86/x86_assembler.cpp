@@ -99,6 +99,17 @@ static void assert_valid_binary_float_operation(ir_operation* operation)
 	assert(ir_operand::is_vector(&operation->sources[0]));
 }
 
+static void assert_valid_binary_float_comparison_operation(ir_operation* operation)
+{
+	assert_operand_count(operation, 1, 3);
+
+	assert_same_registers(operation->destinations[0], operation->sources[0]);
+	assert_same_size({operation->destinations[0], operation->sources[0], operation->sources[1]});
+	assert(ir_operand::is_vector(&operation->sources[0]));
+	
+	assert_is_constant(operation->sources[2]);
+}
+
 void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_operation_block* source_ir)
 {
 	arena_allocator* allocator = source_ir->allocator;
@@ -156,7 +167,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 
 		}; break;
 
-		case ir_compare_and_swap:
+		case x86_cmpxchg:
 		{
 			assert_operand_count(&working_operation, 1, 3);
 
@@ -368,11 +379,8 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 
 			assert_is_register(destinations[0]);
 			assert_is_register(sources[0]);
-
-			//assert_all_registers(&working_operation);
-
-			assert(destinations[0].meta_data == sources[0].meta_data);
-			assert(destinations[0].meta_data == sources[1].meta_data);
+			
+			assert_same_size({destinations[0], sources[0], sources[1]});
 
 			if (ir_operand::is_constant(&sources[1]))
 			{
@@ -814,13 +822,26 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			ir_operand d = working_operation.destinations[0];
 			ir_operand s0 = working_operation.sources[0];
 			ir_operand s1 = working_operation.sources[1];
-			
-			switch (d.meta_data)
-			{
-				case int32: c.lea(create_operand<Xbyak::Reg32>(d), c.ptr[create_operand<Xbyak::Reg32>(s0) + create_operand<Xbyak::Reg32>(s1)]); break;
-				case int64: c.lea(create_operand<Xbyak::Reg64>(d), c.ptr[create_operand<Xbyak::Reg64>(s0) + create_operand<Xbyak::Reg64>(s1)]); break;
 
-				default: throw_error();
+			if (ir_operand::is_constant(&s1))
+			{
+				switch (d.meta_data)
+				{
+					case int32: c.lea(create_operand<Xbyak::Reg32>(d), c.ptr[create_operand<Xbyak::Reg32>(s0) + s1.value]); break;
+					case int64: c.lea(create_operand<Xbyak::Reg64>(d), c.ptr[create_operand<Xbyak::Reg64>(s0) + s1.value]); break;
+
+					default: throw_error();
+				}
+			}
+			else
+			{
+				switch (d.meta_data)
+				{
+					case int32: c.lea(create_operand<Xbyak::Reg32>(d), c.ptr[create_operand<Xbyak::Reg32>(s0) + create_operand<Xbyak::Reg32>(s1)]); break;
+					case int64: c.lea(create_operand<Xbyak::Reg64>(d), c.ptr[create_operand<Xbyak::Reg64>(s0) + create_operand<Xbyak::Reg64>(s1)]); break;
+
+					default: throw_error();
+				}
 			}
 
 		}; break;
@@ -852,6 +873,19 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 
 		}; break;
 
+		case x86_cmpss: assert_valid_binary_float_comparison_operation(&working_operation); c.cmpss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1]), working_operation.sources[2].value); break;
+		case x86_cmpsd: assert_valid_binary_float_comparison_operation(&working_operation); c.cmpsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1]), working_operation.sources[2].value); break;
+		case x86_cmpps: assert_valid_binary_float_comparison_operation(&working_operation); c.cmpps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1]), working_operation.sources[2].value); break;
+		case x86_cmppd: assert_valid_binary_float_comparison_operation(&working_operation); c.cmppd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1]), working_operation.sources[2].value); break;
+
+		case x86_haddpd: assert_valid_binary_float_operation(&working_operation); c.haddpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_haddps: assert_valid_binary_float_operation(&working_operation); c.haddps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+
+		case x86_paddb: assert_valid_binary_float_operation(&working_operation); c.paddb(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_paddw: assert_valid_binary_float_operation(&working_operation); c.paddw(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_paddd: assert_valid_binary_float_operation(&working_operation); c.paddd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_paddq: assert_valid_binary_float_operation(&working_operation); c.paddq(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+
 		case x86_addpd: assert_valid_binary_float_operation(&working_operation); c.addpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_addps: assert_valid_binary_float_operation(&working_operation); c.addps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_addsd: assert_valid_binary_float_operation(&working_operation); c.addsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
@@ -878,9 +912,103 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		case x86_pand: 	assert_valid_binary_float_operation(&working_operation); c.pand(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_pandn:	assert_valid_binary_float_operation(&working_operation); c.pandn(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 
+		case x86_cvtsd2ss: c.cvtsd2ss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;
+		case x86_cvtss2sd: c.cvtss2sd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;
 
 		case x86_sqrtss:	c.sqrtss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;
 		case x86_sqrtsd:	c.sqrtsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;
+		case x86_sqrtps:	c.sqrtps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;
+		case x86_sqrtpd:	c.sqrtpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[0])); break;
+
+		case x86_popcnt:
+		{
+			ir_operand destination = working_operation.destinations[0];
+			ir_operand source = working_operation.sources[0];
+
+			assert_same_size({destination, source});
+
+			switch (destination.meta_data)
+			{
+				case int16: c.popcnt(create_operand<Xbyak::Reg16>(destination), create_operand<Xbyak::Reg16>(source)); break;
+				case int32: c.popcnt(create_operand<Xbyak::Reg32>(destination), create_operand<Xbyak::Reg32>(source)); break;
+				case int64: c.popcnt(create_operand<Xbyak::Reg64>(destination), create_operand<Xbyak::Reg64>(source)); break;
+				default: throw_error();
+			}
+		}; break;
+
+		case x86_lzcnt:
+		{
+			ir_operand destination = working_operation.destinations[0];
+			ir_operand source = working_operation.sources[0];
+
+			assert_same_size({destination, source});
+
+			switch (destination.meta_data)
+			{
+				case int32: c.lzcnt(create_operand<Xbyak::Reg32>(destination), create_operand<Xbyak::Reg32>(source)); break;
+				case int64: c.lzcnt(create_operand<Xbyak::Reg64>(destination), create_operand<Xbyak::Reg64>(source)); break;
+				default: throw_error();
+			}
+		} break;
+
+		case x86_add_flags:
+		case x86_sub_flags:
+		{
+			ir_operand* destinations = working_operation.destinations.data;
+			ir_operand* sources = working_operation.sources.data;
+
+			assert_is_register(destinations[0]);
+			assert_same_registers(destinations[0], sources[0]);
+
+			assert(ir_operand::is_register(&destinations[0]));
+			assert(ir_operand::is_register(&sources[0]));
+
+			Xbyak::Operand dn = create_operand(destinations[0]);
+
+			assert_operand_count(&working_operation, 5, 2);
+
+			if (ir_operand::is_constant(&sources[1]))
+			{
+				uint64_t imm = sources[1].value;
+
+				if (imm >= INT32_MAX)
+				{
+					throw_error();
+				}
+
+				switch (instruction)
+				{
+					case x86_add_flags: c.add(dn, imm); break;
+					case x86_sub_flags: c.sub(dn, imm); break;
+					default: throw_error();
+				}
+			}
+			else
+			{
+				assert(destinations[0].value == sources[0].value);
+				assert(destinations[0].meta_data == sources[0].meta_data);
+				assert(destinations[0].meta_data == sources[1].meta_data);
+
+				Xbyak::Operand m = create_operand(sources[1]);
+
+				switch (instruction)
+				{
+					case x86_add_flags: c.add(dn, m); break;
+					case x86_sub_flags: c.sub(dn, m); break;
+					default: throw_error();
+				}
+			}
+
+			c.sets(create_operand<Xbyak::Reg8>(destinations[1]));
+			c.sete(create_operand<Xbyak::Reg8>(destinations[2]));
+			c.setc(create_operand<Xbyak::Reg8>(destinations[3]));
+			c.seto(create_operand<Xbyak::Reg8>(destinations[4]));
+
+			for (int i = 1; i < 5; ++i)
+			{
+				c.and_(create_operand<Xbyak::Reg64>(destinations[i]), 1);
+			}
+		}; break;
 
 		case ir_floating_point_compare_equal:
 		case ir_floating_point_compare_less:

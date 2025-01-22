@@ -490,6 +490,13 @@ static uint64_t get_mask(int size)
     throw_error();
 }
 
+static void empty_operation(ir_operation* operation)
+{
+    operation->sources.count = 0;
+    operation->destinations.count = 0;
+    operation->instruction = ir_no_operation;
+}
+
 static bool perform_move_propagation(ssa_cf_node* node)
 {
     bool done = true;
@@ -537,14 +544,110 @@ static bool perform_move_propagation(ssa_cf_node* node)
                 break;
         }
 
-        i->data.instruction = ir_no_operation;
-        i->data.destinations.count = 0;
-        i->data.sources.count = 0;
+        empty_operation(&i->data);
 
         done = false;
     }
 
     return done;
+}
+
+static bool perform_load_store_addition_propagation(ssa_cf_node* node, std::unordered_map<uint64_t, std::unordered_map<ssa_cf_node*, uint64_t>>* usage_count_map)
+{
+    bool done = true;
+
+    ssa_context* ctx = node->context;
+
+    for (auto i = node->raw_node->entry_instruction; i != node->raw_node->final_instruction->next; i = i->next)
+    {
+        auto working_instruction = i->data;
+
+        int ins = working_instruction.instruction;
+
+        if (ins != ir_load && ins != ir_store)
+            continue; 
+
+        if ((working_instruction.sources.count == 2 && ins == ir_load) || (working_instruction.sources.count == 3 && ins == ir_store))
+            continue;
+
+        ir_operand source = i->data.sources[0];
+
+        if (ir_operand::is_constant(&source))
+            continue;
+
+        if (is_global(ctx, source))
+            continue;
+
+        if ((*usage_count_map)[source.value][node] > 2)
+        {
+            continue;
+        }
+
+        ir_operation* to_nop = nullptr;
+
+        for (auto s = i->prev; s != nullptr; s = s->prev)
+        {
+            ir_operation* check_instruction = &s->data;
+
+            if (check_instruction->destinations.count != 1)
+                continue;
+
+            ir_operand destination_check = check_instruction->destinations[0];
+
+            if (ir_operand::are_equal(destination_check, source))
+            {
+                to_nop = check_instruction;
+
+                break;
+            }
+
+            if (s == node->raw_node->entry_instruction)
+                break;
+
+            if (s->data.instruction == ir_mark_label)
+            {
+                throw_error();
+            }
+        }
+
+        if (to_nop == nullptr)
+        {
+            throw_error();
+        }
+
+        if (to_nop->instruction != ir_add)
+            continue;
+
+        if (ins == ir_load)
+        {
+            ir_operation_block::emit_with(ctx->ir, ir_load, working_instruction.destinations.data, 1, to_nop->sources.data, 2, i);
+        }
+        else if (ins == ir_store)
+        {
+            ir_operand new_sources[3];
+
+            new_sources[0] = to_nop->sources[0];
+            new_sources[1] = to_nop->sources[1];
+            new_sources[2] = working_instruction.sources[1];
+
+            ir_operation_block::emit_with(ctx->ir, ir_store, nullptr, 0, new_sources, 3, i);
+        }
+
+        empty_operation(&i->data);
+        empty_operation(to_nop);
+
+        done = false;
+    }
+
+    return done;
+}
+
+static void swap(ir_operand* l, ir_operand* r)
+{
+	ir_operand tmp = *l;
+
+	*l = *r;
+	*r = tmp;
 }
 
 static bool perform_global_move_propagation(ssa_cf_node* node, std::unordered_map<uint64_t, std::unordered_map<ssa_cf_node*, uint64_t>>* usage_count_map)
@@ -575,16 +678,14 @@ static bool perform_global_move_propagation(ssa_cf_node* node, std::unordered_ma
 
         ir_operand* to_replace = nullptr;
 
-        int usage_count = 0;
-
-        if ((*usage_count_map)[source.value][node] > 1)
-        {
-            continue;
-        }
-
         for (auto s = i->prev; s != nullptr; s = s->prev)
         {
             ir_operation* check_instruction = &s->data;
+
+            if (check_if_local_used(s->data.sources.data, s->data.sources.count, source.value))
+            {
+                break;
+            }
 
             if (check_instruction->destinations.count != 1)
                 continue;
@@ -612,10 +713,59 @@ static bool perform_global_move_propagation(ssa_cf_node* node, std::unordered_ma
             continue;
         }
 
-        if (usage_count != 0)
-            break;
+        for (auto s = i->next; s != nullptr; s = s->next)
+        {
+            if (check_if_local_used(s->data.sources.data, s->data.sources.count, source.value))
+            {
+                to_replace = nullptr;
+
+                break;
+            }
+
+            if (s == node->raw_node->final_instruction)
+                break;
+        }
+
+        if (to_replace == nullptr)
+        {
+            continue;
+        }
 
         to_replace->value = destination.value;
+
+        i->data.instruction = ir_no_operation;
+        i->data.destinations.count = 0;
+        i->data.sources.count = 0;
+
+        done = false;
+    }
+
+    return done;
+}
+
+static bool perform_dead_code_elimination(ssa_cf_node* node, std::unordered_map<uint64_t, std::unordered_map<ssa_cf_node*, uint64_t>>* usage_count_map)
+{
+    bool done = true;
+
+    ssa_context* ctx = node->context;
+
+    for (auto i = node->raw_node->entry_instruction; i != node->raw_node->final_instruction->next; i = i->next)
+    {
+        auto working_instruction = i->data;
+
+        if (working_instruction.instruction == ir_external_call)
+            continue;
+
+        if (working_instruction.destinations.count != 1)
+            continue;
+
+        ir_operand destination = working_instruction.destinations[0];
+
+        if (is_global(ctx,destination))
+            continue;
+
+        if ((*usage_count_map)[destination.value][node] >= 1)
+            continue;
 
         i->data.instruction = ir_no_operation;
         i->data.destinations.count = 0;
@@ -653,6 +803,28 @@ static bool perform_math_propagation(ssa_cf_node* node)
                     done = false;
                 }
 
+            }; break;
+
+            case ir_load:
+            {
+                if (working_instruction->sources.count == 2)
+                {
+                    if (ir_operand::is_constant(&sources[0]) && !ir_operand::is_constant(&sources[1]))
+                    {
+                        swap(&sources[0], &sources[1]);
+
+                        done = false;
+                    }
+                    else if (ir_operand::is_constant(&sources[0]) && ir_operand::is_constant(&sources[1]))
+                    {
+                        ir_operand new_operand = ir_operand::create_con(sources[0].value + sources[1].value, sources[0].meta_data);
+
+                        sources[0] = new_operand;
+                        working_instruction->sources.count = 1;
+
+                        done = false;
+                    }
+                }
             }; break;
 
             case ir_add:
@@ -914,13 +1086,6 @@ void ssa_construct_and_optimize(ir_operation_block* source, compiler_flags flags
         remap_ssa_sources(&ctx, &ssa_node_store[i]);
     }
 
-    std::unordered_map<uint64_t, std::unordered_map<ssa_cf_node*, uint64_t>> total_register_usage_count;
-
-    for (int i = 0; i < count; ++i)
-    {
-        append_usage_data_global(nullptr, &total_register_usage_count, &ssa_node_store[i]);
-    }
-
     //ir_operation_block::log(source);
 
     if (flags & compiler_flags::mathmatical_fold)
@@ -929,6 +1094,13 @@ void ssa_construct_and_optimize(ir_operation_block* source, compiler_flags flags
         {
             bool done = true;
 
+            std::unordered_map<uint64_t, std::unordered_map<ssa_cf_node*, uint64_t>> total_register_usage_count;
+
+            for (int i = 0; i < count; ++i)
+            {
+                append_usage_data_global(nullptr, &total_register_usage_count, &ssa_node_store[i]);
+            }
+
             for (int i = 0; i < count; ++i)
             {
                 ssa_cf_node* working_node = &ssa_node_store[i];
@@ -936,6 +1108,8 @@ void ssa_construct_and_optimize(ir_operation_block* source, compiler_flags flags
                 done &= perform_move_propagation(working_node);
                 done &= perform_math_propagation(working_node);
                 done &= perform_global_move_propagation(working_node, &total_register_usage_count);
+                done &= perform_load_store_addition_propagation(working_node, &total_register_usage_count);
+                done &= perform_dead_code_elimination(working_node, &total_register_usage_count);
             }
 
             if (done)

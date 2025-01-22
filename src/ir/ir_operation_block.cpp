@@ -435,6 +435,9 @@ std::string ir_operation_block::get_block_log(ir_operation_block* ir)
 	{
 		ir_operation working_operation = i->data;
 
+		if (working_operation.instruction == ir_no_operation)
+			continue;
+
 		std::string name = instruction_names[working_operation.instruction];
 
 		result += name + " ";

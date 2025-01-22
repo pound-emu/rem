@@ -67,7 +67,7 @@ void* jit_context::append_to_jit_cache(jit_context* context, void* source_functi
     return growing_jit_cache::append_code(&context->jit_cache, source_function, function_size);
 }
 
-void* jit_context::compile_code(jit_context* context, ir_operation_block* ir_operation_block_context, compiler_flags flags)
+void* jit_context::compile_code(jit_context* context, ir_operation_block* ir_operation_block_context, compiler_flags flags, uint64_t* code_size_result)
 {
     void* code_buffer;
     uint64_t code_size;
@@ -82,6 +82,11 @@ void* jit_context::compile_code(jit_context* context, ir_operation_block* ir_ope
         }; break;
 
         default: throw_error();
+    }
+
+    if (code_size_result != nullptr)
+    {
+        *code_size_result = code_size;
     }
 
     return jit_context::append_to_jit_cache(context, code_buffer, code_size);

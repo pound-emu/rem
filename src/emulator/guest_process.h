@@ -25,6 +25,7 @@ struct guest_process
     void*                           counter_function;
     void*                           undefined_instruction;
     bool                            debug_mode;
+    void*                           log_native;
 
     cpu_type                        process_type;
     cpu_size                        process_size;

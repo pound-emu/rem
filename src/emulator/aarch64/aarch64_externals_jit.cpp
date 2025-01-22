@@ -235,6 +235,60 @@ uint64_t use_x86_sse41_jit(ssa_emit_context* ctx)
     return 1;
 }
 
+uint64_t use_x86_jit(ssa_emit_context* ctx)
+{
+    return 1;
+}
+
+uint64_t use_x86_lzcnt_jit(ssa_emit_context* ctx)
+{
+    return 1;
+}
+
+static ir_operand x86_add_subtract_set_flags_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, bool is_add)
+{
+    aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
+    aarch64_context_offsets offsets = actx->process->guest_context_offset_data;
+
+    ir_operand result = ssa_emit_context::create_local(ctx, O);
+
+    ir_operand destinations[] = 
+    {
+        result,
+        aarch64_emit_context::get_context_reg_raw(actx, offsets.n_offset),
+        aarch64_emit_context::get_context_reg_raw(actx, offsets.z_offset),
+        aarch64_emit_context::get_context_reg_raw(actx, offsets.c_offset),
+        aarch64_emit_context::get_context_reg_raw(actx, offsets.v_offset),
+    };
+
+    ir_operand sources[] = 
+    {
+        n,
+        m
+    };
+
+    ir_operation_block::emit_with(ctx->ir, is_add ? x86_add_flags : x86_sub_flags, destinations, 5, sources, 2);
+
+    if (!is_add)
+    {
+        ir_operand c = aarch64_emit_context::get_context_reg_raw(actx, offsets.c_offset);
+
+        ir_operation_block::emitds(ctx->ir, ir_bitwise_exclusive_or, c, c, ir_operand::create_con(1, c.meta_data));
+    }
+
+    return result;
+}
+
+ir_operand x86_add_set_flags_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m)
+{
+    return x86_add_subtract_set_flags_jit(ctx, O, n, m, true);
+}
+
+ir_operand x86_subtract_set_flags_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m)
+{
+    return x86_add_subtract_set_flags_jit(ctx, O, n, m, false);
+}
+
 ir_operand intrinsic_unary_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source)
 {
     return ssa_emit_context::emit_ssa(ctx, (ir_instructions)instruction, source, R);
@@ -253,4 +307,9 @@ ir_operand intrinsic_binary_imm_jit(ssa_emit_context* ctx,uint64_t R, uint64_t i
 ir_operand intrinsic_ternary_imm_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1, uint64_t source_2)
 {
     return ssa_emit_context::emit_ssa(ctx, (ir_instructions)instruction, source_0, source_1, ir_operand::create_con(source_2));
+}
+
+ir_operand intrinsic_ternary_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1, ir_operand source_2)
+{
+    return ssa_emit_context::emit_ssa(ctx, (ir_instructions)instruction, source_0, source_1, source_2);
 }

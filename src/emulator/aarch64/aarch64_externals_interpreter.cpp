@@ -206,3 +206,13 @@ uint64_t use_x86_sse41_interpreter(interpreter_data* ctx)
 {
     return true;
 }
+
+uint64_t use_x86_interpreter(interpreter_data* ctx)
+{
+    return false;
+}
+
+uint64_t use_x86_lzcnt_interpreter(interpreter_data* ctx)
+{
+    return false;
+}

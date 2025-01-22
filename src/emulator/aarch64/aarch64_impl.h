@@ -115,8 +115,10 @@ template <typename O>
 O add_subtract_carry_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_flags, uint64_t is_add, O carry);
 uint8_t condition_holds_interpreter(interpreter_data* ctx, uint64_t cond);
 void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint64_t link);
+uint64_t select_interpreter(interpreter_data* ctx, uint64_t condition, uint64_t yes, uint64_t no);
 uint64_t create_mask_interpreter(interpreter_data* ctx, uint64_t bits);
 uint64_t shift_left_check_interpreter(interpreter_data* ctx, uint64_t to_shift, uint64_t shift, uint64_t size);
+uint64_t get_x86_rounding_mode_interpreter(interpreter_data* ctx, uint64_t rounding);
 uint64_t shift_right_check_interpreter(interpreter_data* ctx, uint64_t to_shift, uint64_t shift, uint64_t size, uint64_t is_unsigned);
 uint64_t reverse_interpreter(interpreter_data* ctx, uint128_t word, uint64_t M, uint64_t N);
 void convert_to_int_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t ftype, uint64_t Rd, uint64_t Rn, uint64_t round, uint64_t is_unsigned, uint64_t to_vector);
@@ -134,7 +136,6 @@ void convert_to_float_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t f
 uint128_t replicate_vector_interpreter(interpreter_data* ctx, uint128_t source, uint64_t v_size, uint64_t count);
 void st_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t opcode, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rt);
 void memory_1_interpreter(interpreter_data* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t R, uint64_t Rm, uint64_t o2, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t is_load);
-void fcm_vector_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t mode, uint64_t Q, uint64_t sz);
 uint64_t bits_r_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t top, uint64_t bottom);
 uint64_t infinity_interpreter(interpreter_data* ctx, uint64_t sign, uint64_t N);
 uint64_t float_is_nan_interpreter(interpreter_data* ctx, uint64_t operand, uint64_t N);
@@ -176,6 +177,12 @@ void intrinsic_float_binary_scalar_interpreter(interpreter_data* ctx, uint64_t R
 void x86_sse_logic_vector_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t Q, uint64_t invert, uint64_t primary_instruction);
 uint128_t sse_copy_to_xmm_from_xmm_element_interpreter(interpreter_data* ctx, uint128_t source, uint64_t size, uint64_t index);
 uint128_t sse_coppy_gp_across_lanes_interpreter(interpreter_data* ctx, uint64_t source, uint64_t size);
+void floating_point_multiply_scalar_element_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t sz, uint64_t index);
+void floating_point_multiply_vector_element_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t sz, uint64_t index);
+void floating_point_multiply_accumulate_scalar_element_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t neg, uint64_t sz, uint64_t index);
+void floating_point_multiply_accumulate_vector_element_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t neg, uint64_t sz, uint64_t index);
+void fcm_vector_interpreter(interpreter_data* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t mode, uint64_t Q, uint64_t sz);
+uint128_t clear_vector_scalar_interpreter(interpreter_data* ctx, uint128_t working, uint64_t fltsize);
 void add_subtract_imm12_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd);
 void add_subtract_shifted_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t shift, uint64_t Rm, uint64_t imm6, uint64_t Rn, uint64_t Rd);
 void add_subtract_extended_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t Rm, uint64_t option, uint64_t imm3, uint64_t Rn, uint64_t Rd);
@@ -185,6 +192,7 @@ void multiply_with_32_interpreter(interpreter_data* ctx, uint64_t U, uint64_t Rm
 void multiply_hi_interpreter(interpreter_data* ctx, uint64_t U, uint64_t Rm, uint64_t o0, uint64_t Rn, uint64_t Rd);
 void multiply_additive_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rm, uint64_t o0, uint64_t Ra, uint64_t Rn, uint64_t Rd);
 void divide_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rm, uint64_t o1, uint64_t Rn, uint64_t Rd);
+uint64_t create_rbit_mask_interpreter(interpreter_data* ctx, uint64_t index);
 void rbit_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rn, uint64_t Rd);
 void rev16_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t Rn, uint64_t Rd);
 void reverse_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t opc, uint64_t Rn, uint64_t Rd);
@@ -220,6 +228,7 @@ void load_store_register_imm_unsigned_interpreter(interpreter_data* ctx, uint64_
 void load_store_register_imm_unscaled_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t wb, uint64_t Rn, uint64_t Rt);
 void load_store_register_offset_interpreter(interpreter_data* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t Rm, uint64_t option, uint64_t S, uint64_t Rn, uint64_t Rt);
 void load_store_exclusive_ordered_interpreter(interpreter_data* ctx, uint64_t size, uint64_t ordered, uint64_t L, uint64_t Rs, uint64_t o0, uint64_t Rn, uint64_t Rt);
+uint64_t exclusive_address_mask_interpreter(interpreter_data* ctx);
 void load_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, uint64_t size, uint64_t Rn, uint64_t Rt);
 void store_exclusive_interpreter(interpreter_data* ctx, uint64_t is_exclusive, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t Rs);
 void conversion_between_floating_point_and_fixed_point_interpreter(interpreter_data* ctx, uint64_t sf, uint64_t S, uint64_t ftype, uint64_t rmode, uint64_t opcode, uint64_t scale, uint64_t Rn, uint64_t Rd);
@@ -245,6 +254,12 @@ void fmul_vector_by_element_interpreter(interpreter_data* ctx, uint64_t Q, uint6
 void fmul_accumulate_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd);
 void fmul_accumulate_element_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd);
 void faddp_scalar_interpreter(interpreter_data* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd);
+void fcmeq_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
+void fcmgt_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
+void fcmge_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
+void fcmeq_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
+void fcmgt_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
+void fcmge_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
 void fadd_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd);
 void fsub_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd);
 void fmul_scalar_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd);
@@ -315,12 +330,6 @@ void st2_multiple_structures_no_offset_interpreter(interpreter_data* ctx, uint64
 void st2_multiple_structures_post_index_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt);
 void st1_single_structure_no_offset_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt);
 void st1_single_structure_post_index_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt);
-void fcmeq_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
-void fcmgt_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
-void fcmge_vector_zero_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
-void fcmeq_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
-void fcmgt_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
-void fcmge_vector_register_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
 void floating_point_conditional_select_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd);
 void fcmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc);
 void fccmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t nzcv);
@@ -340,6 +349,12 @@ uint64_t use_fast_float_interpreter(interpreter_data* ctx);//THIS FUNCTION IS US
 uint64_t use_x86_sse_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t use_x86_sse2_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t use_x86_sse41_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_lzcnt_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
+template <typename O>
+O x86_add_set_flags_interpreter(interpreter_data* ctx, O n, O m);//THIS FUNCTION IS USER DEFINED
+template <typename O>
+O x86_subtract_set_flags_interpreter(interpreter_data* ctx, O n, O m);//THIS FUNCTION IS USER DEFINED
 uint64_t _get_pc_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address);//THIS FUNCTION IS USER DEFINED
 void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED
@@ -376,8 +391,10 @@ ir_operand add_subtract_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n,
 ir_operand add_subtract_carry_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add, ir_operand carry);
 ir_operand condition_holds_jit(ssa_emit_context* ctx, uint64_t cond);
 void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link);
+uint64_t select_jit(ssa_emit_context* ctx, uint64_t condition, uint64_t yes, uint64_t no);
 ir_operand create_mask_jit(ssa_emit_context* ctx, uint64_t bits);
 ir_operand shift_left_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_operand shift, uint64_t size);
+uint64_t get_x86_rounding_mode_jit(ssa_emit_context* ctx, uint64_t rounding);
 ir_operand shift_right_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_operand shift, uint64_t size, uint64_t is_unsigned);
 ir_operand reverse_jit(ssa_emit_context* ctx, ir_operand word, uint64_t M, uint64_t N);
 void convert_to_int_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, uint64_t Rd, uint64_t Rn, uint64_t round, uint64_t is_unsigned, uint64_t to_vector);
@@ -395,7 +412,6 @@ void convert_to_float_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t ftype, ui
 ir_operand replicate_vector_jit(ssa_emit_context* ctx, ir_operand source, uint64_t v_size, uint64_t count);
 void st_jit(ssa_emit_context* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t opcode, uint64_t size, uint64_t Rm, uint64_t Rn, uint64_t Rt);
 void memory_1_jit(ssa_emit_context* ctx, uint64_t wback, uint64_t Q, uint64_t L, uint64_t R, uint64_t Rm, uint64_t o2, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t is_load);
-void fcm_vector_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t mode, uint64_t Q, uint64_t sz);
 ir_operand bits_r_jit(ssa_emit_context* ctx, ir_operand operand, uint64_t top, uint64_t bottom);
 ir_operand infinity_jit(ssa_emit_context* ctx, uint64_t sign, uint64_t N);
 ir_operand float_is_nan_jit(ssa_emit_context* ctx, ir_operand operand, uint64_t N);
@@ -436,6 +452,12 @@ void intrinsic_float_binary_scalar_jit(ssa_emit_context* ctx, uint64_t Rd, uint6
 void x86_sse_logic_vector_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t Q, uint64_t invert, uint64_t primary_instruction);
 ir_operand sse_copy_to_xmm_from_xmm_element_jit(ssa_emit_context* ctx, ir_operand source, uint64_t size, uint64_t index);
 ir_operand sse_coppy_gp_across_lanes_jit(ssa_emit_context* ctx, ir_operand source, uint64_t size);
+void floating_point_multiply_scalar_element_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t sz, uint64_t index);
+void floating_point_multiply_vector_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t sz, uint64_t index);
+void floating_point_multiply_accumulate_scalar_element_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t neg, uint64_t sz, uint64_t index);
+void floating_point_multiply_accumulate_vector_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t neg, uint64_t sz, uint64_t index);
+void fcm_vector_jit(ssa_emit_context* ctx, uint64_t Rd, uint64_t Rn, uint64_t Rm, uint64_t mode, uint64_t Q, uint64_t sz);
+ir_operand clear_vector_scalar_jit(ssa_emit_context* ctx, ir_operand working, uint64_t fltsize);
 void add_subtract_imm12_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t sh, uint64_t imm12, uint64_t Rn, uint64_t Rd);
 void add_subtract_shifted_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t shift, uint64_t Rm, uint64_t imm6, uint64_t Rn, uint64_t Rd);
 void add_subtract_extended_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uint64_t S, uint64_t Rm, uint64_t option, uint64_t imm3, uint64_t Rn, uint64_t Rd);
@@ -445,6 +467,7 @@ void multiply_with_32_jit(ssa_emit_context* ctx, uint64_t U, uint64_t Rm, uint64
 void multiply_hi_jit(ssa_emit_context* ctx, uint64_t U, uint64_t Rm, uint64_t o0, uint64_t Rn, uint64_t Rd);
 void multiply_additive_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint64_t o0, uint64_t Ra, uint64_t Rn, uint64_t Rd);
 void divide_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint64_t o1, uint64_t Rn, uint64_t Rd);
+uint64_t create_rbit_mask_jit(ssa_emit_context* ctx, uint64_t index);
 void rbit_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rn, uint64_t Rd);
 void rev16_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rn, uint64_t Rd);
 void reverse_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t opc, uint64_t Rn, uint64_t Rd);
@@ -480,6 +503,7 @@ void load_store_register_imm_unsigned_jit(ssa_emit_context* ctx, uint64_t size, 
 void load_store_register_imm_unscaled_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t imm9, uint64_t wb, uint64_t Rn, uint64_t Rt);
 void load_store_register_offset_jit(ssa_emit_context* ctx, uint64_t size, uint64_t VR, uint64_t opc, uint64_t Rm, uint64_t option, uint64_t S, uint64_t Rn, uint64_t Rt);
 void load_store_exclusive_ordered_jit(ssa_emit_context* ctx, uint64_t size, uint64_t ordered, uint64_t L, uint64_t Rs, uint64_t o0, uint64_t Rn, uint64_t Rt);
+ir_operand exclusive_address_mask_jit(ssa_emit_context* ctx);
 void load_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t size, uint64_t Rn, uint64_t Rt);
 void store_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t Rs);
 void conversion_between_floating_point_and_fixed_point_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t S, uint64_t ftype, uint64_t rmode, uint64_t opcode, uint64_t scale, uint64_t Rn, uint64_t Rd);
@@ -505,6 +529,12 @@ void fmul_vector_by_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, 
 void fmul_accumulate_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd);
 void fmul_accumulate_element_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t L, uint64_t M, uint64_t Rm, uint64_t neg, uint64_t H, uint64_t Rn, uint64_t Rd);
 void faddp_scalar_jit(ssa_emit_context* ctx, uint64_t sz, uint64_t Rn, uint64_t Rd);
+void fcmeq_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
+void fcmgt_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
+void fcmge_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
+void fcmeq_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
+void fcmgt_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
+void fcmge_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
 void fadd_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd);
 void fsub_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd);
 void fmul_scalar_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t Rd);
@@ -573,12 +603,6 @@ void st2_multiple_structures_no_offset_jit(ssa_emit_context* ctx, uint64_t Q, ui
 void st2_multiple_structures_post_index_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt);
 void st1_single_structure_no_offset_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt);
 void st1_single_structure_post_index_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t opcode, uint64_t S, uint64_t size, uint64_t Rn, uint64_t Rt);
-void fcmeq_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
-void fcmgt_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
-void fcmge_vector_zero_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rn, uint64_t Rd);
-void fcmeq_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
-void fcmgt_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
-void fcmge_vector_register_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t sz, uint64_t Rm, uint64_t Rn, uint64_t Rd);
 void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd);
 void fcmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc);
 void fccmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t nzcv);
@@ -598,6 +622,10 @@ uint64_t use_fast_float_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFIN
 uint64_t use_x86_sse_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t use_x86_sse2_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 uint64_t use_x86_sse41_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_lzcnt_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
+ir_operand x86_add_set_flags_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m);//THIS FUNCTION IS USER DEFINED
+ir_operand x86_subtract_set_flags_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m);//THIS FUNCTION IS USER DEFINED
 uint64_t _get_pc_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address);//THIS FUNCTION IS USER DEFINED
 void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED

@@ -23,6 +23,7 @@ void guest_process::create(guest_process* result, guest_memory guest_memory_cont
     result->guest_functions.use_flt = true;
 
     result->guest_functions.retranslator_is_running = false;
+    result->log_native = nullptr;
 
     init_aarch64_decoder(result);
 }
@@ -40,7 +41,7 @@ uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_func
 
     void* arguments[] = { arm_context };
 
-    if (function_to_execute.times_executed == 100 && !process->debug_mode)
+    if (function_to_execute.times_executed == 1000 && !process->debug_mode)
     {
         switch (function_to_execute.optimizations)
         {
@@ -105,6 +106,10 @@ guest_function guest_process::translate_function(translate_request_data* data, g
     }
 
     ssa_emit_context::reset_local(&ssa_emit);
+
+    ssa_emit.memory_base = ssa_emit_context::create_global(&ssa_emit, int64);
+    
+    ir_operation_block::emitds(raw_ir, ir_move, ssa_emit.memory_base, ir_operand::create_con((uint64_t)process->guest_memory_context.base));
 
     while (true)
     {
@@ -204,7 +209,14 @@ guest_function guest_process::translate_function(translate_request_data* data, g
         backend_compiler_flags = compiler_flags::optimize_ssa | compiler_flags::mathmatical_fold;
     }
 
-    void* code = jit_context::compile_code(process->host_jit_context, raw_ir,(compiler_flags)backend_compiler_flags);
+    uint64_t code_size;
+
+    void* code = jit_context::compile_code(process->host_jit_context, raw_ir,(compiler_flags)backend_compiler_flags, &code_size);
+
+    if (((guest_process*)data->process)->log_native != nullptr && flags == guest_compiler_optimization_flags::level_three)
+    {
+        ((void(*)(void*, int))((guest_process*)data->process)->log_native)(code, code_size);
+    }
 
     guest_function result;
 

@@ -7,6 +7,8 @@
 #include "ir/basic_register_allocator.h"
 #include "ir/undefined_behavior_check.h"
 
+#include <iostream>
+
 void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir_operation_block* source_ir, bool optimize, abi working_abi, compiler_flags flags)
 {
 	arena_allocator* allocator = source_ir->allocator;
@@ -33,6 +35,11 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 	if (flags & optimize_ssa)
 	{
 		ssa_construct_and_optimize(source_ir, flags);
+
+		if (flags & mathmatical_fold)
+		{
+			ir_operation_block::log(source_ir);
+		}
 	}
 	
 	x86_pre_allocator_context::run_pass(&pre_allocation_data, pre_allocated_code, source_ir, working_abi.cpu,working_abi.os);

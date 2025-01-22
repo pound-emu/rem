@@ -22,7 +22,7 @@ static void base_plus_va_jit(void* memory, ssa_emit_context* ir, ir_operand dest
 {
     ir_operation_block* ctx = ir->ir;
 
-    ir_operation_block::emitds(ctx, ir_add, destination, source, ir_operand::create_con((uint64_t)memory));
+    ir_operation_block::emitds(ctx, ir_add, destination, source, ir->memory_base);
 }
 
 extern "C"
@@ -30,6 +30,8 @@ extern "C"
     EXPORT void* create_rem_context(void* memory, aarch64_context_offsets* context_offsets, void* svc, void* counter, void* undefined_instruction)
     {
         external_context* result = new external_context;
+
+        result->process.log_native = nullptr;
 
         jit_context::create(&result->memory, 5ULL * 1024 * 1024 * 1024, get_abi());
         guest_process::create(&result->process, {memory, base_plus_va, base_plus_va_jit}, &result->memory, *context_offsets);
@@ -53,8 +55,10 @@ extern "C"
         return guest_process::interperate_function(&context->process, virtual_address, guest_context, is_running);
     }
 
-    EXPORT uint64_t jit_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context, bool* is_running)
+    EXPORT uint64_t jit_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context, bool* is_running, void* log_native)
     {
+        context->process.log_native = log_native;
+
         while (*is_running)
         {
             virtual_address = guest_process::jit_function(&context->process, virtual_address, guest_context);
