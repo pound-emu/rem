@@ -10471,25 +10471,25 @@ ir_operand shift_left_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_o
 {
 	ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, int64));
 	{
-	    ir_operand end = ir_operation_block::create_label(ctx->ir);
-	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+	        ir_operand end = ir_operation_block::create_label(ctx->ir);
+	        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 	
-	    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(size, int64));
+	        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(size, int64));
 	
-	    ir_operation_block::jump_if(ctx->ir,yes, condition);
-		{
+	        ir_operation_block::jump_if(ctx->ir,yes, condition);
+	    	{
 			ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_left, to_shift, copy_new_raw_size(ctx, shift, int64)));
 		}
-	    
-	    ir_operation_block::jump(ctx->ir,end);
-	    ir_operation_block::mark_label(ctx->ir, yes);
+	        
+	        ir_operation_block::jump(ctx->ir,end);
+	        ir_operation_block::mark_label(ctx->ir, yes);
 	
-		{
+	    	{
 			ssa_emit_context::move(ctx,result,ir_operand::create_con(0ULL, int64));
 		}
 	
-	    ir_operation_block::mark_label(ctx->ir, end);
-	}
+	        ir_operation_block::mark_label(ctx->ir, end);
+	    }
 	return result;
 }
 
@@ -10523,13 +10523,13 @@ ir_operand shift_right_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_
 {
 	ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, int64));
 	{
-	    ir_operand end = ir_operation_block::create_label(ctx->ir);
-	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+	        ir_operand end = ir_operation_block::create_label(ctx->ir);
+	        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 	
-	    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(size, int64));
+	        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(size, int64));
 	
-	    ir_operation_block::jump_if(ctx->ir,yes, condition);
-		{
+	        ir_operation_block::jump_if(ctx->ir,yes, condition);
+	    	{
 			if ((is_unsigned))
 			{
 				ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, to_shift, copy_new_raw_size(ctx, shift, int64)));
@@ -10539,35 +10539,35 @@ ir_operand shift_right_check_jit(ssa_emit_context* ctx, ir_operand to_shift, ir_
 				ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_shift_right_signed, to_shift, copy_new_raw_size(ctx, shift, int64)));
 			}
 		}
-	    
-	    ir_operation_block::jump(ctx->ir,end);
-	    ir_operation_block::mark_label(ctx->ir, yes);
+	        
+	        ir_operation_block::jump(ctx->ir,end);
+	        ir_operation_block::mark_label(ctx->ir, yes);
 	
-		{
+	    	{
 			{
-			    ir_operand end = ir_operation_block::create_label(ctx->ir);
-			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+			        ir_operand end = ir_operation_block::create_label(ctx->ir);
+			        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 			
-			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, to_shift, ir_operand::create_con(0ULL, int64)), ir_operand::create_con(!is_unsigned, int64));
+			        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, to_shift, ir_operand::create_con(0ULL, int64)), ir_operand::create_con(!is_unsigned, int64));
 			
-			    ir_operation_block::jump_if(ctx->ir,yes, condition);
-				{
+			        ir_operation_block::jump_if(ctx->ir,yes, condition);
+			    	{
 					ssa_emit_context::move(ctx,result,ir_operand::create_con(0ULL, int64));
 				}
-			    
-			    ir_operation_block::jump(ctx->ir,end);
-			    ir_operation_block::mark_label(ctx->ir, yes);
+			        
+			        ir_operation_block::jump(ctx->ir,end);
+			        ir_operation_block::mark_label(ctx->ir, yes);
 			
-				{
+			    	{
 					ssa_emit_context::move(ctx,result,ir_operand::create_con(-1ULL, int64));
 				}
 			
-			    ir_operation_block::mark_label(ctx->ir, end);
-			}
+			        ir_operation_block::mark_label(ctx->ir, end);
+			    }
 		}
 	
-	    ir_operation_block::mark_label(ctx->ir, end);
-	}
+	        ir_operation_block::mark_label(ctx->ir, end);
+	    }
 	return result;
 }
 
@@ -11000,46 +11000,38 @@ ir_operand float_is_nan_jit(ssa_emit_context* ctx, ir_operand operand, uint64_t 
 		exp = bits_r_jit(ctx,operand,30ULL,23ULL);
 		frac = bits_r_jit(ctx,operand,22ULL,0ULL);
 		{
-		    ir_operand end = ir_operation_block::create_label(ctx->ir);
-		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operand end = ir_operation_block::create_label(ctx->ir);
+		        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 		
-		    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, exp, ir_operand::create_con(255ULL, int64)), ssa_emit_context::emit_ssa(ctx, ir_compare_not_equal, frac, ir_operand::create_con(0ULL, int64)));
+		        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, exp, ir_operand::create_con(255ULL, int64)), ssa_emit_context::emit_ssa(ctx, ir_compare_not_equal, frac, ir_operand::create_con(0ULL, int64))), ir_operand::create_con(1));
 		
-		    ir_operation_block::jump_if(ctx->ir,yes, condition);
-			/* TODO if statements without a no should not have this*/
-		    
-		    ir_operation_block::jump(ctx->ir,end);
-		    ir_operation_block::mark_label(ctx->ir, yes);
+		        ir_operation_block::jump_if(ctx->ir,end, condition);
 		
-			{
+		    	{
 				ssa_emit_context::move(ctx,result,ir_operand::create_con(1ULL, int8));
 			}
 		
-		    ir_operation_block::mark_label(ctx->ir, end);
-		}
+		        ir_operation_block::mark_label(ctx->ir, end);
+		    }
 	}
 	else if ((((uint64_t)N == (uint64_t)64ULL)))
 	{
 		exp = bits_r_jit(ctx,operand,62ULL,52ULL);
 		frac = bits_r_jit(ctx,operand,51ULL,0ULL);
 		{
-		    ir_operand end = ir_operation_block::create_label(ctx->ir);
-		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operand end = ir_operation_block::create_label(ctx->ir);
+		        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 		
-		    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, exp, ir_operand::create_con(2047ULL, int64)), ssa_emit_context::emit_ssa(ctx, ir_compare_not_equal, frac, ir_operand::create_con(0ULL, int64)));
+		        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, exp, ir_operand::create_con(2047ULL, int64)), ssa_emit_context::emit_ssa(ctx, ir_compare_not_equal, frac, ir_operand::create_con(0ULL, int64))), ir_operand::create_con(1));
 		
-		    ir_operation_block::jump_if(ctx->ir,yes, condition);
-			/* TODO if statements without a no should not have this*/
-		    
-		    ir_operation_block::jump(ctx->ir,end);
-		    ir_operation_block::mark_label(ctx->ir, yes);
+		        ir_operation_block::jump_if(ctx->ir,end, condition);
 		
-			{
+		    	{
 				ssa_emit_context::move(ctx,result,ir_operand::create_con(1ULL, int8));
 			}
 		
-		    ir_operation_block::mark_label(ctx->ir, end);
-		}
+		        ir_operation_block::mark_label(ctx->ir, end);
+		    }
 	}
 	else
 	{
@@ -11175,40 +11167,36 @@ ir_operand FPMaxNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand o
 		ir_operand type_1_nan = float_is_nan_jit(ctx,operand1,N);
 		ir_operand type_2_nan = float_is_nan_jit(ctx,operand2,N);
 		{
-		    ir_operand end = ir_operation_block::create_label(ctx->ir);
-		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operand end = ir_operation_block::create_label(ctx->ir);
+		        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 		
-		    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, type_1_nan, ssa_emit_context::emit_ssa(ctx, ir_logical_not, type_2_nan));
+		        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, type_1_nan, ssa_emit_context::emit_ssa(ctx, ir_logical_not, type_2_nan));
 		
-		    ir_operation_block::jump_if(ctx->ir,yes, condition);
-			{
-			    ir_operand end = ir_operation_block::create_label(ctx->ir);
-			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operation_block::jump_if(ctx->ir,yes, condition);
+		    	{
+			        ir_operand end = ir_operation_block::create_label(ctx->ir);
+			        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 			
-			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_logical_not, type_1_nan), type_2_nan);
+			        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_logical_not, type_1_nan), type_2_nan), ir_operand::create_con(1));
 			
-			    ir_operation_block::jump_if(ctx->ir,yes, condition);
-				/* TODO if statements without a no should not have this*/
-			    
-			    ir_operation_block::jump(ctx->ir,end);
-			    ir_operation_block::mark_label(ctx->ir, yes);
+			        ir_operation_block::jump_if(ctx->ir,end, condition);
 			
-				{
+			    	{
 					ssa_emit_context::move(ctx,operand2,infinity_jit(ctx,1ULL,N));
 				}
 			
-			    ir_operation_block::mark_label(ctx->ir, end);
-			}
-		    
-		    ir_operation_block::jump(ctx->ir,end);
-		    ir_operation_block::mark_label(ctx->ir, yes);
+			        ir_operation_block::mark_label(ctx->ir, end);
+			    }
+		        
+		        ir_operation_block::jump(ctx->ir,end);
+		        ir_operation_block::mark_label(ctx->ir, yes);
 		
-			{
+		    	{
 				ssa_emit_context::move(ctx,operand1,infinity_jit(ctx,1ULL,N));
 			}
 		
-		    ir_operation_block::mark_label(ctx->ir, end);
-		}
+		        ir_operation_block::mark_label(ctx->ir, end);
+		    }
 		uint64_t F = N == 32ULL ? int32 : N == 64ULL ? int64 : 0;
 		{
 			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_select_max, copy_new_raw_size(ctx, operand1, F), copy_new_raw_size(ctx, operand2, F)), int64);
@@ -11224,40 +11212,36 @@ ir_operand FPMinNum_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand o
 		ir_operand type_1_nan = float_is_nan_jit(ctx,operand1,N);
 		ir_operand type_2_nan = float_is_nan_jit(ctx,operand2,N);
 		{
-		    ir_operand end = ir_operation_block::create_label(ctx->ir);
-		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operand end = ir_operation_block::create_label(ctx->ir);
+		        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 		
-		    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, type_1_nan, ssa_emit_context::emit_ssa(ctx, ir_logical_not, type_2_nan));
+		        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, type_1_nan, ssa_emit_context::emit_ssa(ctx, ir_logical_not, type_2_nan));
 		
-		    ir_operation_block::jump_if(ctx->ir,yes, condition);
-			{
-			    ir_operand end = ir_operation_block::create_label(ctx->ir);
-			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operation_block::jump_if(ctx->ir,yes, condition);
+		    	{
+			        ir_operand end = ir_operation_block::create_label(ctx->ir);
+			        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 			
-			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_logical_not, type_1_nan), type_2_nan);
+			        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_logical_not, type_1_nan), type_2_nan), ir_operand::create_con(1));
 			
-			    ir_operation_block::jump_if(ctx->ir,yes, condition);
-				/* TODO if statements without a no should not have this*/
-			    
-			    ir_operation_block::jump(ctx->ir,end);
-			    ir_operation_block::mark_label(ctx->ir, yes);
+			        ir_operation_block::jump_if(ctx->ir,end, condition);
 			
-				{
+			    	{
 					ssa_emit_context::move(ctx,operand2,infinity_jit(ctx,0ULL,N));
 				}
 			
-			    ir_operation_block::mark_label(ctx->ir, end);
-			}
-		    
-		    ir_operation_block::jump(ctx->ir,end);
-		    ir_operation_block::mark_label(ctx->ir, yes);
+			        ir_operation_block::mark_label(ctx->ir, end);
+			    }
+		        
+		        ir_operation_block::jump(ctx->ir,end);
+		        ir_operation_block::mark_label(ctx->ir, yes);
 		
-			{
+		    	{
 				ssa_emit_context::move(ctx,operand1,infinity_jit(ctx,0ULL,N));
 			}
 		
-		    ir_operation_block::mark_label(ctx->ir, end);
-		}
+		        ir_operation_block::mark_label(ctx->ir, end);
+		    }
 		uint64_t F = N == 32ULL ? int32 : N == 64ULL ? int64 : 0;
 		{
 			return copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_floating_point_select_min, copy_new_raw_size(ctx, operand1, F), copy_new_raw_size(ctx, operand2, F)), int64);
@@ -11278,61 +11262,61 @@ ir_operand FPCompare_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand 
 			ir_operand type_1_nan = float_is_nan_jit(ctx,copy_new_raw_size(ctx, o1, int64),N);
 			ir_operand type_2_nan = float_is_nan_jit(ctx,copy_new_raw_size(ctx, o2, int64),N);
 			{
-			    ir_operand end = ir_operation_block::create_label(ctx->ir);
-			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+			        ir_operand end = ir_operation_block::create_label(ctx->ir);
+			        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 			
-			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, type_1_nan, type_2_nan);
+			        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_or, type_1_nan, type_2_nan);
 			
-			    ir_operation_block::jump_if(ctx->ir,yes, condition);
-				{
+			        ir_operation_block::jump_if(ctx->ir,yes, condition);
+			    	{
 					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					        ir_operand end = ir_operation_block::create_label(ctx->ir);
+					        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_equal, o1, o2);
+					        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_equal, o1, o2);
 					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						{
-						    ir_operand end = ir_operation_block::create_label(ctx->ir);
-						    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					        ir_operation_block::jump_if(ctx->ir,yes, condition);
+					    	{
+						        ir_operand end = ir_operation_block::create_label(ctx->ir);
+						        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 						
-						    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_less, o1, o2);
+						        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_less, o1, o2);
 						
-						    ir_operation_block::jump_if(ctx->ir,yes, condition);
-							{
+						        ir_operation_block::jump_if(ctx->ir,yes, condition);
+						    	{
 								ssa_emit_context::move(ctx,result,ir_operand::create_con(2ULL, F));
 							}
-						    
-						    ir_operation_block::jump(ctx->ir,end);
-						    ir_operation_block::mark_label(ctx->ir, yes);
+						        
+						        ir_operation_block::jump(ctx->ir,end);
+						        ir_operation_block::mark_label(ctx->ir, yes);
 						
-							{
+						    	{
 								ssa_emit_context::move(ctx,result,ir_operand::create_con(8ULL, F));
 							}
 						
-						    ir_operation_block::mark_label(ctx->ir, end);
-						}
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
+						        ir_operation_block::mark_label(ctx->ir, end);
+						    }
+					        
+					        ir_operation_block::jump(ctx->ir,end);
+					        ir_operation_block::mark_label(ctx->ir, yes);
 					
-						{
+					    	{
 							ssa_emit_context::move(ctx,result,ir_operand::create_con(6ULL, F));
 						}
 					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
+					        ir_operation_block::mark_label(ctx->ir, end);
+					    }
 				}
-			    
-			    ir_operation_block::jump(ctx->ir,end);
-			    ir_operation_block::mark_label(ctx->ir, yes);
+			        
+			        ir_operation_block::jump(ctx->ir,end);
+			        ir_operation_block::mark_label(ctx->ir, yes);
 			
-				{
+			    	{
 					ssa_emit_context::move(ctx,result,ir_operand::create_con(3ULL, F));
 				}
 			
-			    ir_operation_block::mark_label(ctx->ir, end);
-			}
+			        ir_operation_block::mark_label(ctx->ir, end);
+			    }
 			return copy_new_raw_size(ctx, result, int64);
 		}
 	}
@@ -11555,23 +11539,19 @@ ir_operand FPToFixed_jit(ssa_emit_context* ctx, ir_operand source, uint64_t frac
 				{
 					rounding_control = 2ULL;
 					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					        ir_operand end = ir_operation_block::create_label(ctx->ir);
+					        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_less_equal, working, ir_operand::create_con(0ULL, F));
+					        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_less_equal, working, ir_operand::create_con(0ULL, F)), ir_operand::create_con(1));
 					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						/* TODO if statements without a no should not have this*/
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
+					        ir_operation_block::jump_if(ctx->ir,end, condition);
 					
-						{
+					    	{
 							ssa_emit_context::move(ctx,working,ssa_emit_context::emit_ssa(ctx, ir_floating_point_subtract, working, copy_new_raw_size(ctx, float_imm_jit(ctx,ir_operand::create_con(1ULL, int64),from), F)));
 						}
 					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
+					        ir_operation_block::mark_label(ctx->ir, end);
+					    }
 				}
 				else
 				{
@@ -11587,71 +11567,71 @@ ir_operand FPToFixed_jit(ssa_emit_context* ctx, ir_operand source, uint64_t frac
 				}
 				ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ir_operand::create_con(0ULL, I));
 				{
-				    ir_operand end = ir_operation_block::create_label(ctx->ir);
-				    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+				        ir_operand end = ir_operation_block::create_label(ctx->ir);
+				        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 				
-				    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_greater_equal, working, max);
+				        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_greater_equal, working, max);
 				
-				    ir_operation_block::jump_if(ctx->ir,yes, condition);
-					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+				        ir_operation_block::jump_if(ctx->ir,yes, condition);
+				    	{
+					        ir_operand end = ir_operation_block::create_label(ctx->ir);
+					        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_less_equal, working, min);
+					        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_floating_point_compare_less_equal, working, min);
 					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						if ((is_unsigned))
+					        ir_operation_block::jump_if(ctx->ir,yes, condition);
+					    	if ((is_unsigned))
 						{
 							ir_operand s_max_i = copy_new_raw_size(ctx, create_mask_jit(ctx,((uint64_t)to - (uint64_t)1ULL)), I);
 							ir_operand s_max = ssa_emit_context::convert_to_float(ctx,s_max_i,F,I, 1);
 							{
-							    ir_operand end = ir_operation_block::create_label(ctx->ir);
-							    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+							        ir_operand end = ir_operation_block::create_label(ctx->ir);
+							        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 							
-							    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_signed, working, s_max);
+							        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_signed, working, s_max);
 							
-							    ir_operation_block::jump_if(ctx->ir,yes, condition);
-								{
+							        ir_operation_block::jump_if(ctx->ir,yes, condition);
+							    	{
 									ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, ssa_emit_context::convert_to_integer(ctx,working,I,F, 1), I));
 								}
-							    
-							    ir_operation_block::jump(ctx->ir,end);
-							    ir_operation_block::mark_label(ctx->ir, yes);
+							        
+							        ir_operation_block::jump(ctx->ir,end);
+							        ir_operation_block::mark_label(ctx->ir, yes);
 							
-								{
+							    	{
 									ir_operand difference = ssa_emit_context::emit_ssa(ctx, ir_floating_point_subtract, working, s_max);
 									ssa_emit_context::move(ctx,working,ssa_emit_context::emit_ssa(ctx, ir_floating_point_subtract, working, difference));
 									ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, ssa_emit_context::convert_to_integer(ctx,difference,I,F, 1), I));
 									ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_add, result, copy_new_raw_size(ctx, ssa_emit_context::convert_to_integer(ctx,working,I,F, 1), I)));
 								}
 							
-							    ir_operation_block::mark_label(ctx->ir, end);
-							}
+							        ir_operation_block::mark_label(ctx->ir, end);
+							    }
 						}
 						else
 						{
 							ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, ssa_emit_context::convert_to_integer(ctx,working,I,F, 1), I));
 						}
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
+					        
+					        ir_operation_block::jump(ctx->ir,end);
+					        ir_operation_block::mark_label(ctx->ir, yes);
 					
-						{
+					    	{
 							ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, min_i, I));
 						}
 					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
-				    
-				    ir_operation_block::jump(ctx->ir,end);
-				    ir_operation_block::mark_label(ctx->ir, yes);
+					        ir_operation_block::mark_label(ctx->ir, end);
+					    }
+				        
+				        ir_operation_block::jump(ctx->ir,end);
+				        ir_operation_block::mark_label(ctx->ir, yes);
 				
-					{
+				    	{
 						ssa_emit_context::move(ctx,result,copy_new_raw_size(ctx, max_i, I));
 					}
 				
-				    ir_operation_block::mark_label(ctx->ir, end);
-				}
+				        ir_operation_block::mark_label(ctx->ir, end);
+				    }
 				return copy_new_raw_size(ctx, result, int64);
 			}
 		}
@@ -12323,13 +12303,13 @@ void divide_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint64_t o1, ui
 		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
 		ir_operand result;
 		{
-		    ir_operand end = ir_operation_block::create_label(ctx->ir);
-		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operand end = ir_operation_block::create_label(ctx->ir);
+		        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 		
-		    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, operand2, ir_operand::create_con(0ULL, O));
+		        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, operand2, ir_operand::create_con(0ULL, O));
 		
-		    ir_operation_block::jump_if(ctx->ir,yes, condition);
-			{
+		        ir_operation_block::jump_if(ctx->ir,yes, condition);
+		    	{
 				if ((is_signed))
 				{
 					uint64_t min = 9223372036854775808ULL;
@@ -12338,41 +12318,41 @@ void divide_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t Rm, uint64_t o1, ui
 						min = ((uint64_t)min >> (uint64_t)32ULL);
 					}
 					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					        ir_operand end = ir_operation_block::create_label(ctx->ir);
+					        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, operand1, ir_operand::create_con(min, O)), ssa_emit_context::emit_ssa(ctx, ir_compare_equal, operand2, ir_operand::create_con(-1ULL, O)));
+					        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_compare_equal, operand1, ir_operand::create_con(min, O)), ssa_emit_context::emit_ssa(ctx, ir_compare_equal, operand2, ir_operand::create_con(-1ULL, O)));
 					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						{
+					        ir_operation_block::jump_if(ctx->ir,yes, condition);
+					    	{
 							X_jit(ctx,Rd,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_divide_signed, operand1, operand2), int64));
 						}
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
+					        
+					        ir_operation_block::jump(ctx->ir,end);
+					        ir_operation_block::mark_label(ctx->ir, yes);
 					
-						{
+					    	{
 							X_jit(ctx,Rd,ir_operand::create_con(min, int64));
 						}
 					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
+					        ir_operation_block::mark_label(ctx->ir, end);
+					    }
 				}
 				else
 				{
 					X_jit(ctx,Rd,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_divide_unsigned, operand1, operand2), int64));
 				}
 			}
-		    
-		    ir_operation_block::jump(ctx->ir,end);
-		    ir_operation_block::mark_label(ctx->ir, yes);
+		        
+		        ir_operation_block::jump(ctx->ir,end);
+		        ir_operation_block::mark_label(ctx->ir, yes);
 		
-			{
+		    	{
 				X_jit(ctx,Rd,ir_operand::create_con(0ULL, int64));
 			}
 		
-		    ir_operation_block::mark_label(ctx->ir, end);
-		}
+		        ir_operation_block::mark_label(ctx->ir, end);
+		    }
 	}
 }
 
@@ -12477,60 +12457,48 @@ void count_leading_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t s, uint64_t 
 				if ((s))
 				{
 					{
-					    ir_operand end = ir_operation_block::create_label(ctx->ir);
-					    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+					        ir_operand end = ir_operation_block::create_label(ctx->ir);
+					        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 					
-					    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_not_equal, working, sig_bit);
+					        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,ssa_emit_context::emit_ssa(ctx, ir_compare_not_equal, working, sig_bit), ir_operand::create_con(1));
 					
-					    ir_operation_block::jump_if(ctx->ir,yes, condition);
-						/* TODO if statements without a no should not have this*/
-					    
-					    ir_operation_block::jump(ctx->ir,end);
-					    ir_operation_block::mark_label(ctx->ir, yes);
+					        ir_operation_block::jump_if(ctx->ir,end, condition);
 					
-						{
+					    	{
 							ssa_emit_context::move(ctx,done,ir_operand::create_con(1ULL, O));
 						}
 					
-					    ir_operation_block::mark_label(ctx->ir, end);
-					}
+					        ir_operation_block::mark_label(ctx->ir, end);
+					    }
 				}
 				else {
-				    ir_operand end = ir_operation_block::create_label(ctx->ir);
-				    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+				        ir_operand end = ir_operation_block::create_label(ctx->ir);
+				        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 				
-				    ir_operand condition = working;
+				        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,working, ir_operand::create_con(1));
 				
-				    ir_operation_block::jump_if(ctx->ir,yes, condition);
-					/* TODO if statements without a no should not have this*/
-				    
-				    ir_operation_block::jump(ctx->ir,end);
-				    ir_operation_block::mark_label(ctx->ir, yes);
+				        ir_operation_block::jump_if(ctx->ir,end, condition);
 				
-					{
+				    	{
 						ssa_emit_context::move(ctx,done,ir_operand::create_con(1ULL, O));
 					}
 				
-				    ir_operation_block::mark_label(ctx->ir, end);
-				}
+				        ir_operation_block::mark_label(ctx->ir, end);
+				    }
 				{
-				    ir_operand end = ir_operation_block::create_label(ctx->ir);
-				    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+				        ir_operand end = ir_operation_block::create_label(ctx->ir);
+				        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 				
-				    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_logical_not, done);
+				        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,ssa_emit_context::emit_ssa(ctx, ir_logical_not, done), ir_operand::create_con(1));
 				
-				    ir_operation_block::jump_if(ctx->ir,yes, condition);
-					/* TODO if statements without a no should not have this*/
-				    
-				    ir_operation_block::jump(ctx->ir,end);
-				    ir_operation_block::mark_label(ctx->ir, yes);
+				        ir_operation_block::jump_if(ctx->ir,end, condition);
 				
-					{
+				    	{
 						ssa_emit_context::move(ctx,result,ssa_emit_context::emit_ssa(ctx, ir_add, result, ir_operand::create_con(1ULL, O)));
 					}
 				
-				    ir_operation_block::mark_label(ctx->ir, end);
-				}
+				        ir_operation_block::mark_label(ctx->ir, end);
+				    }
 			}
 		}
 		X_jit(ctx,Rd,copy_new_raw_size(ctx, result, int64));
@@ -12694,13 +12662,13 @@ void conditional_select_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 		ir_operand operand2 = copy_new_raw_size(ctx, X_jit(ctx,Rm), O);
 		ir_operand condition_pass = copy_new_raw_size(ctx, condition_holds_jit(ctx,cond), O);
 		{
-		    ir_operand end = ir_operation_block::create_label(ctx->ir);
-		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operand end = ir_operation_block::create_label(ctx->ir);
+		        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 		
-		    ir_operand condition = condition_pass;
+		        ir_operand condition = condition_pass;
 		
-		    ir_operation_block::jump_if(ctx->ir,yes, condition);
-			{
+		        ir_operation_block::jump_if(ctx->ir,yes, condition);
+		    	{
 				if ((invert))
 				{
 					operand2 = ssa_emit_context::emit_ssa(ctx, ir_bitwise_not, operand2);
@@ -12711,16 +12679,16 @@ void conditional_select_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, uin
 				}
 				X_jit(ctx,Rd,copy_new_raw_size(ctx, operand2, int64));
 			}
-		    
-		    ir_operation_block::jump(ctx->ir,end);
-		    ir_operation_block::mark_label(ctx->ir, yes);
+		        
+		        ir_operation_block::jump(ctx->ir,end);
+		        ir_operation_block::mark_label(ctx->ir, yes);
 		
-			{
+		    	{
 				X_jit(ctx,Rd,copy_new_raw_size(ctx, operand1, int64));
 			}
 		
-		    ir_operation_block::mark_label(ctx->ir, end);
-		}
+		        ir_operation_block::mark_label(ctx->ir, end);
+		    }
 	}
 }
 
@@ -12729,23 +12697,23 @@ void conditional_compare_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, ui
 	uint64_t O = sf == 0ULL ? int32 : sf == 1ULL ? int64 : 0;
 	{
 		{
-		    ir_operand end = ir_operation_block::create_label(ctx->ir);
-		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operand end = ir_operation_block::create_label(ctx->ir);
+		        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 		
-		    ir_operand condition = condition_holds_jit(ctx,cond);
+		        ir_operand condition = condition_holds_jit(ctx,cond);
 		
-		    ir_operation_block::jump_if(ctx->ir,yes, condition);
-			{
+		        ir_operation_block::jump_if(ctx->ir,yes, condition);
+		    	{
 				_sys_jit(ctx,(uint64_t)nzcv_n,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL), int64));
 				_sys_jit(ctx,(uint64_t)nzcv_z,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL), int64));
 				_sys_jit(ctx,(uint64_t)nzcv_c,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL), int64));
 				_sys_jit(ctx,(uint64_t)nzcv_v,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL), int64));
 			}
-		    
-		    ir_operation_block::jump(ctx->ir,end);
-		    ir_operation_block::mark_label(ctx->ir, yes);
+		        
+		        ir_operation_block::jump(ctx->ir,end);
+		        ir_operation_block::mark_label(ctx->ir, yes);
 		
-			{
+		    	{
 				ir_operand operand1 = copy_new_raw_size(ctx, X_jit(ctx,Rn), O);
 				ir_operand operand2;
 				if ((mode))
@@ -12759,8 +12727,8 @@ void conditional_compare_jit(ssa_emit_context* ctx, uint64_t sf, uint64_t op, ui
 				add_subtract_impl_jit(ctx,O,operand1,operand2,1ULL,((uint64_t)op == (uint64_t)0ULL));
 			}
 		
-		    ir_operation_block::mark_label(ctx->ir, end);
-		}
+		        ir_operation_block::mark_label(ctx->ir, end);
+		    }
 	}
 }
 
@@ -13433,28 +13401,28 @@ void store_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t 
 			ir_operand mask = exclusive_address_mask_jit(ctx);
 			ir_operand _exclusive_address = _sys_jit(ctx,(uint64_t)exclusive_address);
 			{
-			    ir_operand end = ir_operation_block::create_label(ctx->ir);
-			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+			        ir_operand end = ir_operation_block::create_label(ctx->ir);
+			        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 			
-			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, _exclusive_address, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, address, mask));
+			        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_equal, _exclusive_address, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, address, mask));
 			
-			    ir_operation_block::jump_if(ctx->ir,yes, condition);
-				{
+			        ir_operation_block::jump_if(ctx->ir,yes, condition);
+			    	{
 					X_jit(ctx,Rs,ir_operand::create_con(1ULL, int64));
 				}
-			    
-			    ir_operation_block::jump(ctx->ir,end);
-			    ir_operation_block::mark_label(ctx->ir, yes);
+			        
+			        ir_operation_block::jump(ctx->ir,end);
+			        ir_operation_block::mark_label(ctx->ir, yes);
 			
-				{
+			    	{
 					ir_operand to_swap = copy_new_raw_size(ctx, X_jit(ctx,Rt), S);
 					ir_operand expecting = copy_new_raw_size(ctx, _sys_jit(ctx,(uint64_t)exclusive_value), S);
 					ir_operand cas_success = copy_new_raw_size(ctx, compare_and_swap_jit(ctx,address,copy_new_raw_size(ctx, expecting, int64),copy_new_raw_size(ctx, to_swap, int64),datasize), S);
 					X_jit(ctx,Rs,copy_new_raw_size(ctx, ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_bitwise_exclusive_or, cas_success, ir_operand::create_con(1ULL, S)), ir_operand::create_con(1ULL, S)), int64));
 				}
 			
-			    ir_operation_block::mark_label(ctx->ir, end);
-			}
+			        ir_operation_block::mark_label(ctx->ir, end);
+			    }
 		}
 		else
 		{
@@ -14656,23 +14624,19 @@ void abs_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t R
 		{
 			ir_operand working = ssa_emit_context::emit_ssa(ctx, ir_move, copy_new_raw_size(ctx, ssa_emit_context::vector_extract(ctx,operand, e, esize), O));
 			{
-			    ir_operand end = ir_operation_block::create_label(ctx->ir);
-			    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+			        ir_operand end = ir_operation_block::create_label(ctx->ir);
+			        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 			
-			    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, working, ir_operand::create_con(0ULL, O));
+			        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,ssa_emit_context::emit_ssa(ctx, ir_compare_less_signed, working, ir_operand::create_con(0ULL, O)), ir_operand::create_con(1));
 			
-			    ir_operation_block::jump_if(ctx->ir,yes, condition);
-				/* TODO if statements without a no should not have this*/
-			    
-			    ir_operation_block::jump(ctx->ir,end);
-			    ir_operation_block::mark_label(ctx->ir, yes);
+			        ir_operation_block::jump_if(ctx->ir,end, condition);
 			
-				{
+			    	{
 					ssa_emit_context::move(ctx,working,ssa_emit_context::emit_ssa(ctx, ir_negate, working));
 				}
 			
-			    ir_operation_block::mark_label(ctx->ir, end);
-			}
+			        ir_operation_block::mark_label(ctx->ir, end);
+			    }
 			ssa_emit_context::vector_insert(ctx,result, e, esize, working);
 		}
 	}
@@ -14799,26 +14763,26 @@ void shl_vector_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t U, uint64_t size
 			}
 		}
 		{
-		    ir_operand end = ir_operation_block::create_label(ctx->ir);
-		    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+		        ir_operand end = ir_operation_block::create_label(ctx->ir);
+		        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 		
-		    ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(0ULL, int64));
+		        ir_operand condition = ssa_emit_context::emit_ssa(ctx, ir_compare_greater_equal_signed, shift, ir_operand::create_con(0ULL, int64));
 		
-		    ir_operation_block::jump_if(ctx->ir,yes, condition);
-			{
+		        ir_operation_block::jump_if(ctx->ir,yes, condition);
+		    	{
 				ssa_emit_context::move(ctx,shift,ssa_emit_context::emit_ssa(ctx, ir_negate, shift));
 				ssa_emit_context::move(ctx,element,shift_right_check_jit(ctx,element,shift,esize,U));
 			}
-		    
-		    ir_operation_block::jump(ctx->ir,end);
-		    ir_operation_block::mark_label(ctx->ir, yes);
+		        
+		        ir_operation_block::jump(ctx->ir,end);
+		        ir_operation_block::mark_label(ctx->ir, yes);
 		
-			{
+		    	{
 				ssa_emit_context::move(ctx,element,shift_left_check_jit(ctx,element,shift,esize));
 			}
 		
-		    ir_operation_block::mark_label(ctx->ir, end);
-		}
+		        ir_operation_block::mark_label(ctx->ir, end);
+		    }
 		ssa_emit_context::vector_insert(ctx,result, e, esize, element);
 	}
 	V_jit(ctx,Rd,result);
@@ -14911,23 +14875,19 @@ void cnt_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t size, uint64_t Rn, uint
 			{
 				ir_operand bit = ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, working, ir_operand::create_con(b, int8)), ir_operand::create_con(1ULL, int8));
 				{
-				    ir_operand end = ir_operation_block::create_label(ctx->ir);
-				    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+				        ir_operand end = ir_operation_block::create_label(ctx->ir);
+				        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 				
-				    ir_operand condition = bit;
+				        ir_operand condition = ssa_emit_context::emit_ssa(ctx,ir_bitwise_exclusive_or,bit, ir_operand::create_con(1));
 				
-				    ir_operation_block::jump_if(ctx->ir,yes, condition);
-					/* TODO if statements without a no should not have this*/
-				    
-				    ir_operation_block::jump(ctx->ir,end);
-				    ir_operation_block::mark_label(ctx->ir, yes);
+				        ir_operation_block::jump_if(ctx->ir,end, condition);
 				
-					{
+				    	{
 						ssa_emit_context::move(ctx,count,ssa_emit_context::emit_ssa(ctx, ir_add, count, ir_operand::create_con(1ULL, int8)));
 					}
 				
-				    ir_operation_block::mark_label(ctx->ir, end);
-				}
+				        ir_operation_block::mark_label(ctx->ir, end);
+				    }
 			}
 		}
 		ssa_emit_context::vector_insert(ctx,result, e, esize, count);
@@ -15168,25 +15128,25 @@ void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype
 	ir_operand operand2 = V_jit(ctx,Rm);
 	ir_operand result = ssa_emit_context::emit_ssa(ctx, ir_move, ssa_emit_context::vector_zero(ctx));
 	{
-	    ir_operand end = ir_operation_block::create_label(ctx->ir);
-	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+	        ir_operand end = ir_operation_block::create_label(ctx->ir);
+	        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 	
-	    ir_operand condition = condition_holds_jit(ctx,cond);
+	        ir_operand condition = condition_holds_jit(ctx,cond);
 	
-	    ir_operation_block::jump_if(ctx->ir,yes, condition);
-		{
+	        ir_operation_block::jump_if(ctx->ir,yes, condition);
+	    	{
 			ssa_emit_context::move(ctx,result,operand2);
 		}
-	    
-	    ir_operation_block::jump(ctx->ir,end);
-	    ir_operation_block::mark_label(ctx->ir, yes);
+	        
+	        ir_operation_block::jump(ctx->ir,end);
+	        ir_operation_block::mark_label(ctx->ir, yes);
 	
-		{
+	    	{
 			ssa_emit_context::move(ctx,result,operand1);
 		}
 	
-	    ir_operation_block::mark_label(ctx->ir, end);
-	}
+	        ir_operation_block::mark_label(ctx->ir, end);
+	    }
 	result = clear_vector_scalar_jit(ctx,result,fltsize);
 	V_jit(ctx,Rd,result);
 }
@@ -15220,23 +15180,23 @@ void fccmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond
 	ir_operand operand2 = copy_new_raw_size(ctx, V_jit(ctx,Rm), int64);
 	ir_operand fpcr_state = _sys_jit(ctx,(uint64_t)fpcr);
 	{
-	    ir_operand end = ir_operation_block::create_label(ctx->ir);
-	    ir_operand yes = ir_operation_block::create_label(ctx->ir);
+	        ir_operand end = ir_operation_block::create_label(ctx->ir);
+	        ir_operand yes = ir_operation_block::create_label(ctx->ir);
 	
-	    ir_operand condition = condition_holds_jit(ctx,cond);
+	        ir_operand condition = condition_holds_jit(ctx,cond);
 	
-	    ir_operation_block::jump_if(ctx->ir,yes, condition);
-		{
+	        ir_operation_block::jump_if(ctx->ir,yes, condition);
+	    	{
 			_sys_jit(ctx,(uint64_t)nzcv_n,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)3ULL)) & (uint64_t)1ULL), int64));
 			_sys_jit(ctx,(uint64_t)nzcv_z,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)2ULL)) & (uint64_t)1ULL), int64));
 			_sys_jit(ctx,(uint64_t)nzcv_c,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)1ULL)) & (uint64_t)1ULL), int64));
 			_sys_jit(ctx,(uint64_t)nzcv_v,ir_operand::create_con(((uint64_t)(((uint64_t)nzcv >> (uint64_t)0ULL)) & (uint64_t)1ULL), int64));
 		}
-	    
-	    ir_operation_block::jump(ctx->ir,end);
-	    ir_operation_block::mark_label(ctx->ir, yes);
+	        
+	        ir_operation_block::jump(ctx->ir,end);
+	        ir_operation_block::mark_label(ctx->ir, yes);
 	
-		{
+	    	{
 			ir_operand success_nzcv = FPCompare_jit(ctx,operand1,operand2,fpcr_state,datasize);
 			_sys_jit(ctx,(uint64_t)nzcv_n,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(3ULL, int64)), ir_operand::create_con(1ULL, int64)));
 			_sys_jit(ctx,(uint64_t)nzcv_z,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(2ULL, int64)), ir_operand::create_con(1ULL, int64)));
@@ -15244,7 +15204,7 @@ void fccmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond
 			_sys_jit(ctx,(uint64_t)nzcv_v,ssa_emit_context::emit_ssa(ctx, ir_bitwise_and, ssa_emit_context::emit_ssa(ctx, ir_shift_right_unsigned, success_nzcv, ir_operand::create_con(0ULL, int64)), ir_operand::create_con(1ULL, int64)));
 		}
 	
-	    ir_operation_block::mark_label(ctx->ir, end);
-	}
+	        ir_operation_block::mark_label(ctx->ir, end);
+	    }
 }
 

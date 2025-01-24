@@ -4,6 +4,7 @@
 #include "ir.h"
 
 struct basic_register_allocator_context;
+struct register_allocator_module;
 
 enum register_mode
 {
@@ -59,7 +60,32 @@ struct register_allocator_module
 	uint64_t							stack_offset;
 
 	static void							emit_host_load(register_allocator_module* module, int host_register, int guest_offset, register_mode mode);
-	static void							emit_host_unload(register_allocator_module* module, int host_register);
+	static void							emit_host_unload(register_allocator_module* module, int host_register, bool is_quet = false);
+};
+
+struct module_save_state
+{
+	static const int 	host_save_count = 1024;
+
+	int 				count;
+	host_register 		hosts[host_save_count];
+	
+	static module_save_state create_save_state(host_register* registers, int register_count)
+	{
+		module_save_state result;
+
+		assert(register_count <= host_save_count);
+
+		memcpy(result.hosts, registers, register_count * sizeof(host_register));
+		result.count = register_count;
+
+		return result;
+	}
+
+	static void load_save_state(host_register* registers, module_save_state* state)
+	{
+		memcpy(registers, state->hosts, state->count * sizeof(host_register));
+	}
 };
 
 struct basic_register_allocator_context

@@ -38,7 +38,7 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 
 		if (flags & mathmatical_fold)
 		{
-			ir_operation_block::log(source_ir);
+			//ir_operation_block::log(source_ir);
 		}
 	}
 	

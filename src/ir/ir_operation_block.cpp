@@ -323,7 +323,6 @@ bool ir_operation_block::is_flow_critical(uint64_t instruction)
 	{
 	case ir_jump_if:
 	case ir_mark_label:
-	case ir_close_and_return:
 		return true;
 
 	default: return false;
@@ -435,8 +434,8 @@ std::string ir_operation_block::get_block_log(ir_operation_block* ir)
 	{
 		ir_operation working_operation = i->data;
 
-		if (working_operation.instruction == ir_no_operation)
-			continue;
+		//if (working_operation.instruction == ir_no_operation)
+		//	continue;
 
 		std::string name = instruction_names[working_operation.instruction];
 

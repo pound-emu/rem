@@ -875,6 +875,7 @@ static bool perform_math_propagation(ssa_cf_node* node)
 
                     done = false;
                 }
+
             }; break;
 
             case ir_bitwise_and:

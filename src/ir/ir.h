@@ -454,8 +454,16 @@ struct ir_operation_block
 
 struct ir_control_flow_node
 {
-	intrusive_linked_list_element<ir_operation>* entry_instruction;
-	intrusive_linked_list_element<ir_operation>* final_instruction;
+	int 											entry_id;
+
+	intrusive_linked_list_element<ir_operation>* 	entry_instruction;
+	intrusive_linked_list_element<ir_operation>* 	final_instruction;
+
+	int 											entry_count;
+	intrusive_linked_list<ir_control_flow_node*>*	entries;
+
+	int 											exit_count;
+	intrusive_linked_list<ir_control_flow_node*>*	exits;
 };
 
 struct ir_control_flow_graph
@@ -463,7 +471,7 @@ struct ir_control_flow_graph
 	ir_operation_block*																source_ir;
 	intrusive_linked_list<ir_control_flow_node*>*									linier_nodes;
 
-	static ir_control_flow_graph* create(ir_operation_block* source);
+	static ir_control_flow_graph* 													create(ir_operation_block* source);
 };
 
 #endif

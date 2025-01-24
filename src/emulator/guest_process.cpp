@@ -215,7 +215,7 @@ guest_function guest_process::translate_function(translate_request_data* data, g
 
     if (((guest_process*)data->process)->log_native != nullptr && flags == guest_compiler_optimization_flags::level_three)
     {
-        ((void(*)(void*, int))((guest_process*)data->process)->log_native)(code, code_size);
+        //((void(*)(void*, int))((guest_process*)data->process)->log_native)(code, code_size);
     }
 
     guest_function result;

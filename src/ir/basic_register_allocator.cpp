@@ -1,6 +1,47 @@
 #include "basic_register_allocator.h"
 #include "debugging.h"
 
+struct save_state_group
+{
+	module_save_state gp;
+	module_save_state vec;
+
+	static save_state_group create(basic_register_allocator_context* source)
+	{
+		save_state_group result;
+
+		result.gp = module_save_state::create_save_state(source->gp_allocator->host_registers, source->gp_allocator->host_register_count);
+		result.vec = module_save_state::create_save_state(source->vec_allocator->host_registers, source->vec_allocator->host_register_count);
+
+		return result;
+	}
+};
+
+static void create_register_save_state(ir_control_flow_node* node, basic_register_allocator_context* context, std::unordered_map<ir_control_flow_node*, save_state_group>* groups)
+{
+	save_state_group group = save_state_group::create(context);
+
+	if (groups->find(node) != groups->end())
+	{
+		throw_error();
+	}
+
+	(*groups)[node] = group;
+}
+
+static void load_register_save_state(ir_control_flow_node* node, basic_register_allocator_context* context, std::unordered_map<ir_control_flow_node*, save_state_group>* groups)
+{
+	if (groups->find(node) == groups->end())
+	{
+		throw_error();
+	}
+
+	save_state_group group = (*groups)[node];
+
+	module_save_state::load_save_state(context->gp_allocator->host_registers, &group.gp);
+	module_save_state::load_save_state(context->vec_allocator->host_registers, &group.vec);
+}
+
 static register_allocator_module* create_allocator_module(basic_register_allocator_context* main_unit, arena_allocator* allocator, int host_count, int guest_count, uint64_t guest_type)
 {
 	register_allocator_module* result = arena_allocator::allocate_struct< register_allocator_module>(allocator);
@@ -195,11 +236,11 @@ static void unlock_all_basic(register_allocator_module* context)
 	}
 }
 
-static void unload_all(register_allocator_module* context)
+static void unload_all(register_allocator_module* context, bool is_quet)
 {
 	for (int i = 0; i < context->host_register_count; ++i)
 	{
-		register_allocator_module::emit_host_unload(context, i);
+		register_allocator_module::emit_host_unload(context, i, is_quet);
 	}
 }
 
@@ -209,10 +250,10 @@ static void unlock_all_basic(basic_register_allocator_context* context)
 	unlock_all_basic(context->vec_allocator);
 }
 
-static void unload_all(basic_register_allocator_context* context)
+static void unload_all(basic_register_allocator_context* context, bool is_quet = false)
 {
-	unload_all(context->gp_allocator);
-	unload_all(context->vec_allocator);
+	unload_all(context->gp_allocator, is_quet);
+	unload_all(context->vec_allocator, is_quet);
 }
 
 void host_register::set_lock_bit(host_register* guest, lock_mode mode)
@@ -261,7 +302,7 @@ void register_allocator_module::emit_host_load(register_allocator_module* module
 	}
 }
 
-void register_allocator_module::emit_host_unload(register_allocator_module* module, int host_index)
+void register_allocator_module::emit_host_unload(register_allocator_module* module, int host_index, bool is_quet)
 {
 	ir_operation_block* result_ir = module->allocator_unit->result_ir;
 	host_register* working_host = &module->host_registers[host_index];
@@ -278,7 +319,7 @@ void register_allocator_module::emit_host_unload(register_allocator_module* modu
 
 	int type_byte_count = 8 << module->guest_type;
 	
-	if (working_host->working_mode & register_mode::write)
+	if (working_host->working_mode & register_mode::write && !is_quet)
 	{
 		ir_operand offset = ir_operand::create_con(working_host->guest_offset);
 		ir_operand to_store = ir_operand::create_reg(working_host->host_index, module->guest_type);
@@ -292,21 +333,21 @@ void register_allocator_module::emit_host_unload(register_allocator_module* modu
 	working_host->hits = 0;
 }
 
-void basic_register_allocator_context::run_pass(basic_register_allocator_context* result_register_allocator, ir_operation_block* result_ir, ir_operation_block* pre_allocated_code, int gp_count, guest_data gp_data, int vec_count, guest_data vec_data, ir_operand context_register)
+static void unload_basic(basic_register_allocator_context* result_register_allocator, bool is_quiet = false)
 {
-	arena_allocator* allocator = result_ir->allocator;
+	unlock_all_basic(result_register_allocator);
 
-	result_register_allocator->gp_allocator = create_allocator_module(result_register_allocator, allocator, gp_count, gp_data.guest_count, gp_data.guest_type);
-	result_register_allocator->vec_allocator = create_allocator_module(result_register_allocator, allocator, vec_count, vec_data.guest_count, vec_data.guest_type);
+	unload_all(result_register_allocator, is_quiet);
+}
 
-	result_register_allocator->gp_allocator->stack_offset = 0;
-	result_register_allocator->vec_allocator->stack_offset = (gp_data.guest_count * 8);
+static void emit_basic_block(basic_register_allocator_context* result_register_allocator, ir_operation_block* result_ir, ir_control_flow_node* node, std::unordered_map<ir_control_flow_node*, save_state_group>* save_state_groups)
+{
+	if (save_state_groups->find(node) != save_state_groups->end())
+	{
+		load_register_save_state(node, result_register_allocator, save_state_groups);
+	}
 
-	result_register_allocator->context_register = context_register;
-
-	result_register_allocator->result_ir = result_ir;
-
-	for (auto i = pre_allocated_code->operations->first; i != pre_allocated_code->operations->last; i = i->next)
+	for (auto i = node->entry_instruction; i != node->final_instruction->next; i = i->next)
 	{
 		ir_operation working_operation = i->data;
 
@@ -337,16 +378,106 @@ void basic_register_allocator_context::run_pass(basic_register_allocator_context
 			allocate_registers(result_register_allocator, new_sources, stack_max, working_operation.sources.data, working_operation.sources.count, register_mode::read);
 			allocate_registers(result_register_allocator, new_destinations, stack_max, working_operation.destinations.data, working_operation.destinations.count, register_mode::write);
 
-			if (ir_operation_block::is_flow_critical(instruction) || instruction == ir_external_call)
+			if (instruction == ir_external_call)
 			{
-				unlock_all_basic(result_register_allocator);
-
-				unload_all(result_register_allocator);
+				unload_basic(result_register_allocator);
 			}
 			
-			ir_operation_block::emit_with(result_ir, instruction, new_destinations, working_operation.destinations.count, new_sources, working_operation.sources.count);
+			bool skip = false;
 
+			if (i == node->final_instruction)
+			{
+				if (!ir_operation_block::is_flow_critical(instruction) && instruction != ir_no_operation)
+				{
+					throw_error();
+				}
+
+				switch (node->exit_count)
+				{
+					case 1:
+					{
+						ir_control_flow_node* next = node->exits->first->next->data;
+
+						bool is_quiet = false;
+
+						if (next->entry_count == 1)
+						{
+							create_register_save_state(next, result_register_allocator,save_state_groups);	
+
+							is_quiet = true;		
+						}
+
+						unload_basic(result_register_allocator, is_quiet);
+					}; break;
+
+					case 2:
+					{
+						ir_control_flow_node* do_branch = node->exits->first->next->data;
+						ir_control_flow_node* dont_branch = node->exits->last->prev->data;
+
+						bool is_quiet = false;
+
+						if (do_branch->entry_count == 1 && dont_branch->entry_count == 1)
+						{
+							create_register_save_state(do_branch, result_register_allocator,save_state_groups);
+							create_register_save_state(dont_branch, result_register_allocator,save_state_groups);
+
+							is_quiet = true;
+						}
+
+						unload_basic(result_register_allocator, is_quiet);
+					}; break;
+
+					case 0:
+					{
+						//DO NOTHING
+					}; break;
+
+					default:
+					{
+						throw_error();
+					}; break;
+				}
+			}
+
+			if (!skip)
+			{
+				ir_operation_block::emit_with(result_ir, instruction, new_destinations, working_operation.destinations.count, new_sources, working_operation.sources.count);
+			}
 		}; break;
 		}
 	}
+}
+
+void basic_register_allocator_context::run_pass(basic_register_allocator_context* result_register_allocator, ir_operation_block* result_ir, ir_operation_block* pre_allocated_code, int gp_count, guest_data gp_data, int vec_count, guest_data vec_data, ir_operand context_register)
+{
+	arena_allocator* allocator = result_ir->allocator;
+
+	result_register_allocator->gp_allocator = create_allocator_module(result_register_allocator, allocator, gp_count, gp_data.guest_count, gp_data.guest_type);
+	result_register_allocator->vec_allocator = create_allocator_module(result_register_allocator, allocator, vec_count, vec_data.guest_count, vec_data.guest_type);
+
+	result_register_allocator->gp_allocator->stack_offset = 0;
+	result_register_allocator->vec_allocator->stack_offset = (gp_data.guest_count * 8);
+
+	result_register_allocator->context_register = context_register;
+
+	result_register_allocator->result_ir = result_ir;
+
+	ir_control_flow_graph* cfg = ir_control_flow_graph::create(pre_allocated_code);
+
+	std::unordered_map<ir_control_flow_node*, save_state_group> saves;
+
+	//ir_operation_block::log(pre_allocated_code);
+
+	for (auto i = cfg->linier_nodes->first; i != nullptr; i = i->next)
+	{
+		if (i->data == nullptr)	
+			continue;
+
+		auto node = i->data;
+
+		emit_basic_block(result_register_allocator, result_ir, i->data, &saves);
+	}
+
+	//ir_operation_block::log(result_ir);
 }
