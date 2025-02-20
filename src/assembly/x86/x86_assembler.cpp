@@ -114,7 +114,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 {
 	arena_allocator* allocator = source_ir->allocator;
 
-	int buffer_size = ONE_MB * 5;
+	int buffer_size = ONE_MB * 10;
 
 	*result_code = arena_allocator::allocate_recursive(allocator, buffer_size);
 	Xbyak::CodeGenerator c(buffer_size, *result_code);
@@ -148,9 +148,10 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		case ir_multiply_hi_unsigned:		c.mul(create_operand(working_operation.sources[1])); 		assert_valid_mul_div_operation(&working_operation);	break;
 
 		case ir_logical_not:
-			c.not_(create_operand(working_operation.destinations[0])); 	
-			c.and_(create_operand(working_operation.destinations[0]), 1); 	
-			
+			c.cmp(create_operand(working_operation.destinations[0]), 0);
+			c.sete(create_operand<Xbyak::Reg8>(working_operation.destinations[0]));
+			c.and_(create_operand<Xbyak::Reg64>(working_operation.destinations[0]), 1);
+
 			assert_valid_unary_operation(&working_operation); 	
 		break;
 
@@ -894,8 +895,12 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		case x86_divps: assert_valid_binary_float_operation(&working_operation); c.divps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_divsd: assert_valid_binary_float_operation(&working_operation); c.divsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_divss: assert_valid_binary_float_operation(&working_operation); c.divss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_maxpd: assert_valid_binary_float_operation(&working_operation); c.maxpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_maxps: assert_valid_binary_float_operation(&working_operation); c.maxps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_maxsd: assert_valid_binary_float_operation(&working_operation); c.maxsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_maxss: assert_valid_binary_float_operation(&working_operation); c.maxss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_minpd: assert_valid_binary_float_operation(&working_operation); c.minpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
+		case x86_minps: assert_valid_binary_float_operation(&working_operation); c.minps(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_minsd: assert_valid_binary_float_operation(&working_operation); c.minsd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_minss: assert_valid_binary_float_operation(&working_operation); c.minss(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;
 		case x86_mulpd: assert_valid_binary_float_operation(&working_operation); c.mulpd(create_operand<Xbyak::Xmm>(working_operation.destinations[0]), create_operand<Xbyak::Xmm>(working_operation.sources[1])); break;

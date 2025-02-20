@@ -62,6 +62,7 @@ enum ir_instructions : uint64_t
 	ir_move,
 	ir_negate,
 	ir_sign_extend, 
+	ir_zero_extend,
 	ir_logical_not,
 	ir_convert_to_float_signed,
 	ir_convert_to_float_unsigned,
@@ -130,8 +131,12 @@ enum ir_instructions : uint64_t
 	x86_divps,
 	x86_divsd,
 	x86_divss,
+	x86_maxpd,
+	x86_maxps,
 	x86_maxsd,
 	x86_maxss,
+	x86_minpd,
+	x86_minps,
 	x86_minsd,
 	x86_minss,
 	x86_mulpd,
@@ -237,6 +242,7 @@ static std::string instruction_names[] = {
 	"ir_move",
 	"ir_negate",
 	"ir_sign_extend", 
+	"ir_zero_extend",
 	"ir_logical_not",
 	"ir_convert_to_float_signed",
 	"ir_convert_to_float_unsigned",
@@ -305,8 +311,12 @@ static std::string instruction_names[] = {
 	"x86_divps",
 	"x86_divsd",
 	"x86_divss",
+	"x86_maxpd",
+	"x86_maxps",
 	"x86_maxsd",
 	"x86_maxss",
+	"x86_minpd",
+	"x86_minps",
 	"x86_minsd",
 	"x86_minss",
 	"x86_mulpd",
@@ -405,6 +415,7 @@ struct ir_operation
 	ir_instructions			instruction;
 	fast_array<ir_operand>	destinations;
 	fast_array<ir_operand>	sources;
+	int 					node_id;
 };
 
 struct ir_operation_block
@@ -420,7 +431,6 @@ struct ir_operation_block
 	static void 										clamp_operands(ir_operation_block* ir, bool use_bit_register_allocations, int* size_counts = nullptr);
 	static void 										ssa_remap(ir_operation_block* ir, std::unordered_map<uint64_t, uint64_t>* remap_data);
 
-
 	static bool 										is_flow_critical(uint64_t instruction);
 	static bool 										is_flow_critical(ir_operation* operation);
 	static ir_operand 									create_label(ir_operation_block* block);
@@ -430,8 +440,11 @@ struct ir_operation_block
 	static void 										jump_if_not(ir_operation_block* block, ir_operand label, ir_operand condition);
 	static void 										get_used_registers(std::unordered_set<uint64_t>* result, ir_operation_block* block);
 
+	static void 										copy(ir_operation_block* result, ir_operation_block* source);
+
 	static std::string 									get_block_log(ir_operation_block* ir);
 	static void 										log(ir_operation_block* ctx);
+	static void 										remove_redundant_moves(ir_operation_block* ctx);
 
 	static intrusive_linked_list_element<ir_operation>* emit(ir_operation_block* block,ir_operation operation, intrusive_linked_list_element<ir_operation>* point = nullptr);
 	static intrusive_linked_list_element<ir_operation>* emit_with(ir_operation_block* ir, uint64_t instruction, ir_operand* destinations, int destination_count, ir_operand* sources, int source_count, intrusive_linked_list_element<ir_operation>* point = nullptr);
@@ -454,7 +467,7 @@ struct ir_operation_block
 
 struct ir_control_flow_node
 {
-	int 											entry_id;
+	int 											label_id;
 
 	intrusive_linked_list_element<ir_operation>* 	entry_instruction;
 	intrusive_linked_list_element<ir_operation>* 	final_instruction;

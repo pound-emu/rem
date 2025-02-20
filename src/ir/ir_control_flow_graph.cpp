@@ -8,7 +8,7 @@ static ir_control_flow_node* create_and_insert_node(intrusive_linked_list<ir_con
 
     result->entry_instruction = first_instruction;
     result->final_instruction = block_final_instruction;
-    result->entry_id = -1;
+    result->label_id = -1;
 
     result->entries = intrusive_linked_list<ir_control_flow_node*>::create(list->allocator, nullptr, nullptr);
     result->exits = intrusive_linked_list<ir_control_flow_node*>::create(list->allocator, nullptr, nullptr);
@@ -68,7 +68,7 @@ static void get_linier_nodes(ir_control_flow_graph* result)
 
         if (is_label(&i->data))
         {
-            if (working_node->entry_id != -1)
+            if (working_node->label_id != -1)
             {
                 throw_error();
             }
@@ -82,9 +82,9 @@ static void get_linier_nodes(ir_control_flow_graph* result)
             {
                 assert_is_constant(working_operation.sources[0]);
 
-                working_node->entry_id = working_operation.sources[0].value;
+                working_node->label_id = working_operation.sources[0].value;
 
-                label_map[working_node->entry_id] = working_node;
+                label_map[working_node->label_id] = working_node;
             }
         }
 
@@ -97,6 +97,8 @@ static void get_linier_nodes(ir_control_flow_graph* result)
             working_node = create_and_insert_node(result->linier_nodes, i->next, source_ir->operations->last);
         }
     }
+
+    int time = 0;
 
     for (auto i = result->linier_nodes->first; i != nullptr; i = i->next)
     {
@@ -144,6 +146,8 @@ static void get_linier_nodes(ir_control_flow_graph* result)
         {
             establish_outward_connection(i->data, i->next->data);
         }
+
+        time++;
     }
 }
 

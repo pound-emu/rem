@@ -101,6 +101,17 @@ ir_operand ir_operand::copy_new_raw_size(ir_operand source, uint64_t new_size)
 	return source;
 }
 
+void ir_operation_block::copy(ir_operation_block* result, ir_operation_block* source)
+{
+	for (auto i = source->operations->first; i != nullptr; i = i->next)
+	{
+		if (i->data.instruction == ir_no_operation)
+			continue;
+
+		ir_operation_block::emit_with(result, i->data.instruction, i->data.destinations.data, i->data.destinations.count, i->data.sources.data, i->data.sources.count);
+	}
+}
+
 bool ir_operand::are_equal(ir_operand left, ir_operand right)
 {
 	bool type_equal = left.meta_data == right.meta_data;

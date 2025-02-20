@@ -224,7 +224,16 @@ static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, ir_instructions 
 
 	intrusive_linked_list_element<ir_operation>* core_operation = nullptr;
 
-	if ((ir_operand::is_constant(&source_1) && source_1.value < INT32_MAX) && !ir_operand::is_constant(&source_0) && instruction != ir_multiply)
+	uint64_t mask = INT32_MAX;
+
+	switch (destination.meta_data)
+	{
+		case int8: mask = INT8_MAX; break;
+		case int16: mask = INT16_MAX; break;
+		default: mask = INT32_MAX; break;
+	}
+
+	if ((ir_operand::is_constant(&source_1) && source_1.value < mask) && !ir_operand::is_constant(&source_0) && instruction != ir_multiply)
 	{
 		if (instruction == ir_add && ir_operand::get_raw_size(&destination) > int16)
 		{
@@ -683,6 +692,34 @@ static void emit_vector_insert(x86_pre_allocator_context* result, ir_operation* 
 	{
 		emit_move(result, destination, source_vector);
 	}
+	
+	switch (ir_operand::get_raw_size(&value))
+	{
+		case int8:
+		case int16:
+		{
+			ir_operand mask = register_or_constant(result, ir_operand::create_con( get_mask_from_size(ir_operand::get_raw_size(&value))));
+			ir_operand temp_value = create_scrap_operand(result, int64);
+	
+			value = ir_operand::copy_new_raw_size(value, int64);
+	
+			emit_move(result, temp_value, value);
+	
+			ir_operation_block::emitds(result->ir, ir_bitwise_and, temp_value, temp_value, mask);
+	
+			value = temp_value;
+		}; break;
+
+		case int32:
+		{
+			ir_operand temp_value = create_scrap_operand(result, int32);
+
+			emit_move(result, temp_value, value);
+
+			value = temp_value;
+
+		}; break;
+	}
 
 	ir_operation_block::emitds(result->ir, ir_vector_insert, destination, destination, value, index, size);
 }
@@ -697,7 +734,7 @@ static void emit_external_call(x86_pre_allocator_context* result, ir_operation* 
 			RDX(int64),
 			RCX(int64),
 			R8(int64),
-			R9(int64),
+			R9(int64)
 		};
 
 		int abi_count = (sizeof(locks) / sizeof(ir_operand));
@@ -1023,6 +1060,7 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case ir_bitwise_or:
 		case ir_bitwise_exclusive_or:
 		case ir_multiply:
+		
 		case x86_addpd:
 		case x86_addps:
 		case x86_addsd:
@@ -1035,6 +1073,10 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case x86_maxss:
 		case x86_minsd:
 		case x86_minss:
+		case x86_maxpd:
+		case x86_maxps:
+		case x86_minpd:
+		case x86_minps:
 		case x86_mulpd:
 		case x86_mulps:
 		case x86_mulsd:
@@ -1170,6 +1212,7 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 
 		//Unary Operations
 		case ir_move:
+		case ir_zero_extend:
 		{
 			assert_operand_count(operation, 1, 1);
 			assert_is_register(operation->destinations[0]);

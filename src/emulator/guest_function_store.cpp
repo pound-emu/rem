@@ -29,6 +29,8 @@ void guest_function_store::retranslate_functions(guest_function_store* context)
 { 
     context->retranslator_is_running = true;
 
+    int rest = 0;
+
     while (1)
     {
         context->retranslate_lock.lock();
@@ -96,11 +98,29 @@ guest_function guest_function_store::get_or_translate_function(guest_function_st
         fast_function_table::init(function_table, address);
     }
 
+    guest_process* p = (guest_process*)process_context->process;
+
     context->main_translate_lock.lock();
 
     if (context->functions.find(address) == context->functions.end())
     {
-        guest_compiler_optimization_flags entry_optimization = guest_compiler_optimization_flags::level_zero;
+        if (!p->debug_mode)
+        {
+            guest_function result;
+
+            result.times_executed = 0;
+            result.optimizations = guest_compiler_optimization_flags::interpreted;
+            result.jit_offset = UINT32_MAX;
+            result.raw_function = nullptr;
+
+            context->functions[address] = result;
+
+            context->main_translate_lock.unlock();
+
+            return result;
+        }
+
+        guest_compiler_optimization_flags entry_optimization = guest_compiler_optimization_flags::level_three;
 
         context->main_translate_lock.unlock();
 

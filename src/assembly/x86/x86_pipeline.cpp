@@ -2,8 +2,8 @@
 #include "x86_pre_allocator.h"
 #include "x86_assembler.h"
 #include "debugging.h"
-#include "ir/ssa.h"
 
+#include "ir/ssa.h"
 #include "ir/basic_register_allocator.h"
 #include "ir/undefined_behavior_check.h"
 
@@ -34,15 +34,16 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 
 	if (flags & optimize_ssa)
 	{
-		ssa_construct_and_optimize(source_ir, flags);
-
-		if (flags & mathmatical_fold)
-		{
-			//ir_operation_block::log(source_ir);
-		}
+		convert_to_ssa(source_ir, flags & mathmatical_fold);
 	}
 	
 	x86_pre_allocator_context::run_pass(&pre_allocation_data, pre_allocated_code, source_ir, working_abi.cpu,working_abi.os);
+
+	//ir_operation_block::log(pre_allocated_code);
+
+    //std::string code;
+    //std::cin >> code;
+
 
 	basic_register_allocator_context::run_pass(
 		&register_allocation_data,

@@ -5,6 +5,8 @@
 
 static uint64_t get_mask_from_size(uint64_t size)
 {
+    size &= UINT32_MAX;
+
     if (size == 3)
         return -1;
 

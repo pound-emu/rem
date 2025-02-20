@@ -171,6 +171,9 @@ void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc)
     guest_process* process = (guest_process*)ctx->process_context;
 
     ((void(*)(void*, int))process->svc_function)(ctx->process_context, svc);
+
+    ctx->branch_type = long_branch;
+    ctx->current_pc = ctx->current_pc + 4;
 }
 
 uint64_t call_counter_interpreter(interpreter_data* ctx)

@@ -31,6 +31,7 @@ void ir_operation_block::create_raw_operation(arena_allocator* allocator, ir_ope
 	fast_array<ir_operand>::create(allocator, source_count, &result->sources);
 
 	result->instruction = (ir_instructions)instruction;
+	result->node_id = -1;
 }
 
 intrusive_linked_list_element<ir_operation>* ir_operation_block::emit(ir_operation_block* block, ir_operation operation, intrusive_linked_list_element<ir_operation>* point)
@@ -56,11 +57,34 @@ void ir_operation_block::log(ir_operation_block* ctx)
 	std::cout << to_log << std::endl;
 }
 
+void ir_operation_block::remove_redundant_moves(ir_operation_block* ctx)
+{
+	for (auto i = ctx->operations->first; i != nullptr; i = i->next)
+	{
+		ir_operation* working_operation = &i->data;
+
+		if (working_operation->instruction != ir_move)
+		{
+			continue;
+		}
+		
+		ir_operand* des = &working_operation->destinations[0];		
+		ir_operand* src = &working_operation->sources[0];
+
+		if (ir_operand::are_equal(*des, *src) && ir_operand::get_raw_size(des) >= int64)
+		{
+			working_operation->instruction = ir_no_operation;
+			working_operation->destinations.count = 0;
+			working_operation->sources.count = 0;
+		}
+	}
+}
+
 //NOTE: creating std::unordered_map contains a new somewhere. and the point of this
 //		is to avoid news as much as possible.
 
 //TODO: create a custom allocator group
-static void remap_operands_impl(std::unordered_map<uint64_t, uint64_t>** remaps, fast_array<ir_operand>* operands, bool use_bit_register_allocations)
+static void remap_operands_impl(std::unordered_map<uint64_t, uint64_t>** remaps, fast_array<ir_operand>* operands, bool use_bit_register_allocations, bool ignore_unreamped_registers)
 {
 	for (int i = 0; i < operands->count; ++i)
 	{
@@ -79,6 +103,11 @@ static void remap_operands_impl(std::unordered_map<uint64_t, uint64_t>** remaps,
 
 		if (working_remap->find(source_value) == working_remap->end())
 		{
+			if (ignore_unreamped_registers)
+			{
+				continue;
+			}
+
 			int new_source_value = working_remap->size();
 
 			(*working_remap)[source_value] = new_source_value;
@@ -97,10 +126,10 @@ static void remap_operands_impl(std::unordered_map<uint64_t, uint64_t>** remaps,
 	}
 }
 
-static void remap_operands_operations_impl(std::unordered_map<uint64_t, uint64_t>** remaps, ir_operation* operation, bool use_bit_register_allocations)
+static void remap_operands_operations_impl(std::unordered_map<uint64_t, uint64_t>** remaps, ir_operation* operation, bool use_bit_register_allocations, bool ignore_unreamped_registers)
 {
-	remap_operands_impl(remaps, &operation->destinations, use_bit_register_allocations);
-	remap_operands_impl(remaps, &operation->sources, use_bit_register_allocations);
+	remap_operands_impl(remaps, &operation->destinations, use_bit_register_allocations, ignore_unreamped_registers);
+	remap_operands_impl(remaps, &operation->sources, use_bit_register_allocations, ignore_unreamped_registers);
 }
 
 void ir_operation_block::create_vector_gp_remap_scheme(arena_allocator* allocator, std::unordered_map<uint64_t, uint64_t>* remap_store, std::unordered_map<uint64_t, uint64_t>** remap_redirect)
@@ -130,7 +159,7 @@ void ir_operation_block::clamp_operands(ir_operation_block* ir, bool use_bit_reg
 
 	for (auto i = ir->operations->first; i != ir->operations->last; i = i->next)
 	{
-		remap_operands_operations_impl(remap_redirection, &i->data, use_bit_register_allocations);
+		remap_operands_operations_impl(remap_redirection, &i->data, use_bit_register_allocations, false);
 	}
 
 	if (size_counts != nullptr)
@@ -151,7 +180,7 @@ void ir_operation_block::ssa_remap(ir_operation_block* ir, std::unordered_map<ui
 
 	for (auto i = ir->operations->first; i != ir->operations->last; i = i->next)
 	{
-		remap_operands_operations_impl(remap_redirection, &i->data, false);
+		remap_operands_operations_impl(remap_redirection, &i->data, false, true);
 	}
 }
 
@@ -434,8 +463,8 @@ std::string ir_operation_block::get_block_log(ir_operation_block* ir)
 	{
 		ir_operation working_operation = i->data;
 
-		//if (working_operation.instruction == ir_no_operation)
-		//	continue;
+		if (working_operation.instruction == ir_no_operation)
+			continue;
 
 		std::string name = instruction_names[working_operation.instruction];
 

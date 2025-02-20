@@ -66,4 +66,15 @@ extern "C"
 
         return virtual_address;
     }
+
+    EXPORT void invalidate_jit_region(external_context* context, uint64_t address, ulong size)
+    {
+        for (uint64_t i = 0; i < size; i += 4)
+        {
+            uint64_t working_address = address + i;
+
+            fast_function_table::insert_function(&context->process.guest_functions.native_function_table, working_address, -1);
+            context->process.guest_functions.functions.erase(working_address);
+        }
+    }
 }

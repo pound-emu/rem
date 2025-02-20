@@ -35,7 +35,7 @@ struct guest_process
 
     static void                     create(guest_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, aarch64_context_offsets arm_guest_data);
     static uint64_t                 jit_function(guest_process* process, uint64_t guest_function, void* arm_context);
-    static uint64_t                 interperate_function(guest_process* process, uint64_t guest_function, void* arm_context, bool* is_running);
+    static uint64_t                 interperate_function(guest_process* process, uint64_t guest_function, void* arm_context, bool* is_running, bool exit_on_long_branch = false);
 
     static guest_function           translate_function(translate_request_data* data, guest_compiler_optimization_flags flags);
 
