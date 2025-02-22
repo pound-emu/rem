@@ -134,7 +134,7 @@ static bool look_for_and_connect_global_usage(ssa_node* look_at_node,global_usag
     return false;
 }
 
-static void find_register_in_parents(ssa_node* look_at_node, uint64_t look_for_register, global_usage_location* to_connect, std::unordered_set<ssa_node*>* visited, int stack = 0)
+static void find_register_in_parents(ssa_node* look_at_node, uint64_t look_for_register, global_usage_location* to_connect, std::unordered_set<ssa_node*>* visited)
 {
     if (in_set(visited, look_at_node))
     {
@@ -143,11 +143,14 @@ static void find_register_in_parents(ssa_node* look_at_node, uint64_t look_for_r
 
     visited->insert(look_at_node);
 
-    look_for_and_connect_global_usage(look_at_node,to_connect, look_for_register, look_at_node->declarations_global_info.size() - 1);
+    if (look_for_and_connect_global_usage(look_at_node,to_connect, look_for_register, look_at_node->declarations_global_info.size() - 1))
+    {
+        return;
+    }
 
     for (auto i : look_at_node->inlets)
     {
-        find_register_in_parents(i, look_for_register, to_connect, visited, stack + 1);
+        find_register_in_parents(i, look_for_register, to_connect, visited);
     }
 }
 
