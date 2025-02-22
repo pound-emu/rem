@@ -5,25 +5,64 @@
 
 #include <unordered_set>
 
-static phi_source create_phi_source(ssa_node* node, int source_register)
+struct ssa_context;
+struct ssa_node;
+struct global_usage_location;
+
+struct global_usage_location
+{   
+    int                                             time;
+    ir_operand*                                     operand;
+
+    bool                                            is_global;
+    intrusive_linked_list<global_usage_location*>*  connections;
+    bool                                            is_remapped;
+};
+
+struct ssa_node
 {
-    phi_source result;
+    ssa_context*                                                        context;
+    ir_control_flow_node*                                               raw_node;
+    std::vector<std::unordered_map<uint64_t, global_usage_location*>>   declarations_global_info;
 
-    result.node_source = node;
-    result.source_register = source_register;
+    std::unordered_map<int, std::unordered_map<uint64_t, uint64_t>>     declaration_time_map;
 
-    return result;
+    std::vector<ssa_node*>                                              inlets;
+    std::vector<ssa_node*>                                              outlets;
+};
+
+struct ssa_context
+{
+    ir_control_flow_graph*                                  cfg;
+    ir_operation_block*                                     ir;
+    std::vector<ssa_node*>                                  ssa_nodes;
+    std::unordered_map<ir_control_flow_node*, ssa_node*>    ssa_node_map;
+    uint64_t                                                global_top;
+    uint64_t                                                local_start;
+
+    std::vector<global_usage_location*>                     global_usage_pool;
+};
+
+static void connect_global_usages(global_usage_location* a, global_usage_location* b)
+{
+    intrusive_linked_list<global_usage_location*>::insert_element(a->connections, b);
+    intrusive_linked_list<global_usage_location*>::insert_element(b->connections, a);
 }
 
-static phi_node create_phi_node(ssa_node* node, uint64_t destination, std::vector<phi_source> sources)
+static global_usage_location* create_global_usage_location(ssa_context* context, ir_operand* operand, int time)
 {
-    phi_node result;
+    global_usage_location* new_usage_data = arena_allocator::allocate_struct<global_usage_location>(context->ir->allocator);
 
-    result.new_register = destination;
-    result.sources = sources;
-    result.node_context = node;
+    new_usage_data->operand = operand;
+    new_usage_data->time = time;
 
-    return result;
+    new_usage_data->is_global = false;    
+    new_usage_data->connections = intrusive_linked_list<global_usage_location*>::create(context->ir->allocator, nullptr, nullptr);
+    new_usage_data->is_remapped = false;
+
+    context->global_usage_pool.push_back(new_usage_data);
+
+    return new_usage_data;
 }
 
 static void create_ssa_context(ssa_context* result, ir_operation_block* ir)
@@ -35,342 +74,318 @@ static void create_ssa_context(ssa_context* result, ir_operation_block* ir)
         if (i->data == nullptr)
             continue;
 
-        ssa_node* working_node = new ssa_node;
-
-        working_node->context = result;
-        working_node->raw_node = i->data;
+        ssa_node* new_ssa_node = new ssa_node();
         
-        result->ssa_nodes.push_back(working_node);
+        new_ssa_node->context = result;
+        new_ssa_node->raw_node = i->data;
 
-        result->node_map[i->data] = working_node;
-        result->reverse_node_map[working_node] = i->data;
+        result->ssa_node_map[i->data] = new_ssa_node;
 
-        if (i->data->label_id != -1)
-        {
-            result->numbered_node_map[i->data->label_id] = working_node;
-        }
+        result->ssa_nodes.push_back(new_ssa_node);
     }
 
     for (auto i : result->ssa_nodes)
     {
-        for (auto test = i->raw_node->entries->first; test != nullptr; test = test->next)
+        for (auto c = i->raw_node->exits->first; c != nullptr; c = c->next)
         {
-            if (test->data == nullptr)
+            if (c->data == nullptr)
                 continue;
 
-            i->inlets.push_back(result->node_map[test->data]);
+            i->outlets.push_back(result->ssa_node_map[c->data]);
         }
 
-        for (auto test = i->raw_node->exits->first; test != nullptr; test = test->next)
+        for (auto c = i->raw_node->entries->first; c != nullptr; c = c->next)
         {
-            if (test->data == nullptr)
+            if (c->data == nullptr)
                 continue;
 
-            i->outlets.push_back(result->node_map[test->data]);
+            i->inlets.push_back(result->ssa_node_map[c->data]);
         }
     }
-
-    result->raw_cfg = cfg;
-    result->open_register = 0;
-}
-
-static uint64_t request_new_register(ssa_context* context)
-{
-    uint64_t result = context->open_register;
     
-    context->open_register++;
-
-    return result;
+    result->ir = ir;
+    result->cfg = cfg;
 }
 
 static void destroy_ssa_context(ssa_context* to_destroy)
 {
-    for (int i = 0; i < to_destroy->ssa_nodes.size(); ++i)
+    for (auto i : to_destroy->ssa_nodes)
     {
-        delete to_destroy->ssa_nodes[i];
+        delete i;
     }
 }
 
-static void deconsturct_ssa(ssa_node* node)
+static bool look_for_and_connect_global_usage(ssa_node* look_at_node,global_usage_location* to_connect, uint64_t look_for_register, int time)
 {
-    ir_operation_block* ir = node->context->raw_cfg->source_ir;
-
-    for (auto phi : node->phis)
+    for (; time != -1; -- time)
     {
-        uint64_t new_destination = phi.new_register;
-        
-        for (auto source : phi.sources)
-        {
-            ssa_node* source_node = source.node_source;
+        if (!in_map(&look_at_node->declarations_global_info[time], look_for_register))
+            continue;
 
-            ir_operation_block::emitds(ir, ir_move, ir_operand::create_reg(phi.new_register,phi.type),ir_operand::create_reg(source.source_register,phi.type), source_node->raw_node->final_instruction->prev);
+        global_usage_location* working_connection = look_at_node->declarations_global_info[time][look_for_register];
 
-            source_node->local_to_global_move_count[source.source_register]++;
-        }
+        connect_global_usages(working_connection, to_connect);
+
+        working_connection->is_global = true;
+
+        return true;
+    }
+
+    return false;
+}
+
+static void find_register_in_parents(ssa_node* look_at_node, uint64_t look_for_register, global_usage_location* to_connect, std::unordered_set<ssa_node*>* visited, int stack = 0)
+{
+    if (in_set(visited, look_at_node))
+    {
+        return;
+    }
+
+    visited->insert(look_at_node);
+
+    look_for_and_connect_global_usage(look_at_node,to_connect, look_for_register, look_at_node->declarations_global_info.size() - 1);
+
+    for (auto i : look_at_node->inlets)
+    {
+        find_register_in_parents(i, look_for_register, to_connect, visited, stack + 1);
     }
 }
 
-static void deconsturct_ssa(ssa_context* to_deconstruct)
+static void find_same_register_pools(ssa_node* node)
 {
-    for (int i = 0; i < to_deconstruct->ssa_nodes.size(); ++i)
+    auto raw_node = node->raw_node;
+
+    int time = 0;
+
+    for (auto ins_index = raw_node->entry_instruction; ins_index != raw_node->final_instruction->next; ins_index = ins_index->next)
     {   
-        ssa_node* working_node = to_deconstruct->ssa_nodes[i];
+        ir_operation* current_instruction = &ins_index->data;
 
-        deconsturct_ssa(working_node);
-    }
-}
+        for (int i = 0; i < current_instruction->sources.count; ++i)
+        {
+            ir_operand* current_source = &current_instruction->sources[i];
 
-static void redifine_destinations(ssa_node* node, int time, ir_operand* destinations, int destination_count)
-{
-    if (in_map(&node->time_remap, time))
-    {
-        node->time_remap[time] = std::unordered_map<uint64_t, uint64_t>();
-    }
+            if (ir_operand::is_constant(current_source))
+                continue;
 
-    std::unordered_map<uint64_t, uint64_t>* remap = &node->time_remap[time];
+            global_usage_location* this_global_usage = create_global_usage_location(node->context, current_source, time);
 
-    for (int i = 0; i < destination_count; ++i)
-    {
-        ir_operand* working_destination = &destinations[i];
+            this_global_usage->operand = current_source;
+            
+            if (look_for_and_connect_global_usage(node, this_global_usage, current_source->value, time - 1))
+            {
+                continue;
+            }
+
+            this_global_usage->is_global = true;
+
+            for (auto inlet : node->inlets)
+            {
+                std::unordered_set<ssa_node*> visited;
+
+                find_register_in_parents(inlet, current_source->value, this_global_usage, &visited);
+            }
+        }
         
-        assert_is_register(*working_destination);
-
-        uint64_t new_register = request_new_register(node->context);
-
-        (*remap)[working_destination->value] = new_register;
-
-        working_destination->value = new_register;
+        time++;
     }
 }
 
-static uint64_t get_new_definition_at_time(ssa_node* node, uint64_t old_value, bool* exists,int time)
+static void create_time_stamped_declaration_info(ssa_context* context)
 {
-    *exists = false;
-
-    for (; time != -2; time --)
+    for (auto ssa_node : context->ssa_nodes)
     {
-        std::unordered_map<uint64_t, uint64_t>* remap = &node->time_remap[time];
+        auto raw_node = ssa_node->raw_node;
 
-        if (!in_map(remap, old_value))
-            continue;
+        int time = 0;
 
-        *exists = true;
-
-        return (*remap)[old_value];
-    }
-
-    return -1;
-}
-
-static void get_phi_sources(std::vector<phi_source>* result, ssa_node* root_node, uint64_t old_value, std::unordered_set<ssa_node*>* visited)
-{
-    if (in_set(visited, root_node))
-    {
-        return;
-    }
-    
-    visited->insert(root_node);
-
-    bool exists;
-    uint64_t possible_phi = get_new_definition_at_time(root_node, old_value, &exists, root_node->count);
-
-    if (exists)
-    {
-        result->push_back(create_phi_source(root_node, possible_phi));
-
-        return;
-    }
-    else
-    {
-        for (auto parent : root_node->inlets)
+        for (auto ins_index = raw_node->entry_instruction; ins_index != raw_node->final_instruction->next; ins_index = ins_index->next)
         {
-            get_phi_sources(result, parent, old_value, visited);
+            ir_operation* current_instruction = &ins_index->data;
+
+            std::unordered_map<uint64_t, global_usage_location*> data_at_time_stamp;
+
+            for (int i = 0; i < current_instruction->destinations.count; ++i)
+            {
+                ir_operand* current_destination = &current_instruction->destinations[i];
+    
+                data_at_time_stamp[current_destination->value] = create_global_usage_location(context, current_destination, time);
+            }
+
+            ssa_node->declarations_global_info.push_back(data_at_time_stamp);
+
+            time++;
         }
     }
 }
 
-static void redifine_source(ssa_node* node, int time, ir_operand* source)
+static void remap_global_usage(global_usage_location* to_remap, std::unordered_set<global_usage_location*>* visited, uint64_t new_register)
 {
-    if (ir_operand::is_constant(source))
+    if (in_set(visited, to_remap))
     {
         return;
     }
 
-    bool exists;
-    uint64_t new_value = get_new_definition_at_time(node, source->value, &exists, time);
+    to_remap->is_remapped = true;
 
-    if (exists)
+    visited->insert(to_remap);
+
+    to_remap->operand->value = new_register;
+
+    for (auto i = to_remap->connections->first; i != nullptr; i = i->next)
     {
-        source->value = new_value;
-
-        return;
-    }
-
-    uint64_t new_phi_register = request_new_register(node->context);
-
-    std::vector<phi_source> phi_sources;
-    std::unordered_set<ssa_node*> visited;
-
-    for (auto parent : node->inlets)
-    {
-        get_phi_sources(&phi_sources, parent, source->value, &visited);
-    }
-
-    if (phi_sources.size() == 0)
-    {
-        return;
-    }
-    
-    for (auto i : phi_sources)
-    {
-        node->time_remap[-1][source->value] = new_phi_register;
-    }
-
-    source->value = new_phi_register;
-
-    phi_node phi = create_phi_node(node, new_phi_register, phi_sources);
-
-    if (ir_operand::is_vector(source))
-    {
-        phi.type = int128;
-    }
-    else
-    {
-        phi.type = int64;
-    }
-
-    ir_operand phi_des = ir_operand::create_reg(new_phi_register, -1);
-    ir_operand phi_src[phi_sources.size()];
-
-    for (int i = 0; i < phi_sources.size(); ++i)
-    {
-        phi_src[i] = ir_operand::create_reg(phi_sources[i].source_register, -1);
-    }
-
-    //ir_operation_block::emit_with(node->context->raw_cfg->source_ir, ir_ssa_phi, &phi_des, 1, phi_src, phi_sources.size(), node->raw_node->entry_instruction);
-
-    node->phis.push_back(phi);
-}
-
-static void redifine_sources(ssa_node* node, int time, ir_operand* sources, int source_count)
-{
-    for (int i = 0; i < source_count; ++i)
-    {
-        redifine_source(node, time, &sources[i]);
-    }
-}
-
-static void construct_ssa_sources(ssa_node* node)
-{
-    int time = 0;
-
-    for (auto i = node->raw_node->entry_instruction; i != node->raw_node->final_instruction->next; i = i->next)
-    {
-        ir_operation* working_operation = &i->data;
-
-        if (working_operation->instruction == ir_ssa_phi)
+        if (i->data == nullptr)
             continue;
 
-        redifine_sources(node, time - 1, working_operation->sources.data, working_operation->sources.count);
-
-        ++time;
+        remap_global_usage(i->data, visited, new_register);
     }
 }
 
-static void construct_ssa_declarations(ssa_node* node)
+static uint64_t find_and_remap_true_globals(ssa_context* context)
 {
-    int time = 0;
-
-    for (auto i = node->raw_node->entry_instruction; i != node->raw_node->final_instruction->next; i = i->next)
+    for (auto i : context->ssa_nodes)
     {
-        ir_operation* working_operation = &i->data;
-
-        redifine_destinations(node, time, working_operation->destinations.data, working_operation->destinations.count);
-
-        ++time;
+        find_same_register_pools(i);
     }
 
-    node->count = time;
-}
+    std::vector<global_usage_location*> relevant_global_usages;
 
-static void construct_ssa_declarations(ssa_context* context)
-{
-    for (int i = 0; i < context->ssa_nodes.size(); ++i)
+    for (auto i : context->global_usage_pool)
     {
-        construct_ssa_declarations(context->ssa_nodes[i]);
+        if (!i->is_global)
+            continue;
+
+        relevant_global_usages.push_back(i);
     }
-}
 
-static void construct_ssa_sources(ssa_context* context)
-{
-    for (int i = 0; i < context->ssa_nodes.size(); ++i)
-    {
-        construct_ssa_sources(context->ssa_nodes[i]);
-    }
-}
+    uint64_t global_remap_index = 0;
 
-static void get_all_globals_from_phis(std::unordered_set<uint64_t>* globals, ssa_context* ssa)
-{
-    for (auto i : ssa->ssa_nodes)
+    while (true)
     {
-        for (auto phi : i->phis)
+        bool is_done = true;
+
+        for (auto i : relevant_global_usages)
         {
-            globals->insert(phi.new_register);
+            if (i->is_remapped)
+                continue;
+
+            std::unordered_set<global_usage_location*> visited;
+
+            remap_global_usage(i, &visited, global_remap_index);
+
+            global_remap_index++;
+
+            is_done = false;
+        }
+
+        if (is_done)
+        {
+            break;
         }
     }
+
+    return global_remap_index;
 }
 
-static bool is_global(std::unordered_set<uint64_t>* globals, uint64_t working_register)
+static bool is_global(ssa_context* context, uint64_t working_register)
 {
-    return in_set(globals, working_register);
+    return working_register <= context->global_top;
 }
 
-static bool is_global(std::unordered_set<uint64_t>* globals, ir_operand working_register)
+static bool is_global(ssa_context* context, ir_operand working_register)
 {
     if (ir_operand::is_constant(&working_register))
         return false;
 
-    return is_global(globals, working_register.value);
+    return is_global(context, working_register.value);
 }
 
-static void get_used_local_registers(ssa_node* working_node, std::unordered_map<uint64_t, int>* usage_count)
+uint64_t look_for_local_at_time(ssa_node* node, int time, uint64_t to_look_for)
 {
-    auto raw_node = working_node->raw_node;
-
-    for (auto i = raw_node->entry_instruction; i != raw_node->final_instruction->next; i = i->next)
-    {
-        ir_operation* working_operation = &i->data;
-
-        for (int o = 0; o < working_operation->sources.count; ++o)
+    for (; time != -1; time--)
+    {   
+        if (in_map(&node->declaration_time_map[time], to_look_for))
         {
-            ir_operand reg = working_operation->sources[o];
+            return node->declaration_time_map[time][to_look_for];
+        }
+    }
 
-            if (ir_operand::is_constant(&reg))
-                continue;
+    throw_error();
+}
 
-            (*usage_count)[reg.value]++;
+static void redifine_destinations(ssa_context* context)
+{
+    context->local_start = context->global_top;
+
+    for (auto node : context->ssa_nodes)
+    {
+        ir_control_flow_node* raw_node = node->raw_node;
+
+        int time = 0;
+
+        for (auto ins_index = raw_node->entry_instruction; ins_index != raw_node->final_instruction->next; ins_index = ins_index->next)
+        {
+            ir_operation* working_operation = &ins_index->data;
+
+            ir_operand* destinations = working_operation->destinations.data;
+            int destination_count = working_operation->destinations.count;
+
+            for (int i = 0; i < destination_count; ++i)
+            {
+                ir_operand* working_destination = &destinations[i];
+
+                if (is_global(context, *working_destination))
+                {
+                    continue;
+                }
+
+                uint64_t new_local_register = context->local_start ++;
+
+                working_destination->value = new_local_register;
+                node->declaration_time_map[time][working_destination->value] = new_local_register;
+            }
+
+            time++;
         }
     }
 }
 
-
-static void replace_sources_if_needed(ir_operation* working_operation, uint64_t to_replace_register,ir_operand to_replace_with)
+static void redifine_sources(ssa_context* context)
 {
-    for (int i = 0; i < working_operation->sources.count; ++i)
+    for (auto node : context->ssa_nodes)
     {
-        ir_operand* working_to_replace = &working_operation->sources[i];
+        ir_control_flow_node* raw_node = node->raw_node;
 
-        if (ir_operand::is_constant(working_to_replace))
-        {
-            continue;
-        }
+        int time = 0;
 
-        if (working_to_replace->value != to_replace_register)
+        for (auto ins_index = raw_node->entry_instruction; ins_index != raw_node->final_instruction->next; ins_index = ins_index->next)
         {
-            continue;
+            ir_operation* working_operation = &ins_index->data;
+
+            ir_operand* sources = working_operation->sources.data;
+            int source_count = working_operation->sources.count;
+
+            for (int i = 0; i < source_count; ++i)
+            {
+                ir_operand* working_source = &sources[i];
+
+                if (ir_operand::is_constant(working_source))
+                {
+                    continue;
+                }
+
+                if (is_global(context, *working_source))
+                {
+                    continue;
+                }
+
+                uint64_t new_value = look_for_local_at_time(node, time - 1, working_source->value);
+
+                working_source->value = new_value;
+            }
+
+            time++;
         }
-        
-        *working_to_replace = ir_operand::copy_new_raw_size(to_replace_with, working_to_replace->meta_data);
     }
 }
 
@@ -399,117 +414,31 @@ static bool check_if_zero_extend(ir_operation* working_operation, ir_operand che
     return false;
 }
 
+static void replace_sources_if_needed(ir_operation* working_operation, uint64_t to_replace_register,ir_operand to_replace_with)
+{
+    for (int i = 0; i < working_operation->sources.count; ++i)
+    {
+        ir_operand* working_to_replace = &working_operation->sources[i];
+
+        if (ir_operand::is_constant(working_to_replace))
+        {
+            continue;
+        }
+
+        if (working_to_replace->value != to_replace_register)
+        {
+            continue;
+        }
+        
+        *working_to_replace = ir_operand::copy_new_raw_size(to_replace_with, working_to_replace->meta_data);
+    }
+}
+
 static void nop_operation(ir_operation* to_nop)
 {
     to_nop->instruction = ir_no_operation;
     to_nop->destinations.count = 0;
     to_nop->sources.count = 0;
-}
-
-static bool optimize_local_moves(ssa_node* working_node, std::unordered_set<uint64_t>* globals)
-{
-    auto raw_node = working_node->raw_node;
-
-    for (auto i = raw_node->entry_instruction; i != raw_node->final_instruction->next; i = i->next)
-    {
-        ir_operation* working_operation = &i->data;
-
-        if (working_operation->instruction != ir_move)
-        {
-            continue;
-        }
-
-        ir_operand destination = working_operation->destinations[0];
-
-        if (is_global(globals, destination))
-        {
-            continue;
-        }
-
-        ir_operand to_replace = working_operation->sources[0];
-
-        if (is_global(globals, to_replace))
-        {
-            continue;
-        }
-
-        bool is_zero_extend_check = false;
-
-        for (auto r = i->next; r != raw_node->final_instruction->next; r = r->next)
-        {
-            if (check_if_zero_extend(&r->data, destination))
-            {
-                is_zero_extend_check = true;
-
-                break;
-            }
-        }
-
-        if (is_zero_extend_check)
-        {
-            working_operation->instruction = ir_zero_extend;
-
-            continue;
-        }
-
-        for (auto r = i->next; r != raw_node->final_instruction->next; r = r->next)
-        {
-            replace_sources_if_needed(&r->data, destination.value,to_replace);
-        }
-
-        nop_operation(working_operation);
-
-        return false;
-    }
-
-    return true;
-}
-
-ir_operand* find_destination_from_source(ir_operation* working_operation, ir_operand to_find)
-{
-    for (int i = 0; i < working_operation->destinations.count; ++i)
-    {
-        if (working_operation->destinations[i].value == to_find.value)
-        {
-            return &working_operation->destinations[i];
-        }
-    }
-
-    return nullptr;
-}
-
-static bool remove_unused_code(ssa_node* working_node, std::unordered_set<uint64_t>* globals)
-{
-    bool is_done = true;
-
-    auto raw_node = working_node->raw_node;
-
-    std::unordered_map<uint64_t, int> usage_count;
-
-    get_used_local_registers(working_node, &usage_count);
-
-    for (auto i = raw_node->entry_instruction; i != raw_node->final_instruction->next; i = i->next)
-    {
-        ir_operation* working_operation = &i->data;
-
-        if (working_operation->instruction == ir_external_call)
-            continue;
-
-        if (working_operation->destinations.count != 1)
-            continue;
-
-        ir_operand destination = working_operation->destinations[0];
-
-        if (is_global(globals, destination))
-            continue;
-
-        if (usage_count[destination.value] >= 1)
-            continue;
-
-        nop_operation(working_operation);
-    }
-    
-    return is_done;
 }
 
 static void convert_to_move(ir_operation* working_operation, ir_operand value)
@@ -802,83 +731,65 @@ static bool optimize_math(ssa_node* working_node)
     return is_done;
 }
 
-static void replace_registers(ir_operand* to_replace, int count, uint64_t old_register, uint64_t new_register)
+
+static bool optimize_local_moves(ssa_node* working_node)
 {
-    for (int i = 0; i < count; ++i)
-    {
-        ir_operand* working = &to_replace[i];
-
-        if (ir_operand::is_constant(working))
-        {
-            continue;
-        }
-
-        if (working->value != old_register)
-            continue;
-
-        working->value = new_register;
-    }
-}
-
-static void replace_registers(ir_operation* operation, uint64_t old_register, uint64_t new_register)
-{
-    replace_registers(operation->destinations.data, operation->destinations.count, old_register, new_register);
-    replace_registers(operation->sources.data, operation->sources.count, old_register, new_register);
-}
-
-static bool optimize_global_moves(ssa_node* working_node, std::unordered_set<uint64_t>* globals)
-{
-    bool is_done = true;
-
     auto raw_node = working_node->raw_node;
+
+    ssa_context* context = working_node->context;
+
+    bool is_done = true;
 
     for (auto i = raw_node->entry_instruction; i != raw_node->final_instruction->next; i = i->next)
     {
         ir_operation* working_operation = &i->data;
 
         if (working_operation->instruction != ir_move)
+        {
             continue;
+        }
 
         ir_operand destination = working_operation->destinations[0];
 
-        if (!is_global(globals, destination))
+        if (is_global(context, destination))
         {
             continue;
         }
 
-        ir_operand source = working_operation->sources[0];
+        ir_operand to_replace = working_operation->sources[0];
 
-        if (ir_operand::is_constant(&source))
+        if (is_global(context, to_replace))
         {
             continue;
         }
 
-        if (is_global(globals, source))
+        bool is_zero_extend_check = false;
+
+        for (auto r = i->next; r != raw_node->final_instruction->next; r = r->next)
         {
+            if (check_if_zero_extend(&r->data, destination))
+            {
+                is_zero_extend_check = true;
+
+                break;
+            }
+        }
+
+        if (is_zero_extend_check)
+        {
+            working_operation->instruction = ir_zero_extend;
+
             continue;
         }
 
-        uint64_t dreg = destination.value;
-        uint64_t sreg = source.value;
-
-        if (dreg == sreg)
-            continue;
-
-        uint64_t times_moved = working_node->local_to_global_move_count[sreg];
-
-        if (times_moved > 1)
+        for (auto r = i->next; r != raw_node->final_instruction->next; r = r->next)
         {
-            continue;
+            replace_sources_if_needed(&r->data, destination.value,to_replace);
         }
 
-        for (auto tr = raw_node->entry_instruction; tr != raw_node->final_instruction->next; tr = tr->next)
-        {
-            replace_registers(&tr->data, sreg, dreg);
-        }
+        nop_operation(working_operation);
 
         is_done = false;
-
-        nop_operation(&i->data);
     }
 
     return is_done;
@@ -890,17 +801,15 @@ void convert_to_ssa(ir_operation_block* ir, bool optimize)
 
     ssa_context ssa;
 
-    create_ssa_context(&ssa, ir);
+    create_ssa_context(&ssa,ir);
 
-    construct_ssa_declarations(&ssa);
+    create_time_stamped_declaration_info(&ssa);
 
-    construct_ssa_sources(&ssa);
+    ssa.global_top = find_and_remap_true_globals(&ssa);
 
-    deconsturct_ssa(&ssa);
+    redifine_destinations(&ssa);
 
-    std::unordered_set<uint64_t> globals;
-
-    get_all_globals_from_phis(&globals, &ssa);
+    redifine_sources(&ssa);
 
     while (true && optimize)
     {
@@ -910,25 +819,7 @@ void convert_to_ssa(ir_operation_block* ir, bool optimize)
         {
             ssa_node* working_node = ssa.ssa_nodes[i];
 
-            is_done &= optimize_global_moves(working_node, &globals);
-        }
-
-        if (is_done)
-        {
-            break;
-        }
-    }
-
-    while (true && optimize)
-    {
-        bool is_done = true;
-
-        for (int i = 0; i < ssa.ssa_nodes.size(); ++i)
-        {
-            ssa_node* working_node = ssa.ssa_nodes[i];
-
-            is_done &= remove_unused_code(working_node, &globals);
-            is_done &= optimize_local_moves(working_node, &globals);
+            is_done &= optimize_local_moves(working_node);
             is_done &= optimize_math(working_node);
         }
 
@@ -938,7 +829,7 @@ void convert_to_ssa(ir_operation_block* ir, bool optimize)
         }
     }
 
-    linier_scan_register_allocator_pass(ssa.raw_cfg);
+    linier_scan_register_allocator_pass(ssa.cfg);
 
     destroy_ssa_context(&ssa);
 }

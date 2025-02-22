@@ -47,7 +47,7 @@ uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_func
         {
             if (function_to_execute.times_executed == 10)
             {
-                guest_function_store::request_retranslate_function(&process->guest_functions,guest_function_address, level_one, translator_request);
+                guest_function_store::request_retranslate_function(&process->guest_functions,guest_function_address, level_three, translator_request);
             }
 
             return guest_process::interperate_function(process, guest_function_address, arm_context, nullptr, true);

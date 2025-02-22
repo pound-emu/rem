@@ -132,6 +132,11 @@ guest_function guest_function_store::get_or_translate_function(guest_function_st
 
         context->functions[address] = result;
 
+        if (entry_optimization == level_three && !p->debug_mode)
+        {
+            fast_function_table::insert_function(&context->native_function_table, address, result.jit_offset);
+        }
+
         context->main_translate_lock.unlock();
 
         return result;
