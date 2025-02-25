@@ -1,7 +1,7 @@
 #include "emulator/guest_process.h"
 #include "emulator/ssa_emit_context.h"
 
-#if (defined __linux__) || (defined __APPLE__)
+#if defined (__linux__) || defined (__APPLE__)
     #define EXPORT __attribute__((visibility("default")))
 #elif (defined _WIN32)
     #define EXPORT __declspec(dllexport)
@@ -67,7 +67,7 @@ extern "C"
         return virtual_address;
     }
 
-    EXPORT void invalidate_jit_region(external_context* context, uint64_t address, ulong size)
+    EXPORT void invalidate_jit_region(external_context* context, uint64_t address, uint64_t size)
     {
         for (uint64_t i = 0; i < size; i += 4)
         {

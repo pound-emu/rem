@@ -120,7 +120,7 @@ guest_function guest_process::translate_function(translate_request_data* data, g
 
     int instruction_limit = 10000;
 
-    if (!(flags & guest_compiler_optimization_flags::function_wide_translation))
+    if ((flags & guest_compiler_optimization_flags::function_wide_translation) == 0)
     {
         instruction_limit = 50;
     }

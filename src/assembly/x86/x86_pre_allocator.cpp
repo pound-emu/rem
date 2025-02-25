@@ -3,6 +3,7 @@
 #include "ir/checks.h"
 #include "tools/bit_tools.h"
 #include "debugging.h"
+#include "assembly/pre_allocator_tools.h"
 
 static uint64_t get_context_size(uint64_t value)
 {
@@ -169,57 +170,18 @@ static void emit_conditional_select(x86_pre_allocator_context* result, ir_operan
 	}
 }
 
-static bool instruction_is_commutative(uint64_t instruction)
-{
-	switch (instruction)
-	{
-		case ir_add:
-		case ir_multiply:
-		case ir_bitwise_and:
-		case ir_bitwise_or:
-		case ir_bitwise_exclusive_or:
-		case x86_addps:
-		case x86_addpd:
-		case x86_addss:
-		case x86_addsd:
-		case x86_xorps:
-		case x86_pand:
-		case x86_orps:
-		case x86_mulps:
-		case x86_mulpd:
-		case x86_mulss:
-		case x86_mulsd:
-		case x86_add_flags:
-		case ir_compare_equal:
-		case ir_compare_not_equal:
-		{
-			return true;
-		};
-	}
-
-	return false;
-}
-
-static void swap(ir_operand* l, ir_operand* r)
-{
-	ir_operand tmp = *l;
-
-	*l = *r;
-	*r = tmp;
-}
-
 static void emit_d_n_f_d_n_m(x86_pre_allocator_context* result, ir_instructions instruction, ir_operand destination, ir_operand source_0, ir_operand source_1, ir_operation* source_operation)
 {
 	assert_same_size({ destination, source_0, source_1 });
 
 	if (instruction_is_commutative(instruction) && ir_operand::is_constant(&source_0) && !ir_operand::is_constant(&source_1))
 	{
-		swap(&source_0, &source_1);	
+		swap_operands(&source_0, &source_1);	
 	}
 
 	if (instruction_is_commutative(instruction) && ir_operand::are_equal(destination, source_1) && !ir_operand::are_equal(destination, source_0))
 	{
-		swap(&source_0, &source_1);	
+		swap_operands(&source_0, &source_1);	
 	}
 
 	intrusive_linked_list_element<ir_operation>* core_operation = nullptr;
@@ -406,7 +368,7 @@ static void emit_compare(x86_pre_allocator_context* result, uint64_t instruction
 
 	if (ir_operand::is_constant(&source_0) && !ir_operand::is_constant(&source_1) && instruction_is_commutative(instruction))
 	{
-		swap(&source_0, &source_1);
+		swap_operands(&source_0, &source_1);
 	}
 
 	ir_operand working_destination = destination;
@@ -984,7 +946,7 @@ static void emit_store(x86_pre_allocator_context* result, ir_operation* operatio
 	{
 		if (ir_operand::is_constant(&operation->sources[0]) && !ir_operand::is_constant(&operation->sources[1]))
 		{
-			swap(&source_temp[0], &source_temp[1]);
+			swap_operands(&source_temp[0], &source_temp[1]);
 		}
 	}
 
@@ -1030,7 +992,7 @@ static void emit_load(x86_pre_allocator_context* result, ir_operation* operation
 	{
 		if (ir_operand::is_constant(&operation->sources[0]) && !ir_operand::is_constant(&operation->sources[1]))
 		{
-			swap(&source_temp[0], &source_temp[1]);
+			swap_operands(&source_temp[0], &source_temp[1]);
 		}
 	}
 

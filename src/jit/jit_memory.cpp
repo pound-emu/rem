@@ -3,7 +3,7 @@
 
 #include "jit_memory.h"
 
-#define USE_MEMPROTECT (defined __linux__) || (defined __APPLE__)
+#define USE_MEMPROTECT defined (__linux__) || defined(__APPLE__)
 #define USE_VIRTUAL_PROTECT (defined _WIN32)
 
 #if USE_MEMPROTECT

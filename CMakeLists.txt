@@ -9,7 +9,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS "-g -Ofast")
+set(CMAKE_CXX_FLAGS "-g -Ofast -Wno-c++11-narrowing")
 
 project(${PROJECT_SHARED})
 

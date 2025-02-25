@@ -798,6 +798,11 @@ static bool optimize_local_moves(ssa_node* working_node)
     return is_done;
 }
 
+bool remove_unused_code(ssa_node* working_node)
+{
+    
+}
+
 void convert_to_ssa(ir_operation_block* ir, bool optimize)
 {    
     ir_operation_block::clamp_operands(ir, true);
