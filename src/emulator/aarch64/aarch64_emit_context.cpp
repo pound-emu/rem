@@ -62,7 +62,7 @@ void aarch64_emit_context::emit_store_context(aarch64_emit_context* ctx)
     ctx->context_movement.push_back(ir_operation_block::emits(ir, ir_guest_store_context, ctx->context_pointer));
 }
 
-static void table_branch(aarch64_emit_context* ctx, ir_operand address)
+void aarch64_emit_context::table_branch(aarch64_emit_context* ctx, ir_operand address, bool is_stack_call)
 {
     guest_process* process = ctx->process;
     ir_operation_block* ir = ctx->raw_ir;
@@ -89,13 +89,22 @@ static void table_branch(aarch64_emit_context* ctx, ir_operand address)
     ir_operand jit_base = ir_operand::create_con((uint64_t)process->host_jit_context->jit_cache.memory->raw_memory_block);
 
     value_test = ir_operand::copy_new_raw_size(value_test, int64);
+
+    ir_operand host_address = ssa_emit_context::emit_ssa(ctx->ssa, ir_add, jit_base, value_test);
     
-    ir_operation_block::emits(ir, ir_table_jump, ssa_emit_context::emit_ssa(ctx->ssa, ir_add, jit_base, value_test));
+    if (is_stack_call)
+    {
+        ir_operation_block::emits(ir, ir_internal_call, host_address, ctx->context_pointer);
+    }
+    else
+    {
+        ir_operation_block::emits(ir, ir_table_jump, host_address);   
+    }
 
     ir_operation_block::mark_label(ir, end);
 }
 
-void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new_location, bool store_context, bool allow_table_branch)
+void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new_location, bool store_context, bool allow_table_branch, bool is_stack_call)
 {
     ctx->branch_state = branch_type::long_branch;
 
@@ -106,7 +115,11 @@ void aarch64_emit_context::branch_long(aarch64_emit_context* ctx, ir_operand new
 
     if (allow_table_branch && (ctx->optimization_flags & guest_compiler_optimization_flags::use_flt))
     {
-        table_branch(ctx, new_location);
+        table_branch(ctx, new_location, is_stack_call);
+    }
+    else
+    {
+        assert(!is_stack_call);
     }
 
     ir_operation_block::emits(ctx->raw_ir, ir_close_and_return, new_location);

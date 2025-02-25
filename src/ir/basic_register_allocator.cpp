@@ -378,7 +378,7 @@ static void emit_basic_block(basic_register_allocator_context* result_register_a
 			allocate_registers(result_register_allocator, new_sources, stack_max, working_operation.sources.data, working_operation.sources.count, register_mode::read);
 			allocate_registers(result_register_allocator, new_destinations, stack_max, working_operation.destinations.data, working_operation.destinations.count, register_mode::write);
 
-			if (instruction == ir_external_call)
+			if (instruction == ir_external_call || instruction == ir_internal_call)
 			{
 				unload_basic(result_register_allocator);
 			}
@@ -387,11 +387,6 @@ static void emit_basic_block(basic_register_allocator_context* result_register_a
 
 			if (i == node->final_instruction)
 			{
-				if (!ir_operation_block::is_flow_critical(instruction) && instruction != ir_no_operation)
-				{
-					throw_error();
-				}
-
 				switch (node->exit_count)
 				{
 					case 1:

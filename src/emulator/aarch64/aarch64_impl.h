@@ -113,7 +113,7 @@ template <typename O>
 O add_subtract_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_flags, uint64_t is_add);
 template <typename O>
 O add_subtract_carry_impl_interpreter(interpreter_data* ctx, O n, O m, uint64_t set_flags, uint64_t is_add, O carry);
-uint8_t condition_holds_interpreter(interpreter_data* ctx, uint64_t cond);
+uint32_t condition_holds_interpreter(interpreter_data* ctx, uint64_t cond);
 void branch_long_universal_interpreter(interpreter_data* ctx, uint64_t Rn, uint64_t link);
 uint64_t select_interpreter(interpreter_data* ctx, uint64_t condition, uint64_t yes, uint64_t no);
 uint64_t create_mask_interpreter(interpreter_data* ctx, uint64_t bits);
@@ -352,6 +352,8 @@ void V_interpreter(interpreter_data* ctx, uint64_t reg_id, uint128_t value);//TH
 void _branch_long_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
 void _branch_short_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
 void _branch_conditional_interpreter(interpreter_data* ctx, uint64_t yes, uint64_t no, uint64_t condition);//THIS FUNCTION IS USER DEFINED
+void _branch_call_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
+void _return_from_call_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
 uint64_t get_vector_context_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 void store_context_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
 void load_context_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
@@ -635,6 +637,8 @@ void V_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);//THIS FUNC
 void _branch_long_jit(ssa_emit_context* ctx, ir_operand location);//THIS FUNCTION IS USER DEFINED
 void _branch_short_jit(ssa_emit_context* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
 void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t yes, uint64_t no, ir_operand condition);//THIS FUNCTION IS USER DEFINED
+void _branch_call_jit(ssa_emit_context* ctx, ir_operand location);//THIS FUNCTION IS USER DEFINED
+void _return_from_call_jit(ssa_emit_context* ctx, ir_operand location);//THIS FUNCTION IS USER DEFINED
 ir_operand get_vector_context_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 void store_context_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
 void load_context_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED

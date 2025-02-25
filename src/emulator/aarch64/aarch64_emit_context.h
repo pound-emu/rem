@@ -36,10 +36,11 @@ struct aarch64_emit_context
     static void                                                 init_context(aarch64_emit_context* ctx);
     static void                                                 emit_load_context(aarch64_emit_context* ctx);
     static void                                                 emit_store_context(aarch64_emit_context* ctx);
-    static void                                                 branch_long(aarch64_emit_context* ctx, ir_operand new_location, bool store_context = true, bool allow_table_branch = true);
+    static void                                                 branch_long(aarch64_emit_context* ctx, ir_operand new_location, bool store_context = true, bool allow_table_branch = true, bool is_stack_call = false);
     static void                                                 branch_short(aarch64_emit_context* ctx, ir_operand new_location);
     static void                                                 emit_context_movement(aarch64_emit_context* ctx);
     static ir_operand                                           get_or_create_basic_block_label(aarch64_emit_context* ctx, uint64_t value);
+    static void                                                 table_branch(aarch64_emit_context* ctx, ir_operand address, bool is_stack_call);
 
     static ir_operand                                           get_x_raw(aarch64_emit_context* ctx, int index);
     static void                                                 set_x_raw(aarch64_emit_context* ctx, int index, ir_operand value);

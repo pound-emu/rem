@@ -44,7 +44,6 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
     //std::string code;
     //std::cin >> code;
 
-
 	basic_register_allocator_context::run_pass(
 		&register_allocation_data,
 		register_allocated_code,

@@ -184,6 +184,78 @@ void ir_operation_block::ssa_remap(ir_operation_block* ir, std::unordered_map<ui
 	}
 }
 
+bool ir_operation_block::is_label(ir_operation* operation)
+{
+    switch (operation->instruction)
+    {
+        case ir_mark_label:
+            return true;
+    }
+
+    return false;
+}
+
+bool ir_operation_block::is_jump(ir_operation* operation)
+{
+    switch (operation->instruction)
+    {
+        case ir_jump_if:
+        case ir_jump_if_equal:
+        case ir_jump_if_not_equal:
+        case ir_jump_if_less_signed:	
+        case ir_jump_if_less_equal_signed:
+        case ir_jump_if_less_unsigned:	
+        case ir_jump_if_less_equal_unsigned:
+        case ir_jump_if_greater_signed:	
+        case ir_jump_if_greater_equal_signed:
+        case ir_jump_if_greater_unsigned:	
+        case ir_jump_if_greater_equal_unsigned:
+            return true;
+    }
+
+    return false;
+}
+
+bool ir_operation_block::is_compare(ir_operation* operation)
+{
+	switch (operation->instruction)
+	{
+		case ir_compare_equal:
+		case ir_compare_greater_equal_signed:
+		case ir_compare_greater_equal_unsigned:
+		case ir_compare_greater_signed:
+		case ir_compare_greater_unsigned:
+		case ir_compare_less_equal_signed:
+		case ir_compare_less_equal_unsigned:
+		case ir_compare_less_signed:
+		case ir_compare_less_unsigned:
+		case ir_compare_not_equal:
+		{
+			return true;
+		}; break;
+	}
+
+	return false;
+}
+
+bool ir_operation_block::ends_control_flow(ir_operation* operation)
+{
+    if (is_jump(operation))
+    {
+        return true;
+    } 
+
+    switch (operation->instruction)
+    {
+        case ir_close_and_return:
+        case ir_table_jump:
+            return true;
+    }
+
+    return false;
+}
+
+
 intrusive_linked_list_element<ir_operation>* ir_operation_block::emit_with(ir_operation_block* ir, uint64_t instruction, ir_operand* destinations, int destination_count, ir_operand* sources, int source_count, intrusive_linked_list_element<ir_operation>* point)
 {
 	ir_operation result;
@@ -344,23 +416,6 @@ intrusive_linked_list_element<ir_operation>* ir_operation_block::emits(ir_operat
 	result.sources[3] = source_3;
 	result.sources[4] = source_4;
 	return emit(ir, result, point);
-}
-
-bool ir_operation_block::is_flow_critical(uint64_t instruction)
-{
-	switch (instruction)
-	{
-	case ir_jump_if:
-	case ir_mark_label:
-		return true;
-
-	default: return false;
-	}
-}
-
-bool ir_operation_block::is_flow_critical(ir_operation* operation)
-{
-	return ir_operation_block::is_flow_critical(operation->instruction);
 }
 
 ir_operand ir_operation_block::create_label(ir_operation_block* block)

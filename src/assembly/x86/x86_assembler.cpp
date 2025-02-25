@@ -156,13 +156,25 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 		break;
 
 		case ir_external_call:
+		case ir_internal_call:
 		{
 			auto function_to_call = create_operand(working_operation.sources[0]);
 			int caller_size = 120;
 
 			c.sub(c.rsp, caller_size);
 
+			if (instruction == ir_internal_call)
+			{
+				c.sub(c.rsp, 8);
+				c.push(create_operand(working_operation.sources[1]));
+			}
+
 			c.call(function_to_call);
+			
+			if (instruction == ir_internal_call)
+			{
+				c.add(c.rsp, 16);
+			}
 
 			c.add(c.rsp, caller_size);
 
@@ -216,6 +228,44 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 			c.L(label);
 
 			c.nop();
+
+		}; break;
+
+		case ir_jump_if_equal:
+		case ir_jump_if_not_equal:
+		{
+			ir_operand label_operand = working_operation.sources[0];
+			ir_operand left = working_operation.sources[1];
+			ir_operand right = working_operation.sources[2];
+
+			std::string xbyak_label = create_label(label_operand);
+			Xbyak::Operand xbyak_condition_l = create_operand(left);
+
+			if (ir_operand::is_constant(&right))
+			{
+				c.cmp(xbyak_condition_l, right.value);
+			}
+			else
+			{
+				Xbyak::Operand xbyak_condition_r = create_operand(right);
+
+				c.cmp(xbyak_condition_l, xbyak_condition_r);
+			}
+
+			switch (instruction)
+			{
+				case ir_jump_if_equal:						c.je(xbyak_label); break;
+				case ir_jump_if_not_equal:					c.jne(xbyak_label); break;
+				
+				case ir_jump_if_greater_equal_signed:		c.jge(xbyak_label); break;
+				case ir_jump_if_greater_equal_unsigned:		c.jae(xbyak_label); break;
+				case ir_jump_if_greater_signed:				c.jg(xbyak_label); break;
+				case ir_jump_if_greater_unsigned:			c.ja(xbyak_label); break;
+				case ir_jump_if_less_equal_signed:			c.jle(xbyak_label); break;
+				case ir_jump_if_less_equal_unsigned:		c.jbe(xbyak_label); break;
+				case ir_jump_if_less_signed:				c.jl(xbyak_label); break;
+				case ir_jump_if_less_unsigned:				c.jb(xbyak_label); break;
+			}
 
 		}; break;
 

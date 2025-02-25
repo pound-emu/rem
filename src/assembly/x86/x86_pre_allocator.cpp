@@ -631,6 +631,40 @@ static void emit_as_is(x86_pre_allocator_context* result, ir_operation* operatio
 	);
 }
 
+static void emit_jump_conditional(x86_pre_allocator_context* result, ir_operation* operation)
+{
+	assert_operand_count(operation, 0, 3);
+
+	ir_operand label = operation->sources[0];
+
+	ir_operand left = operation->sources[1];
+	ir_operand right = operation->sources[2];
+
+	switch (operation->instruction)
+	{
+	case ir_jump_if_equal:
+	case ir_jump_if_not_equal:
+	{
+		if (ir_operand::is_constant(&left) && ir_operand::is_register(&right))
+		{
+			swap_operands(&left, &right);
+		}
+	}; break;
+	
+	default:
+		break;
+	}
+
+	left = register_or_constant(result, left);
+
+	if (ir_operand::is_constant(&right) && right.value >= INT32_MAX)
+	{
+		right = register_or_constant(result, right);
+	}
+
+	ir_operation_block::emits(result->ir, operation->instruction, label, left, right);
+}
+
 static void emit_vector_insert(x86_pre_allocator_context* result, ir_operation* operation)
 {
 	assert_operand_count(operation, 1, 4);
@@ -1260,6 +1294,20 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 			emit_as_is(pre_allocator_context, operation);
 		}; break;
 
+		case ir_jump_if_equal:
+        case ir_jump_if_not_equal:
+        case ir_jump_if_less_signed:	
+        case ir_jump_if_less_equal_signed:
+        case ir_jump_if_less_unsigned:	
+        case ir_jump_if_less_equal_unsigned:
+        case ir_jump_if_greater_signed:	
+        case ir_jump_if_greater_equal_signed:
+        case ir_jump_if_greater_unsigned:	
+        case ir_jump_if_greater_equal_unsigned:
+		{
+			emit_jump_conditional(pre_allocator_context, operation);
+		}; break;
+
 		case x86_shufpd:
 		case x86_shufps:
 		{
@@ -1332,7 +1380,7 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		}; break;
 
 		default: 
-		
+
 		throw_error();
 	}
 

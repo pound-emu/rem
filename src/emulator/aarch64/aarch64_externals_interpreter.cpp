@@ -125,6 +125,18 @@ void _branch_conditional_interpreter(interpreter_data* ctx, uint64_t yes, uint64
     }
 }
 
+void _branch_call_interpreter(interpreter_data* ctx, uint64_t location)
+{
+    ctx->branch_type = branch_type::long_branch;
+    ctx->current_pc = location;
+}
+
+void _return_from_call_interpreter(interpreter_data* ctx, uint64_t location)
+{
+    ctx->branch_type = branch_type::long_branch;
+    ctx->current_pc = location;
+}
+
 uint64_t get_vector_context_interpreter(interpreter_data* ctx)
 {
     aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;

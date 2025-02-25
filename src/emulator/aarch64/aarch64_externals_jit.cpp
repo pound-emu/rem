@@ -130,6 +130,25 @@ void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t condition_pass, uin
     ir_operation_block::mark_label(ctx->ir, end);
 }
 
+bool use_calling = true;
+
+void _branch_call_jit(ssa_emit_context* ctx, ir_operand location)
+{
+    if (ir_operand::is_constant(&location))
+    {
+        _branch_short_jit(ctx, location.value);
+    }
+    else
+    {
+        _branch_long_jit(ctx, location);
+    }  
+}
+
+void _return_from_call_jit(ssa_emit_context* ctx, ir_operand location)
+{
+    _branch_long_jit(ctx, location);
+}
+
 ir_operand get_vector_context_jit(ssa_emit_context* ctx)
 {
     aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;

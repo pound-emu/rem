@@ -21,30 +21,6 @@ static ir_control_flow_node* create_and_insert_node(intrusive_linked_list<ir_con
     return result;
 }
 
-static bool is_label(ir_operation* operation)
-{
-    switch (operation->instruction)
-    {
-        case ir_mark_label:
-            return true;
-    }
-
-    return false;
-}
-
-static bool is_jump(ir_operation* operation)
-{
-    switch (operation->instruction)
-    {
-        case ir_jump_if:
-        case ir_close_and_return:
-        case ir_table_jump:
-            return true;
-    }
-
-    return false;
-}
-
 static void establish_outward_connection(ir_control_flow_node* working, ir_control_flow_node* exit)
 {
     working->exit_count++;
@@ -66,7 +42,7 @@ static void get_linier_nodes(ir_control_flow_graph* result)
     {
         ir_operation working_operation = i->data;
 
-        if (is_label(&i->data))
+        if (ir_operation_block::is_label(&i->data))
         {
             if (working_node->label_id != -1)
             {
@@ -88,9 +64,9 @@ static void get_linier_nodes(ir_control_flow_graph* result)
             }
         }
 
-        bool next_is_label = (i->next != nullptr && is_label(&i->next->data));
+        bool next_is_label = (i->next != nullptr && ir_operation_block::is_label(&i->next->data));
 
-        if (is_jump(&working_operation) || next_is_label)
+        if (ir_operation_block::ends_control_flow(&working_operation) || next_is_label)
         {
             working_node->final_instruction = i;
 
@@ -105,18 +81,16 @@ static void get_linier_nodes(ir_control_flow_graph* result)
         if (i->data == nullptr)
             continue;
 
-        if (i->data->final_instruction->data.instruction != ir_jump_if && i->data->final_instruction->data.instruction != ir_no_operation)
+        if (!ir_operation_block::is_jump(&i->data->final_instruction->data) && i->data->final_instruction->data.instruction != ir_no_operation)
         {
             i->data->final_instruction = ir_operation_block::emits(result->source_ir, ir_no_operation, i->data->final_instruction);
         }
 
         auto last_operation = &i->data->final_instruction->data;
 
-        if (last_operation->instruction == ir_jump_if)
+        if (ir_operation_block::is_jump(last_operation))
         {
             int next_location = last_operation->sources[0].value;
-
-            ir_operand condition = last_operation->sources[1];
 
             if (label_map.find(next_location) == label_map.end())
             {
@@ -125,8 +99,10 @@ static void get_linier_nodes(ir_control_flow_graph* result)
 
             ir_control_flow_node* node_to_jump_to = label_map[next_location];
 
-            if (ir_operand::is_constant(&condition))
+            if (last_operation->instruction == ir_jump_if && ir_operand::is_constant(&last_operation->sources[1]))
             {
+                ir_operand condition = last_operation->sources[1];
+
                 if (condition.value)
                 {
                     establish_outward_connection(i->data, node_to_jump_to);

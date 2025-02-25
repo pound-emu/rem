@@ -82,12 +82,23 @@ enum ir_instructions : uint64_t
 
 	//Jumping
 	ir_jump_if,
+	ir_jump_if_equal,
+	ir_jump_if_not_equal,
+	ir_jump_if_less_signed,	
+	ir_jump_if_less_equal_signed,
+	ir_jump_if_less_unsigned,	
+	ir_jump_if_less_equal_unsigned,
+	ir_jump_if_greater_signed,	
+	ir_jump_if_greater_equal_signed,
+	ir_jump_if_greater_unsigned,	
+	ir_jump_if_greater_equal_unsigned,
 	ir_mark_label,
 
 	//Abi
 	ir_close_and_return,
 	ir_get_argument,
 	ir_external_call,
+	ir_internal_call,
 	ir_table_jump,
 
 	//Memory
@@ -262,12 +273,23 @@ static std::string instruction_names[] = {
 
 	//Jumping
 	"ir_jump_if",
+	"ir_jump_if_equal",
+	"ir_jump_if_not_equal",
+	"ir_jump_if_less_signed",	
+	"ir_jump_if_less_equal_signed",
+	"ir_jump_if_less_unsigned",	
+	"ir_jump_if_less_equal_unsigned",
+	"ir_jump_if_greater_signed",	
+	"ir_jump_if_greater_equal_signed",
+	"ir_jump_if_greater_unsigned",	
+	"ir_jump_if_greater_equal_unsigned",
 	"ir_mark_label",
 
 	//Abi
 	"ir_close_and_return",
 	"ir_get_argument",
 	"ir_external_call",
+	"ir_internal_call",
 	"ir_table_jump",
 
 	//Memory
@@ -431,8 +453,6 @@ struct ir_operation_block
 	static void 										clamp_operands(ir_operation_block* ir, bool use_bit_register_allocations, int* size_counts = nullptr);
 	static void 										ssa_remap(ir_operation_block* ir, std::unordered_map<uint64_t, uint64_t>* remap_data);
 
-	static bool 										is_flow_critical(uint64_t instruction);
-	static bool 										is_flow_critical(ir_operation* operation);
 	static ir_operand 									create_label(ir_operation_block* block);
 	static void 										mark_label(ir_operation_block* block, ir_operand label);
 	static void 										jump(ir_operation_block* block, ir_operand label);
@@ -445,6 +465,11 @@ struct ir_operation_block
 	static std::string 									get_block_log(ir_operation_block* ir);
 	static void 										log(ir_operation_block* ctx);
 	static void 										remove_redundant_moves(ir_operation_block* ctx);
+
+	static bool 										is_label(ir_operation* operation);
+	static bool 										is_jump(ir_operation* operation);
+	static bool 										is_compare(ir_operation* operation);
+	static bool 										ends_control_flow(ir_operation* operation);
 
 	static intrusive_linked_list_element<ir_operation>* emit(ir_operation_block* block,ir_operation operation, intrusive_linked_list_element<ir_operation>* point = nullptr);
 	static intrusive_linked_list_element<ir_operation>* emit_with(ir_operation_block* ir, uint64_t instruction, ir_operand* destinations, int destination_count, ir_operand* sources, int source_count, intrusive_linked_list_element<ir_operation>* point = nullptr);

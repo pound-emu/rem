@@ -193,7 +193,7 @@ void linier_scan_register_allocator_pass(ir_control_flow_graph* cfg)
     {
         lrsa_node* working_node = &working_nodes[i];
 
-        if (working_node->raw_node->final_instruction->data.instruction != ir_jump_if)
+        if (!ir_operation_block::is_jump(&working_node->raw_node->final_instruction->data))
             continue;
 
         for (auto exit = working_node->raw_node->exits->first; exit != nullptr; exit = exit->next)
