@@ -898,27 +898,19 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                 ir_operand destination = des[0];
                 ir_operand source = src[0];
 
-                if (is_global(context, source))
-                {
-                    continue;
-                }
-
-                if (is_global(context, destination))
-                {
-                    continue;
-                }
-
                 if (ir_operand::is_constant(&source))
-                {
                     continue;
-                }
+
+                if (is_global(context, source) || is_global(context, destination))
+                    continue;
+
+                if (usage_count[source.value] > 1)
+                    continue;
 
                 ir_operation* source_operation = declaration_location[source.value];
 
                 if (source_operation->destinations.count != 1)
-                {
                     continue;
-                }
 
                 bool is_compare = ir_operation_block::is_compare(source_operation);
 
@@ -940,14 +932,10 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                     ir_operand flipped_operand = src[0];
 
                     if (is_global(context,flipped_operand))
-                    {
                         continue;
-                    }
 
                     if (usage_count[flipped_operand.value] > 1)
-                    {
                         continue;
-                    }
 
                     ir_operation* source_operation = declaration_location[flipped_operand.value];
 
@@ -973,7 +961,6 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
 
                             is_done = false;
                         }; break;
-
                     }
                 }
             }; break;
@@ -989,15 +976,14 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
 
                 ir_operand address_operand = working_operation->sources[0];
 
-                if (is_global(context, address_operand))
-                {
+                if (ir_operand::is_constant(&address_operand))
                     continue;
-                }
+
+                if (is_global(context, address_operand))
+                    continue;
 
                 if (usage_count[address_operand.value] > 1)
-                {
                     continue;
-                }
 
                 ir_operation* source_operation = declaration_location[address_operand.value];
 
@@ -1005,9 +991,7 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                     continue;
 
                 if (source_operation->instruction != ir_add)
-                {
                     continue;
-                }
 
                 ir_operand new_sources[3];
 
@@ -1043,19 +1027,13 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                 ir_operand label = src[0];
 
                 if (ir_operand::is_constant(&condition))
-                {
                     continue;
-                }
 
                 if (is_global(context, condition))
-                {
                     continue;
-                }
 
                 if (usage_count[condition.value] > 1)
-                {
                     continue;
-                }
 
                 ir_operation* condition_source = declaration_location[condition.value];
 
@@ -1083,40 +1061,28 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
 
             case ir_move:
             {
-                if (!is_global(context, des[0]))
-                {
-                    continue;
-                }
-
-                if (is_global(context, src[0]))
-                {
-                    continue;
-                }
-
                 ir_operand destination_operand = des[0];
                 ir_operand source_operand = src[0];
 
                 if (ir_operand::is_constant(&source_operand))
-                {
                     continue;
-                }
+
+                if (!is_global(context, destination_operand))
+                    continue;
+
+                if (is_global(context, source_operand))
+                    continue;
 
                 ir_operation* local_declared_operation = declaration_location[source_operand.value];
 
                 if (local_declared_operation == nullptr)
-                {
                     continue;
-                }
 
                 if (usage_count[source_operand.value] > 1)
-                {
                     continue;
-                }
 
                 if (local_declared_operation->destinations.count == 0)
-                {
                     continue;
-                }
 
                 bool is_valid = true;
 
@@ -1125,9 +1091,7 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                     ir_operation* check_operation = &b->data;
 
                     if (check_operation == local_declared_operation)
-                    {
                         break;
-                    }
 
                     if (check_for_register_in_instruction(check_operation, destination_operand.value))
                     {
@@ -1138,9 +1102,7 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                 }
 
                 if (!is_valid)
-                {
                     continue;
-                }
 
                 for (int o = 0; o < local_declared_operation->destinations.count; ++o)
                 {
@@ -1150,12 +1112,12 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                     {
                         if (replace_candidate->meta_data != source_operand.meta_data)
                         {
-                            //is_valid = false;
+                            is_valid = false;
 
                             //IN A LOT OF CACES, THIS CAN BE IGNORED
                             //TODO, FIND THOSE CASES
 
-                            //break;
+                            break;
                         }
 
                         replace_candidate->value = destination_operand.value;
@@ -1163,9 +1125,7 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                 }
 
                 if (!is_valid)
-                {
                     continue;
-                }
 
                 nop_operation(working_operation);
 
