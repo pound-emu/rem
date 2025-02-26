@@ -26,7 +26,9 @@ struct ssa_node
     ir_control_flow_node*                                               raw_node;
     std::vector<std::unordered_map<uint64_t, global_usage_location*>>   declarations_global_info;
 
+    std::unordered_set<uint64_t>                                        declared_in_block;
     std::unordered_map<int, std::unordered_map<uint64_t, uint64_t>>     declaration_time_map;
+    std::unordered_map<uint64_t, int>                                   last_declared;
 
     std::vector<ssa_node*>                                              inlets;
     std::vector<ssa_node*>                                              outlets;
@@ -116,8 +118,23 @@ static void destroy_ssa_context(ssa_context* to_destroy)
     }
 }
 
-static bool look_for_and_connect_global_usage(ssa_node* look_at_node,global_usage_location* to_connect, uint64_t look_for_register, int time)
+static bool look_for_and_connect_global_usage(ssa_node* look_at_node,global_usage_location* to_connect, uint64_t look_for_register, int time, bool is_global)
 {
+    if (!in_set(&look_at_node->declared_in_block, look_for_register))
+    {
+        return false;
+    }
+
+    if (is_global)
+    {
+        if (!in_map(&look_at_node->last_declared, look_for_register))
+        {
+            throw_error();
+        }
+
+        time = look_at_node->last_declared[look_for_register];
+    }
+    
     for (; time != -1; -- time)
     {
         if (!in_map(&look_at_node->declarations_global_info[time], look_for_register))
@@ -126,8 +143,6 @@ static bool look_for_and_connect_global_usage(ssa_node* look_at_node,global_usag
         global_usage_location* working_connection = look_at_node->declarations_global_info[time][look_for_register];
 
         connect_global_usages(working_connection, to_connect);
-
-        //working_connection->is_global = true;
 
         return true;
     }
@@ -144,7 +159,7 @@ static void find_register_in_parents(ssa_node* look_at_node, uint64_t look_for_r
 
     visited->insert(look_at_node);
 
-    if (look_for_and_connect_global_usage(look_at_node,to_connect, look_for_register, look_at_node->declarations_global_info.size() - 1))
+    if (look_for_and_connect_global_usage(look_at_node,to_connect, look_for_register, look_at_node->declarations_global_info.size() - 1, true))
     {
         return;
     }
@@ -176,7 +191,7 @@ static void find_same_register_pools(ssa_node* node)
 
             this_global_usage->operand = current_source;
             
-            if (look_for_and_connect_global_usage(node, this_global_usage, current_source->value, time - 1))
+            if (look_for_and_connect_global_usage(node, this_global_usage, current_source->value, time - 1, false))
             {
                 continue;
             }
@@ -212,6 +227,8 @@ static void create_time_stamped_declaration_info(ssa_context* context)
             for (int i = 0; i < current_instruction->destinations.count; ++i)
             {
                 ir_operand* current_destination = &current_instruction->destinations[i];
+
+                ssa_node->declared_in_block.insert(current_destination->value);
     
                 data_at_time_stamp[current_destination->value] = create_global_usage_location(context, current_destination, time);
             }
@@ -219,6 +236,18 @@ static void create_time_stamped_declaration_info(ssa_context* context)
             ssa_node->declarations_global_info.push_back(data_at_time_stamp);
 
             time++;
+        }
+
+        int time_max = time;
+
+        for (time = 0; time < time_max; ++time)
+        {
+            std::unordered_map<uint64_t, global_usage_location*>* declarations_this_time = &ssa_node->declarations_global_info[time];
+
+            for (auto i : *declarations_this_time)
+            {
+                ssa_node->last_declared[i.first] = time;
+            }
         }
     }
 }
@@ -1112,12 +1141,12 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                     {
                         if (replace_candidate->meta_data != source_operand.meta_data)
                         {
-                            is_valid = false;
+                            //is_valid = false;
 
                             //IN A LOT OF CACES, THIS CAN BE IGNORED
                             //TODO, FIND THOSE CASES
 
-                            break;
+                            //break;
                         }
 
                         replace_candidate->value = destination_operand.value;
