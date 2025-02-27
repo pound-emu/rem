@@ -233,6 +233,15 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 
 		case ir_jump_if_equal:
 		case ir_jump_if_not_equal:
+		
+		case ir_jump_if_greater_equal_signed:	
+		case ir_jump_if_greater_equal_unsigned:	
+		case ir_jump_if_greater_signed:			
+		case ir_jump_if_greater_unsigned:		
+		case ir_jump_if_less_equal_signed:		
+		case ir_jump_if_less_equal_unsigned:	
+		case ir_jump_if_less_signed:			
+		case ir_jump_if_less_unsigned:			
 		{
 			ir_operand label_operand = working_operation.sources[0];
 			ir_operand left = working_operation.sources[1];

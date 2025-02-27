@@ -49,9 +49,11 @@ static void unmark_memory_executable(void* memory, uint64_t size)
 
 static uint64_t align_64_kb(uint64_t source)
 {
-    uint64_t mask = ~63ULL;
+    uint64_t page_size = 64 * 1024;
 
-    return (source & mask) + 64;
+    uint64_t mask = page_size - 1;
+
+    return (source & ~mask) + page_size;
 }
 
 bool jit_memory::create(jit_memory** result, uint64_t allocation_size, abi host_abi)
