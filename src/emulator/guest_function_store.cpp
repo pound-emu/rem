@@ -3,6 +3,111 @@
 #include "guest_process.h"
 #include "jit/jit_memory.h"
 
+static void retranslate_functions_worker(guest_function_store* context, std::vector<retranslate_request>* to_retranslate, int index)
+{
+    for (auto i : *to_retranslate)
+    {
+        translate_request_data process_context = i.process_context;
+
+        guest_function result = process_context.translate_function(&process_context,i.flags);
+
+        result.optimizations = i.flags;
+
+        if (i.flags & guest_compiler_optimization_flags::use_flt)
+        {   
+            fast_function_table::insert_function(&context->native_function_table, i.address, result.jit_offset);
+        }
+
+        context->main_translate_lock.lock();
+
+        context->functions[i.address] = result;
+
+        context->main_translate_lock.unlock();
+    }
+
+    if (index == -1)
+        return;
+
+    context->retranslator_workers[index] = false;
+
+    delete to_retranslate;
+}
+
+static void retranslate_functions_master(guest_function_store* context)
+{ 
+    context->retranslator_is_running = true;
+
+    context->retranslate_lock.lock();
+
+    auto to_retranslate = context->retranslate_requests;
+    context->retranslate_requests = std::vector<retranslate_request>();
+
+    context->retranslate_lock.unlock();
+
+    if (to_retranslate.size() == 0)
+    {
+        return;
+    }
+
+    int function_pool_count = to_retranslate.size() / THREAD_COUNT;
+
+    if (function_pool_count == 0)
+    {
+        retranslate_functions_worker(context, &to_retranslate, -1);
+    }
+    else
+    {
+        int current_thread = 0;
+        int global_place = 0;
+
+        while (true)
+        {    
+            std::vector<retranslate_request>* current_pool = new std::vector<retranslate_request>();
+
+            for (; global_place < to_retranslate.size(); ++global_place)
+            {
+                current_pool->push_back(to_retranslate[global_place]);
+
+                if (global_place % function_pool_count == 0 && global_place != 0)
+                {
+                    global_place++;
+
+                    break;
+                }
+            }
+
+            context->retranslator_workers[current_thread] = true;
+
+            std::thread(retranslate_functions_worker, context, current_pool, current_thread).detach();
+
+            if (current_thread < THREAD_COUNT)
+            {
+                current_thread++;
+            }
+
+            if (global_place >= to_retranslate.size())
+            {
+                break;
+            }
+        }
+    }
+
+    context->retranslator_is_running = false;
+}
+
+static bool no_worker_retranslating(guest_function_store* context)
+{
+    for (int i = 0; i < THREAD_COUNT; ++i)
+    {
+        if (context->retranslator_workers[i])
+        {
+            return true;
+        }
+    }
+
+    return true;
+}
+
 void guest_function_store::request_retranslate_function(guest_function_store* context, uint64_t address, guest_compiler_optimization_flags flags, translate_request_data process_context)
 {
     context->retranslate_lock.lock();
@@ -17,56 +122,12 @@ void guest_function_store::request_retranslate_function(guest_function_store* co
 
     context->retranslate_lock.unlock();
 
-    if (!context->retranslator_is_running)
+    if (!context->retranslator_is_running && no_worker_retranslating(context))
     {
         context->retranslator_is_running = true;
 
-        std::thread(guest_function_store::retranslate_functions, context).detach();
+        std::thread(retranslate_functions_master, context).detach();
     }
-}
-
-void guest_function_store::retranslate_functions(guest_function_store* context)
-{ 
-    context->retranslator_is_running = true;
-
-    int rest = 0;
-
-    while (1)
-    {
-        context->retranslate_lock.lock();
-
-        auto to_retranslate = context->retranslate_requests;
-        context->retranslate_requests = std::vector<retranslate_request>();
-
-        context->retranslate_lock.unlock();
-
-        if (to_retranslate.size() == 0)
-        {
-            break;
-        }
-
-        for (auto i : to_retranslate)
-        {
-            translate_request_data process_context = i.process_context;
-
-            guest_function result = process_context.translate_function(&process_context,i.flags);
-
-            result.optimizations = i.flags;
-
-            if (i.flags & guest_compiler_optimization_flags::use_flt)
-            {   
-                fast_function_table::insert_function(&context->native_function_table, i.address, result.jit_offset);
-            }
-
-            context->main_translate_lock.lock();
-
-            context->functions[i.address] = result;
-
-            context->main_translate_lock.unlock();
-        }
-    }  
-
-    context->retranslator_is_running = false;
 }
 
 guest_function guest_function_store::get_or_translate_function(guest_function_store* context, uint64_t address, translate_request_data* process_context, bool incrament_usage_counter)

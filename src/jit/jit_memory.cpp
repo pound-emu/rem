@@ -11,7 +11,16 @@
 
 static bool allocate_executable_memory(void** memory, uint64_t size)
 {
-    void* result = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    uint64_t map_info = MAP_PRIVATE | MAP_ANONYMOUS;
+    uint64_t map_proc = PROT_READ | PROT_WRITE;
+
+    #if defined(__APPLE__)
+        map_info |= MAP_JIT;
+    #else
+        map_proc |= PROT_EXEC;
+    #endif
+
+    void* result = mmap(NULL, size, map_proc, map_info , -1, 0);
 
     *memory = result;
 
@@ -47,20 +56,38 @@ static void unmark_memory_executable(void* memory, uint64_t size)
 
 #endif
 
-static uint64_t align_64_kb(uint64_t source)
+#define DEFAULT_KB_SIZE 4
+
+static uint64_t align_page_size(uint64_t source, int kb_size = DEFAULT_KB_SIZE)
 {
-    uint64_t page_size = 64 * 1024;
+    uint64_t page_size = kb_size * 1024;
 
     uint64_t mask = page_size - 1;
 
-    return (source & ~mask) + page_size;
+    uint64_t working_result = (source & ~mask);
+
+    if (source > working_result)
+    {
+        working_result += page_size;
+    }
+
+    return working_result;
+}
+
+static uint64_t align_page(uint64_t source, int kb_size = DEFAULT_KB_SIZE)
+{
+    uint64_t page_size = kb_size * 1024;
+
+    uint64_t mask = page_size - 1;
+
+    return source & ~mask;
 }
 
 bool jit_memory::create(jit_memory** result, uint64_t allocation_size, abi host_abi)
 {
     jit_memory* working_result = new jit_memory();
 
-    allocation_size = align_64_kb(allocation_size);
+    allocation_size = align_page_size(allocation_size, 4);
 
     working_result->host_abi = host_abi;
     working_result->memory_block_size = allocation_size;
@@ -77,11 +104,43 @@ void jit_memory::destroy(jit_memory* to_destroy)
     delete to_destroy;
 }
 
-void* jit_memory::coppy_over(jit_memory* jit_memory_context,uint64_t result_offset, void* source, uint64_t size)
+static void align_page_info(jit_memory* jit_memory_context, uint64_t* offset, uint64_t* size)
+{
+    *offset = align_page(*offset);
+    *size = align_page_size(*size);
+
+    *offset = (uint64_t)jit_memory_context->raw_memory_block + *offset;
+}
+
+static void ready_page_for_write(jit_memory* jit_memory_context, uint64_t result_offset, uint64_t size)
+{
+    align_page_info(jit_memory_context, &result_offset, &size);
+
+    mprotect((void*)result_offset, size, PROT_READ | PROT_WRITE);
+}
+
+static void ready_page_for_execution(jit_memory* jit_memory_context, uint64_t result_offset, uint64_t size)
+{
+    align_page_info(jit_memory_context, &result_offset, &size);
+
+    mprotect((void*)result_offset, size, PROT_READ | PROT_EXEC);
+}
+
+void* jit_memory::coppy_over(jit_memory* jit_memory_context, uint64_t result_offset, void* source, uint64_t size)
 {
     char* result_location = (char*)jit_memory_context->raw_memory_block + result_offset;
+
+    if (get_is_apple_silicon(jit_memory_context->host_abi))
+    {
+        ready_page_for_write(jit_memory_context, result_offset, size);
+    }
     
     memcpy(result_location, source, size);
+
+    if (get_is_apple_silicon(jit_memory_context->host_abi))
+    {
+        ready_page_for_execution(jit_memory_context, result_offset, size);
+    }
 
     return result_location;
 }

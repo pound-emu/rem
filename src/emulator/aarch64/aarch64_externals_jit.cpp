@@ -35,7 +35,7 @@ void _x_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
 ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id)
 {
     aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
-    aarch64_context_offsets offsets = actx->process->guest_context_offset_data;
+    aarch64_context_offsets offsets = *(aarch64_context_offsets*)actx->process->guest_context_data;
 
     switch (reg_id)
     {
@@ -56,7 +56,7 @@ ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id)
 void _sys_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value)
 {
     aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
-    aarch64_context_offsets offsets = actx->process->guest_context_offset_data;
+    aarch64_context_offsets offsets = *(aarch64_context_offsets*)actx->process->guest_context_data;
     
     switch (reg_id)
     {
@@ -154,7 +154,9 @@ ir_operand get_vector_context_jit(ssa_emit_context* ctx)
     aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
     guest_process* process = actx->process;
 
-    return ssa_emit_context::emit_ssa(ctx, ir_add, actx->context_pointer, ir_operand::create_con(process->guest_context_offset_data.q_offset));
+    aarch64_context_offsets offsets = *(aarch64_context_offsets*)actx->process->guest_context_data;
+
+    return ssa_emit_context::emit_ssa(ctx, ir_add, actx->context_pointer, ir_operand::create_con(offsets.q_offset));
 }
 
 void store_context_jit(ssa_emit_context* ctx)
@@ -267,7 +269,7 @@ uint64_t use_x86_lzcnt_jit(ssa_emit_context* ctx)
 static ir_operand x86_add_subtract_set_flags_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, bool is_add)
 {
     aarch64_emit_context* actx = (aarch64_emit_context*)ctx->context_data;
-    aarch64_context_offsets offsets = actx->process->guest_context_offset_data;
+    aarch64_context_offsets offsets = *(aarch64_context_offsets*)actx->process->guest_context_data;
 
     ir_operand result = ssa_emit_context::create_local(ctx, O);
 

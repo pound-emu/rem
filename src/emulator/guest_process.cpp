@@ -11,23 +11,6 @@
 #include <iostream>
 #include <iomanip>
 
-void guest_process::create(guest_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, aarch64_context_offsets arm_guest_data)
-{
-    result->guest_memory_context = guest_memory_context;
-    result->host_jit_context = host_jit_context;
-    result->guest_context_offset_data = arm_guest_data;
-
-    result->svc_function = nullptr;
-    result->undefined_instruction = nullptr;
-    result->debug_mode = false;
-    result->guest_functions.use_flt = true;
-
-    result->guest_functions.retranslator_is_running = false;
-    result->log_native = nullptr;
-
-    init_aarch64_decoder(result);
-}
-
 uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_function_address, void* arm_context)
 {
     translate_request_data translator_request = 
@@ -55,9 +38,9 @@ uint64_t guest_process::jit_function(guest_process* process, uint64_t guest_func
 
         case level_one:
         {
-            if (function_to_execute.times_executed == 10 && !process->debug_mode)
+            if (function_to_execute.times_executed == 50 && !process->debug_mode)
             {
-                guest_function_store::request_retranslate_function(&process->guest_functions,guest_function_address, level_three, translator_request); 
+                guest_function_store::request_retranslate_function(&process->guest_functions,guest_function_address, level_two, translator_request); 
             }
         } break;
 
@@ -118,9 +101,9 @@ guest_function guest_process::translate_function(translate_request_data* data, g
 
     aarch64_emit.translate_functions = true;
 
-    int instruction_limit = 10000;
+    int instruction_limit = INT32_MAX;
 
-    if ((flags & guest_compiler_optimization_flags::function_wide_translation) == 0)
+    if (!(flags & guest_compiler_optimization_flags::guest_function_wide_translation))
     {
         instruction_limit = 50;
     }
@@ -130,6 +113,18 @@ guest_function guest_process::translate_function(translate_request_data* data, g
     ssa_emit.memory_base = ssa_emit_context::create_global(&ssa_emit, int64);
     
     ir_operation_block::emitds(raw_ir, ir_move, ssa_emit.memory_base, ir_operand::create_con((uint64_t)process->guest_memory_context.base));
+
+    int backend_compiler_flags = (compiler_flags)0;
+
+    if (flags & guest_compiler_optimization_flags::guest_optimize_basic_ssa)
+    {
+        backend_compiler_flags = compiler_flags::optimize_basic_ssa;
+    }
+    
+    if (flags & guest_compiler_optimization_flags::guest_optimize_group_ssa)
+    {
+        backend_compiler_flags = compiler_flags::optimize_group_pool_ssa;
+    }
 
     while (true)
     {
@@ -164,9 +159,12 @@ guest_function guest_process::translate_function(translate_request_data* data, g
 
                 uint32_t raw_instruction = *(uint32_t*)instruction_address;
 
-                auto instruction_table = fixed_length_decoder<uint32_t>::decode_fast(&process->decoder, raw_instruction);
+                auto instruction_table = fixed_length_decoder<uint32_t>::decode_fast(&process->fixed_length_decoder_context, raw_instruction);
 
-                ssa_emit_context::reset_local(&ssa_emit);
+                if (!(backend_compiler_flags & guest_compiler_optimization_flags::guest_optimize_basic_ssa))
+                {
+                    ssa_emit_context::reset_local(&ssa_emit);
+                }
 
                 if (instruction_table == nullptr)
                 {
@@ -214,25 +212,13 @@ guest_function guest_process::translate_function(translate_request_data* data, g
     
     aarch64_emit_context::emit_context_movement(&aarch64_emit);
 
-    int backend_compiler_flags = (compiler_flags)0;
-
-    if (flags & guest_compiler_optimization_flags::guest_optimize_ssa)
-    {
-        backend_compiler_flags = compiler_flags::optimize_ssa;
-    }
-    
-    if (flags & guest_compiler_optimization_flags::guest_optimize_mathmatical_fold)
-    {
-        backend_compiler_flags = compiler_flags::optimize_ssa | compiler_flags::mathmatical_fold;
-    }
-
     uint64_t code_size;
 
     void* code = jit_context::compile_code(process->host_jit_context, raw_ir,(compiler_flags)backend_compiler_flags, &code_size);
 
     if (((guest_process*)data->process)->log_native != nullptr && flags == guest_compiler_optimization_flags::level_three)
     {
-        //((void(*)(void*, int))((guest_process*)data->process)->log_native)(code, code_size);
+        ((void(*)(void*, int))((guest_process*)data->process)->log_native)(code, code_size);
     }
 
     guest_function result;
@@ -269,7 +255,7 @@ uint64_t guest_process::interperate_function(guest_process* process, uint64_t gu
 
         interpreter.current_instruction = instruction;
 
-        auto table = fixed_length_decoder<uint32_t>::decode_fast(&process->decoder, instruction);
+        auto table = fixed_length_decoder<uint32_t>::decode_fast(&process->fixed_length_decoder_context, instruction);
 
         if (table == nullptr)
         {
@@ -317,6 +303,52 @@ void guest_process::create(guest_process* result, guest_memory memory, jit_conte
         default: throw_error();
     }
 }
+
+void guest_process::create_guest_process(guest_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, void* context_data, int context_data_size, cpu_type cpu, cpu_size size, memory_order order)
+{
+    result->guest_memory_context = guest_memory_context;
+    result->host_jit_context = host_jit_context;
+    
+    if (context_data != nullptr)
+    {
+        memcpy(result->guest_context_data, context_data, context_data_size);
+    }
+
+    result->svc_function = nullptr;
+    result->undefined_instruction = nullptr;
+    result->debug_mode = false;
+    result->guest_functions.use_flt = true;
+
+    memset(result->guest_functions.retranslator_workers, 0, sizeof(guest_function_store::retranslator_workers));
+
+    result->guest_functions.retranslator_is_running = false;
+    result->log_native = nullptr;
+
+    switch (cpu)
+    {
+        case arm:
+        {
+            switch (size)
+            {
+                case _64_bit:
+                {
+                    init_aarch64_decoder(result);
+                }; break;
+
+                default:
+                {
+                    throw_error();
+                }; break;
+            } 
+        }; break;
+
+        default:
+        {
+            throw_error();
+        }; break;
+    }
+}
+
 
 void guest_process::destroy(guest_process* process)
 {

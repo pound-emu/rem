@@ -19,7 +19,7 @@ uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address)
 
 uint64_t _x_interpreter(interpreter_data* ctx, uint64_t reg_id)
 {
-    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+    aarch64_context_offsets* offsets = (aarch64_context_offsets*)ctx->process_context->guest_context_data;
 
     assert(reg_id >= 0 && reg_id <= 32);
     
@@ -28,7 +28,7 @@ uint64_t _x_interpreter(interpreter_data* ctx, uint64_t reg_id)
 
 void _x_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 {
-    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+    aarch64_context_offsets* offsets = (aarch64_context_offsets*)ctx->process_context->guest_context_data;
 
     assert(reg_id >= 0 && reg_id <= 32);
 
@@ -37,7 +37,7 @@ void _x_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 
 uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id)
 {
-    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+    aarch64_context_offsets* offsets = (aarch64_context_offsets*)ctx->process_context->guest_context_data;
 
     switch (reg_id)
     {
@@ -57,7 +57,7 @@ uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id)
 
 void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 {
-    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+    aarch64_context_offsets* offsets = (aarch64_context_offsets*)ctx->process_context->guest_context_data;
 
     switch (reg_id)
     {
@@ -77,7 +77,7 @@ void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value)
 
 uint128_t V_interpreter(interpreter_data* ctx, uint64_t reg_id)
 {
-    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+    aarch64_context_offsets* offsets = (aarch64_context_offsets*)ctx->process_context->guest_context_data;
 
     assert(reg_id >= 0 && reg_id <= 32);
 
@@ -88,7 +88,7 @@ uint128_t V_interpreter(interpreter_data* ctx, uint64_t reg_id)
 
 void V_interpreter(interpreter_data* ctx, uint64_t reg_id, uint128_t value)
 {
-    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+    aarch64_context_offsets* offsets = (aarch64_context_offsets*)ctx->process_context->guest_context_data;
 
     assert(reg_id >= 0 && reg_id <= 32);
 
@@ -139,7 +139,7 @@ void _return_from_call_interpreter(interpreter_data* ctx, uint64_t location)
 
 uint64_t get_vector_context_interpreter(interpreter_data* ctx)
 {
-    aarch64_context_offsets* offsets = &ctx->process_context->guest_context_offset_data;
+    aarch64_context_offsets* offsets = (aarch64_context_offsets*)ctx->process_context->guest_context_data;
 
 	void* data_pointer = (char*)ctx->register_data + offsets->q_offset;
 

@@ -8,8 +8,11 @@
 #include "ir/undefined_behavior_check.h"
 
 #include <iostream>
+#include <fstream>
 
-void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir_operation_block* source_ir, bool optimize, abi working_abi, compiler_flags flags)
+int id = 0;
+
+void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir_operation_block* source_ir, abi working_abi, compiler_flags flags)
 {
 	arena_allocator* allocator = source_ir->allocator;
 	
@@ -32,9 +35,13 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 		source_ir = undefined_behavior_checked_code;
 	}
 
-	if (flags & optimize_ssa)
+	bool use_lrsa_hints = false;
+
+	if ((flags & optimize_basic_ssa) || (flags & optimize_group_pool_ssa))
 	{
-		convert_to_ssa(source_ir, flags & mathmatical_fold);
+		convert_to_ssa(source_ir, flags);
+		
+		use_lrsa_hints = true;
 	}
 	
 	x86_pre_allocator_context::run_pass(&pre_allocation_data, pre_allocated_code, source_ir, working_abi.cpu,working_abi.os);
@@ -61,8 +68,25 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 			(uint32_t)pre_allocation_data.opernad_counts[0] 
 		},
 		
-		RSP(ir_operand_meta::int64)
+		RSP(ir_operand_meta::int64),
+
+		use_lrsa_hints
 	);
+
+	/*
+    if (flags & compiler_flags::optimize_group_pool_ssa)
+    {
+        std::ofstream str;
+
+        id++;
+
+        str.open("/media/linvirt/partish/tmp/" + std::to_string(id));
+
+        str << ir_operation_block::get_block_log(register_allocated_code);
+
+        str.close();
+    }
+		*/
 
 	assemble_x86_64_code(result_code, result_code_size, register_allocated_code);
 }

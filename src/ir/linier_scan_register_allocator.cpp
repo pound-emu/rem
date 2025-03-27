@@ -7,6 +7,7 @@
 #include <unordered_map>
 
 struct register_lifetime;
+struct lrsa_node;
 
 struct register_lifetime
 {
@@ -17,8 +18,11 @@ struct register_lifetime
 
     int             first_use_after_birth_location;
 
-    register_lifetime*  birth_lifetime;
-    ir_operation*       birth_instruction;
+    bool            is_vector;
+
+    ir_operation*   birth_instruction;
+    lrsa_node*      birth_node;
+    lrsa_node*      death_node;
 
     static bool in_interval(register_lifetime* lifetime, int time)
     {
@@ -48,7 +52,7 @@ struct register_lifetime
         context->birth_instruction = birth_instruction;
     }
 
-    static register_lifetime create(uint64_t source_register, int time, ir_operation* birth_instruction)
+    static register_lifetime create(uint64_t source_register, int time, ir_operation* birth_instruction, lrsa_node* birth_node)
     {
         register_lifetime result;
 
@@ -56,6 +60,7 @@ struct register_lifetime
         result.birth = time;
         result.death = time;
         result.first_use_after_birth_location = result.birth;
+        result.birth_node = birth_node;
 
         set_birth_instruction(&result, birth_instruction);
 
@@ -65,19 +70,33 @@ struct register_lifetime
 
 struct loop_data
 {
-    int check_location;
-    int loop_end;
+    int         check_location;
+    lrsa_node*  loop_end_node;
+};
+
+struct known_global
+{
+    uint64_t    reg;
+    bool        is_vector;
+
+    known_global()
+    {
+        //
+    }
 };
 
 struct lrsa_node
 {
-    ir_control_flow_node*   raw_node;
-    
-    int                     start_time;
-    int                     end_time;
+    ir_control_flow_node*                                   raw_node;
+    intrusive_linked_list_element<ir_control_flow_node*>*   raw_node_element;
+
+    int                                                     start_time;
+    int                                                     end_time;
+
+    std::vector<known_global>                               known_globals;
 };
 
-static void find_lifetimes_first_last(std::unordered_map<uint64_t, register_lifetime>* lifetimes,ir_operand* operands, ir_operation* working_operation, int operand_count, int time, int is_source)
+static void find_lifetimes_first_last(std::unordered_map<uint64_t, register_lifetime>* lifetimes,ir_operand* operands, ir_operation* working_operation, int operand_count, int time, int is_source, lrsa_node* working_node)
 {
     for (int i = 0; i < operand_count; ++i)
     {
@@ -94,11 +113,14 @@ static void find_lifetimes_first_last(std::unordered_map<uint64_t, register_life
 
         if (!in_map(lifetimes, working_register))
         {
-            (*lifetimes)[working_register] = register_lifetime::create(working_register, time, working_operation);
+            (*lifetimes)[working_register] = register_lifetime::create(working_register, time, working_operation, working_node);
         }
 
         lifetime_reference = &(*lifetimes)[working_register];
 
+        lifetime_reference->is_vector = ir_operand::is_vector(&working);
+
+        lifetime_reference->death_node = working_node;
         lifetime_reference->death = time;
 
         if (is_source && lifetime_reference->death > lifetime_reference->birth)
@@ -139,10 +161,9 @@ int find_and_use_slot(bool* slots, int max)
 void linier_scan_register_allocator_pass(ir_control_flow_graph* cfg)
 {
     std::unordered_map<uint64_t, register_lifetime> all_intervals;
+    std::unordered_map<ir_control_flow_node*, lrsa_node*> node_map;
 
     int time = 0;
-
-    std::unordered_map<ir_control_flow_node*, lrsa_node*> node_map;
 
     int node_count = 0;
 
@@ -163,12 +184,13 @@ void linier_scan_register_allocator_pass(ir_control_flow_graph* cfg)
         if (i->data == nullptr)
             continue;
 
-        lrsa_node* temp_node = &working_nodes[node_count];
+        lrsa_node* working_node = &working_nodes[node_count];
 
-        temp_node->start_time = time;
-        temp_node->raw_node = i->data;
+        working_node->start_time = time;
+        working_node->raw_node = i->data;
+        working_node->raw_node_element = i;
 
-        node_map[i->data] = temp_node;
+        node_map[i->data] = working_node;
 
         auto raw_node = i->data;
 
@@ -176,13 +198,13 @@ void linier_scan_register_allocator_pass(ir_control_flow_graph* cfg)
         {
             ir_operation* working_operation = &ins->data;
 
-            find_lifetimes_first_last(&all_intervals, working_operation->destinations.data, working_operation,working_operation->destinations.count, time, false);
-            find_lifetimes_first_last(&all_intervals, working_operation->sources.data, working_operation,working_operation->sources.count, time, true);
+            find_lifetimes_first_last(&all_intervals, working_operation->destinations.data, working_operation,working_operation->destinations.count, time, false, working_node);
+            find_lifetimes_first_last(&all_intervals, working_operation->sources.data, working_operation,working_operation->sources.count, time, true, working_node);
 
             time++;
         }
 
-        temp_node->end_time = time;
+        working_node->end_time = time;
 
         node_count++;
     }
@@ -209,7 +231,8 @@ void linier_scan_register_allocator_pass(ir_control_flow_graph* cfg)
             loop_data this_loop;
 
             this_loop.check_location = working_jump->start_time;
-            this_loop.loop_end = working_node->end_time;
+
+            this_loop.loop_end_node = working_node;
 
             loops.push_back(this_loop);
         }
@@ -226,9 +249,12 @@ void linier_scan_register_allocator_pass(ir_control_flow_graph* cfg)
             if (!register_lifetime::in_interval(working_lifetime,loop->check_location))
                 continue;
 
-            if (loop->loop_end > working_lifetime->death)
+            int loop_end_time = loop->loop_end_node->end_time;
+
+            if (loop_end_time > working_lifetime->death)
             {
-                working_lifetime->death = loop->loop_end;
+                working_lifetime->death = loop_end_time;
+                working_lifetime->death_node = loop->loop_end_node;
             }
         }
     }
@@ -244,10 +270,51 @@ void linier_scan_register_allocator_pass(ir_control_flow_graph* cfg)
 
     for (auto i : all_intervals)
     {
-        register_lifetime lifetime = i.second;
+        register_lifetime* lifetime = &all_intervals[i.first];
 
-        births[lifetime.birth].push_back(lifetime.source_register);
-        deaths[lifetime.death].push_back(lifetime.source_register);
+        births[lifetime->birth].push_back(lifetime->source_register);
+        deaths[lifetime->death].push_back(lifetime->source_register);
+
+        if (lifetime->birth_node == lifetime->death_node)
+            continue;
+
+        lrsa_node* birth = lifetime->birth_node;
+        lrsa_node* death = lifetime->death_node;
+
+        for (auto element = birth->raw_node_element; element != death->raw_node_element->next; element = element->next)
+        {
+            lrsa_node* working_node = node_map[element->data];
+            
+            known_global data;
+
+            data.is_vector = i.second.is_vector;
+            data.reg = i.first;
+            
+            working_node->known_globals.push_back(data);
+        }
+    }
+
+    for (int i = 0; i < node_count; ++i)
+    {
+        lrsa_node* working_node = &working_nodes[i];
+
+        int source_count = working_node->known_globals.size();
+
+        if (source_count == 0)
+            continue;
+
+        ir_operand sources[source_count];
+
+        for (int o = 0; o < source_count; ++o)
+        {
+            known_global data = working_node->known_globals[o];
+
+            ir_operand source = ir_operand::create_reg(data.reg, int64 + data.is_vector);
+
+            sources[o] = source;
+        }
+
+        ir_operation_block::emit_with(cfg->source_ir, ir_register_allocator_hint_global, nullptr, 0, sources, source_count, working_node->raw_node->entry_instruction);
     }
 
     std::unordered_map<uint64_t, uint64_t> working_remap;

@@ -11,7 +11,9 @@ void aarch64_emit_context::create(guest_process* process, aarch64_emit_context* 
     result->translate_functions = false;
     result->optimization_flags = flags;
 
-    guest_register_store::create(&result->registers, ssa, process->guest_context_offset_data.context_size);
+    aarch64_context_offsets offsets = *(aarch64_context_offsets*)process->guest_context_data;
+
+    guest_register_store::create(&result->registers, ssa, offsets.context_size);
 }
 
 void aarch64_emit_context::init_context(aarch64_emit_context* ctx)
@@ -23,7 +25,7 @@ void aarch64_emit_context::init_context(aarch64_emit_context* ctx)
 
     ir_operation_block::emitds(ir, ir_get_argument, ctx->context_pointer,ir_operand::create_con(0));
     
-    aarch64_context_offsets offsets = process->guest_context_offset_data;
+    aarch64_context_offsets offsets = *(aarch64_context_offsets*)process->guest_context_data;
 
     for (int i = 0; i < 32; ++i)
     {
@@ -173,14 +175,18 @@ void aarch64_emit_context::emit_context_movement(aarch64_emit_context* ctx)
 
 static int get_x_location(aarch64_emit_context* ctx, int index)
 {
-    int x_location = ctx->process->guest_context_offset_data.x_offset + (index * 8);
+    aarch64_context_offsets offsets = *(aarch64_context_offsets*)ctx->process->guest_context_data;
+
+    int x_location = offsets.x_offset + (index * 8);
 
     return x_location;
 }
 
 static int get_v_location(aarch64_emit_context* ctx, int index)
 {
-    int v_location = ctx->process->guest_context_offset_data.q_offset + (index * 16);
+    aarch64_context_offsets offsets = *(aarch64_context_offsets*)ctx->process->guest_context_data;
+
+    int v_location = offsets.q_offset + (index * 16);
 
     return v_location;
 }

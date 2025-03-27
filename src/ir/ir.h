@@ -76,6 +76,20 @@ enum ir_instructions : uint64_t
 	ir_ternary_begin,
 
 	ir_conditional_select,
+	
+	/*
+	ir_conditional_select_equal,
+	ir_conditional_select_not_equal,
+	ir_conditional_select_less_signed,
+	ir_conditional_select_less_unsigned,
+	ir_conditional_select_greater_signed,
+	ir_conditional_select_greater_unsigned,
+	ir_conditional_select_less_equal_signed,
+	ir_conditional_select_less_equal_unsigned,
+	ir_conditional_select_greater_equal_signed,
+	ir_conditional_select_greater_equal_unsigned,
+	*/
+
 	ir_double_shift_right,
 
 	ir_ternary_end,
@@ -110,6 +124,7 @@ enum ir_instructions : uint64_t
 	ir_open_context,
 	ir_register_allocator_p_lock,
 	ir_register_allocator_p_unlock,
+	ir_register_allocator_hint_global,
 	ir_ssa_phi,
 
 	//Vectors
@@ -301,6 +316,7 @@ static std::string instruction_names[] = {
 	"ir_open_context",
 	"ir_register_allocator_p_lock",
 	"ir_register_allocator_p_unlock",
+	"ir_register_allocator_hint_global",
 	"ir_ssa_phi",
 
 	//Vectors

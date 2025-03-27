@@ -6,6 +6,8 @@
 
 #include "rarma.h"
 
-void assemble_aarch64_abi_caller_code(void* result_code, uint64_t* result_code_size, abi abi_information);
+struct jit_context;
+
+void create_aarch64_caller(jit_context* result, abi abi_information);
 
 #endif

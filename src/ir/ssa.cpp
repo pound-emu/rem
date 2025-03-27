@@ -47,6 +47,38 @@ struct ssa_context
     std::vector<global_usage_location*>                     global_usage_pool;
 };
 
+static bool unpredictable_96_bits(ir_instructions instruction)
+{
+    switch (instruction)
+    {
+        case x86_addss:
+        case x86_divss:
+        case x86_maxss:
+        case x86_minss:
+        case x86_mulss:
+        case x86_subss:
+            return true;
+    }
+
+    return false;
+}
+
+static bool unpredictable_64_bits(ir_instructions instruction)
+{
+    switch (instruction)
+    {
+        case x86_addsd:
+        case x86_divsd:
+        case x86_maxsd:
+        case x86_minsd:
+        case x86_mulsd:
+        case x86_subsd:
+            return true;
+    }
+
+    return false;
+}
+
 static void connect_global_usages(global_usage_location* a, global_usage_location* b)
 {
     intrusive_linked_list<global_usage_location*>::insert_element(a->connections, b);
@@ -119,29 +151,36 @@ static void destroy_ssa_context(ssa_context* to_destroy)
     }
 }
 
-static bool look_for_and_connect_global_usage(ssa_node* look_at_node,global_usage_location* to_connect, uint64_t look_for_register, int time, bool is_global)
+static bool look_for_and_connect_global_usage(ssa_node* node,global_usage_location* to_connect, uint64_t look_for_register, int time, bool is_global)
 {
-    if (!in_set(&look_at_node->declared_in_block, look_for_register))
+    if (!in_set(&node->declared_in_block, look_for_register))
     {
+        if (in_map(&node->cached_global_declarations, look_for_register))
+        {
+            connect_global_usages(to_connect,node->cached_global_declarations[look_for_register]);
+
+            return true;
+        }
+
         return false;
     }
 
     if (is_global)
     {
-        if (!in_map(&look_at_node->last_declared, look_for_register))
+        if (!in_map(&node->last_declared, look_for_register))
         {
             throw_error();
         }
 
-        time = look_at_node->last_declared[look_for_register];
+        time = node->last_declared[look_for_register];
     }
     
     for (; time != -1; -- time)
     {
-        if (!in_map(&look_at_node->declarations_global_info[time], look_for_register))
+        if (!in_map(&node->declarations_global_info[time], look_for_register))
             continue;
 
-        global_usage_location* working_connection = look_at_node->declarations_global_info[time][look_for_register];
+        global_usage_location* working_connection = node->declarations_global_info[time][look_for_register];
 
         connect_global_usages(working_connection, to_connect);
 
@@ -169,6 +208,8 @@ static void find_register_in_parents(ssa_node* look_at_node, uint64_t look_for_r
     {
         find_register_in_parents(i, look_for_register, to_connect, visited);
     }
+
+    look_at_node->cached_global_declarations[look_for_register] = to_connect;
 }
 
 static void find_same_register_pools(ssa_node* node)
@@ -194,13 +235,6 @@ static void find_same_register_pools(ssa_node* node)
             
             if (look_for_and_connect_global_usage(node, this_global_usage, current_source->value, time - 1, false))
             {
-                continue;
-            }
-
-            if (in_map(&node->cached_global_declarations, current_source->value))
-            {
-                connect_global_usages(this_global_usage,node->cached_global_declarations[current_source->value]);
-
                 continue;
             }
 
@@ -284,6 +318,57 @@ static void remap_global_usage(global_usage_location* to_remap, std::unordered_s
     }
 }
 
+static uint64_t find_and_remap_basic_block_globals(ssa_context* context)
+{
+    std::unordered_map<uint64_t, std::unordered_set<ssa_node*>> global_register_usage;
+
+    for (auto node : context->ssa_nodes)
+    {
+        auto raw_node = node->raw_node;
+
+        for (auto ins = raw_node->entry_instruction; ins != raw_node->final_instruction->next; ins = ins->next)
+        {
+            ir_operation* working_instruction = &ins->data;
+
+            for (int o = 0; o < working_instruction->destinations.count; ++o)
+            {
+                ir_operand working_operand = working_instruction->destinations[o];
+                
+                global_register_usage[working_operand.value].insert(node);
+            }
+
+            for (int o = 0; o < working_instruction->sources.count; ++o)
+            {
+                ir_operand working_operand = working_instruction->sources[o];
+
+                if (ir_operand::is_constant(&working_operand))
+                {
+                    continue;
+                }
+                
+                global_register_usage[working_operand.value].insert(node);
+            }
+        }
+    }
+
+    std::unordered_map<uint64_t, uint64_t> global_remap;
+    int count = 0;
+
+    for (auto o : global_register_usage)
+    {
+        if (o.second.size() <= 1)
+            continue;
+
+        global_remap[o.first] = count;
+
+        count++;
+    }
+
+    ir_operation_block::ssa_remap(context->ir, &global_remap);
+    
+    return count;
+}
+
 static uint64_t find_and_remap_true_globals(ssa_context* context)
 {
     for (auto i : context->ssa_nodes)
@@ -341,6 +426,19 @@ static bool is_global(ssa_context* context, ir_operand working_register)
         return false;
 
     return is_global(context, working_register.value);
+}
+
+static bool any_global(ssa_context* context, ir_operand* registers, int count)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        if (is_global(context, registers[i]))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 uint64_t look_for_local_at_time(ssa_node* node, int time, uint64_t to_look_for)
@@ -515,6 +613,11 @@ static bool optimize_math(ssa_node* working_node)
         ir_operand* des = working_operation->destinations.data;
         ir_operand* src = working_operation->sources.data;
 
+        if (instruction_is_commutative(working_operation->instruction) && working_operation->sources.count == 2 && ir_operand::is_constant(&src[0]) && ir_operand::is_register(&src[1]))
+        {
+            swap_operands(&working_operation->sources[0], &working_operation->sources[1]);
+        }
+
         switch (working_operation->instruction)
         {
             case ir_bitwise_and:
@@ -539,6 +642,53 @@ static bool optimize_math(ssa_node* working_node)
 
                     is_done = false;
                 }
+                else if (check_constant(src[1]))
+                {
+                    switch (src[1].value)
+                    {
+                        case UINT8_MAX:
+                        {
+                            working_operation->instruction = ir_move;
+                            working_operation->sources.count = 1;
+
+                            des[0] = ir_operand::copy_new_raw_size(des[0], int8);
+                            src[0] = ir_operand::copy_new_raw_size(src[0], int8);
+
+                            is_done = false;
+                        }; break;
+
+                        case UINT16_MAX:
+                        {
+                            working_operation->instruction = ir_move;
+                            working_operation->sources.count = 1;
+
+                            des[0] = ir_operand::copy_new_raw_size(des[0], int16);
+                            src[0] = ir_operand::copy_new_raw_size(src[0], int16);
+
+                            is_done = false;
+                        }; break;
+
+                        case UINT32_MAX:
+                        {
+                            working_operation->instruction = ir_move;
+                            working_operation->sources.count = 1;
+
+                            des[0] = ir_operand::copy_new_raw_size(des[0], int32);
+                            src[0] = ir_operand::copy_new_raw_size(src[0], int32);
+
+                            is_done = false;
+                        }; break;
+
+                        case UINT64_MAX:
+                        {
+                            convert_to_move(working_operation, src[0]);
+
+                            is_done = false;
+                        }; break;
+                    default:
+                        break;
+                    }
+                }
             }; break;
 
             case ir_multiply:
@@ -548,6 +698,26 @@ static bool optimize_math(ssa_node* working_node)
                     uint64_t value = src[0].value * src[1].value;
 
                     convert_to_move(working_operation, ir_operand::create_con(value, des[0].meta_data));
+
+                    is_done = false;
+                }
+                else if (check_constant(src[1], 0))
+                {
+                    convert_to_move(working_operation, ir_operand::create_con(0));
+
+                    is_done = false;
+                }
+                else if (check_constant(src[1], 1))
+                {
+                    convert_to_move(working_operation, src[0]);
+
+                    is_done = false;
+                }
+                else if (check_constant(src[1], 2))
+                {
+                    working_operation->instruction = ir_shift_left;
+
+                    src[1] = ir_operand::create_con(1, src[1].meta_data);
 
                     is_done = false;
                 }
@@ -700,7 +870,6 @@ static bool optimize_math(ssa_node* working_node)
 
                     is_done = false;
                 }
-
             }; break;
 
             case ir_decrament:
@@ -953,11 +1122,6 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
         ir_operand* src = working_operation->sources.data;
         ir_operand* des = working_operation->destinations.data;
 
-        if (instruction_is_commutative(working_operation->instruction) && working_operation->sources.count == 2 && ir_operand::is_constant(&src[0]) && ir_operand::is_register(&src[1]))
-        {
-            swap_operands(&working_operation->sources[0], &working_operation->sources[1]);
-        }
-
         switch (working_operation->instruction)
         {
             case ir_zero_extend:
@@ -990,6 +1154,129 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
                 src[0].meta_data = int64;
 
                 is_done = false;
+            }; break;
+
+            case x86_sub_flags:
+            {
+                ir_operand result = des[0];
+                ir_operand n = des[1];
+                ir_operand z = des[2];
+                ir_operand c = des[3];
+                ir_operand v = des[4];
+
+                if (any_global(context, des, 5))
+                {
+                    continue;
+                }
+
+                if (usage_count[result.value] > 0)
+                {
+                    continue;
+                }
+                
+                if (
+                    usage_count[n.value] == 0 &&
+                    usage_count[z.value] == 1 &&
+                    usage_count[c.value] == 0 &&
+                    usage_count[v.value] == 0
+                )
+                {
+                    ir_operation* z_usage_instruction = nullptr;
+
+                    for (auto look = i->next; look != raw_node->final_instruction->next; look = look->next)
+                    {   
+                        ir_operation* check_instruction = &look->data;
+
+                        if (check_for_register_in_instruction(check_instruction, z.value))
+                        {
+                            z_usage_instruction = check_instruction;
+
+                            break;
+                        }
+                    }
+
+                    if (z_usage_instruction == nullptr)
+                    {
+                        throw_error();
+                    }
+
+                    if (z_usage_instruction->instruction != ir_compare_equal && z_usage_instruction->instruction != ir_compare_not_equal)
+                    {
+                        continue;
+                    }
+
+                    if (!check_constant(src[1], 1))
+                    {
+                        continue;
+                    }
+
+                    ir_operand destination = z_usage_instruction->destinations.data[0];
+
+                    working_operation->destinations.count = 1;
+                    des[0] = ir_operand::copy_new_raw_size(destination, des[0].meta_data);
+
+                    working_operation->instruction = z_usage_instruction->instruction;
+
+                    nop_operation(z_usage_instruction);
+
+                    is_done = false;
+                }
+                else if (
+                    usage_count[n.value] == 0 &&
+                    usage_count[z.value] == 0 &&
+                    usage_count[c.value] == 1 &&
+                    usage_count[v.value] == 0
+                )
+                {
+                    ir_operation* c_usage_instruction = nullptr;
+
+                    for (auto check = i->next; check != raw_node->final_instruction->next; check = check->next)
+                    {   
+                        ir_operation* check_instruction = &check->data;
+
+                        if (check_for_register_in_instruction(check_instruction, c.value))
+                        {
+                            c_usage_instruction = check_instruction;
+
+                            break;
+                        }
+                    }
+
+                    if (c_usage_instruction == nullptr)
+                    {
+                        throw_error();
+                    }
+
+                    ir_instructions replacement_instruction;
+
+                    switch (c_usage_instruction->instruction)
+                    {
+                        case ir_compare_equal:      replacement_instruction = ir_compare_greater_equal_unsigned; break;
+                        case ir_compare_not_equal:  replacement_instruction = ir_compare_less_unsigned; break;
+
+                        default:
+                            {
+                                continue;
+                            }; break;
+                    }
+
+                    if (!check_constant(src[1], 1))
+                    {
+                        continue;
+                    }
+
+                    ir_operand destination = c_usage_instruction->destinations.data[0];
+
+                    working_operation->destinations.count = 1;
+                    des[0] = ir_operand::copy_new_raw_size(destination, des[0].meta_data);
+
+                    working_operation->instruction = replacement_instruction;
+
+                    nop_operation(c_usage_instruction);
+
+                    is_done = false;
+                }
+
             }; break;
 
             case ir_bitwise_exclusive_or:
@@ -1192,14 +1479,16 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
     
                         if (replace_candidate->value == source_operand.value)
                         {
-                            if (replace_candidate->meta_data != source_operand.meta_data)
-                            {
-                                //is_valid = false;
-    
+                            if (ir_operand::get_raw_size(replace_candidate) > ir_operand::get_raw_size(&source_operand))
+                            {    
                                 //IN A LOT OF CACES, THIS CAN BE IGNORED
                                 //TODO, FIND THOSE CASES
     
-                                //break;
+                                is_valid = false;
+
+                                working_operation->instruction = ir_zero_extend;
+                                
+                                break;
                             }
     
                             replace_candidate->value = destination_operand.value;
@@ -1293,6 +1582,18 @@ static bool optimize_multiple_instructions(ssa_node* working_node)
             }; break;
         
         default:
+
+            if (unpredictable_96_bits(working_operation->instruction))
+            {
+                ir_operand destination_operand = des[0];
+                
+                if (is_global(context,destination_operand))
+                {
+                    break;
+                }
+            }
+
+
             break;
         }
     }
@@ -1333,13 +1634,16 @@ static bool optimize_local_moves(ssa_node* working_node)
 
         bool is_zero_extend_check = false;
 
-        for (auto r = i->next; r != raw_node->final_instruction->next; r = r->next)
+        if (!ir_operand::is_constant(&to_replace))
         {
-            if (check_if_zero_extend(&r->data, destination))
+            for (auto r = i->next; r != raw_node->final_instruction->next; r = r->next)
             {
-                is_zero_extend_check = true;
+                if (check_if_zero_extend(&r->data, destination))
+                {
+                    is_zero_extend_check = true;
 
-                break;
+                    break;
+                }
             }
         }
 
@@ -1363,7 +1667,7 @@ static bool optimize_local_moves(ssa_node* working_node)
     return is_done;
 }
 
-void convert_to_ssa(ir_operation_block* ir, bool optimize)
+void convert_to_ssa(ir_operation_block* ir, compiler_flags flags)
 {    
     ir_operation_block::clamp_operands(ir, true);
 
@@ -1373,13 +1677,24 @@ void convert_to_ssa(ir_operation_block* ir, bool optimize)
 
     create_time_stamped_declaration_info(&ssa);
 
-    ssa.global_top = find_and_remap_true_globals(&ssa);
+    if (flags & compiler_flags::optimize_group_pool_ssa)
+    {
+        ssa.global_top = find_and_remap_true_globals(&ssa);
+    }
+    else if (flags & compiler_flags::optimize_basic_ssa)
+    {
+        ssa.global_top = find_and_remap_basic_block_globals(&ssa);
+    }
+    else
+    {
+        throw_error();
+    }
 
     redifine_destinations(&ssa);
 
     redifine_sources(&ssa);
 
-    while (optimize)
+    while (true)
     {
         bool is_done = true;
 
@@ -1399,11 +1714,9 @@ void convert_to_ssa(ir_operation_block* ir, bool optimize)
         }
     }
 
-    //ir_operation_block::log(ssa.ir);
-    
-    //std::cin.get();
-
     linier_scan_register_allocator_pass(ssa.cfg);
 
     destroy_ssa_context(&ssa);
+
+    //ir_operation_block::log(ir);
 }

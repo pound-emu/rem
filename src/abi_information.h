@@ -26,4 +26,6 @@ os_information 	get_running_os();
 cpu_information get_running_cpu();
 abi 			get_abi();
 
+bool 			get_is_apple_silicon(abi abi_context);
+
 #endif

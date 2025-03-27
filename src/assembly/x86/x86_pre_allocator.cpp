@@ -1290,6 +1290,7 @@ static void emit_pre_allocation_instruction(x86_pre_allocator_context* pre_alloc
 		case x86_sqrtpd:
 		case x86_sqrtss:
 		case x86_sqrtsd:
+		case ir_register_allocator_hint_global:
 		{
 			emit_as_is(pre_allocator_context, operation);
 		}; break;

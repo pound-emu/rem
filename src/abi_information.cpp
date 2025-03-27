@@ -33,3 +33,8 @@ abi get_abi()
 
     return result;
 }
+
+bool get_is_apple_silicon(abi abi_context)
+{
+    return abi_context.cpu == cpu_information::arm_64 && abi_context.os == os_information::_macos;
+}

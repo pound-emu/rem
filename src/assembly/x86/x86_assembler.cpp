@@ -114,7 +114,7 @@ void assemble_x86_64_code(void** result_code, uint64_t* result_code_size, ir_ope
 {
 	arena_allocator* allocator = source_ir->allocator;
 
-	int buffer_size = ONE_MB * 10;
+	int buffer_size = ONE_MB * 20;
 
 	*result_code = arena_allocator::allocate_recursive(allocator, buffer_size);
 	Xbyak::CodeGenerator c(buffer_size, *result_code);

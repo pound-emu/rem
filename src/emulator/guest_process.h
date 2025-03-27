@@ -17,15 +17,19 @@ struct guest_process
     guest_memory                    guest_memory_context;
     jit_context*                    host_jit_context;
     guest_function_store            guest_functions;
-    fixed_length_decoder<uint32_t>  decoder;
+    fixed_length_decoder<uint32_t>  fixed_length_decoder_context;
 
-    aarch64_context_offsets         guest_context_offset_data;
+    uint8_t                         guest_context_data[1024];
 
     void*                           svc_function;
     void*                           counter_function;
     void*                           undefined_instruction;
-    bool                            debug_mode;
     void*                           log_native;
+
+    bool                            debug_mode;
+
+    void*                           interperate_function_reference;
+    void*                           jit_function_reference;
 
     cpu_type                        process_type;
     cpu_size                        process_size;
@@ -33,7 +37,6 @@ struct guest_process
 
     void*                           process_data;
 
-    static void                     create(guest_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, aarch64_context_offsets arm_guest_data);
     static uint64_t                 jit_function(guest_process* process, uint64_t guest_function, void* arm_context);
     static uint64_t                 interperate_function(guest_process* process, uint64_t guest_function, void* arm_context, bool* is_running, bool exit_on_long_branch = false);
 
@@ -41,6 +44,8 @@ struct guest_process
 
     static void                     create(guest_process* result,guest_memory memory,jit_context* jit, cpu_type process_type, cpu_size process_size, memory_order process_memory_order);
     static void                     destroy(guest_process* process);
+
+    static void                     create_guest_process(guest_process* result, guest_memory guest_memory_context, jit_context* host_jit_context, void* context_data, int context_data_size, cpu_type cpu, cpu_size size, memory_order order);
 };
 
 #endif

@@ -6,6 +6,8 @@
 
 #include "assembly/x86/x86_pipeline.h"
 #include "assembly/x86/x86_assembler.h"
+#include "assembly/aarch64/aarch64_assembler.h"
+#include "assembly/aarch64/aarch64_pipeline.h"
 
 typedef uint64_t (*abi_caller_function)(void*, uint64_t*);
 
@@ -13,10 +15,12 @@ static void create_x86_caller(jit_context* result)
 {
     uint64_t max_space = 400;
 
-    void* caller_code_space = growing_jit_cache::allocate(&result->jit_cache, max_space);
+    char caller_buffer[max_space];
 
     uint64_t code_size;
-    assemble_x86_abi_caller_code(caller_code_space, &code_size, result->jit_cache.memory->host_abi);
+    assemble_x86_abi_caller_code(caller_buffer, &code_size, result->jit_cache.memory->host_abi);
+
+    growing_jit_cache::append_code(&result->jit_cache, caller_buffer, max_space);
 
     if (code_size > max_space)
     {
@@ -36,6 +40,11 @@ void jit_context::create(jit_context* result,uint64_t allocation_size, abi abi_i
         case x86_64:
         {
             create_x86_caller(result);
+        }; break;
+
+        case arm_64:
+        {
+            create_aarch64_caller(result, abi_information);
         }; break;
 
         default:
@@ -78,7 +87,12 @@ void* jit_context::compile_code(jit_context* context, ir_operation_block* ir_ope
     {
         case x86_64:
         {
-            assemble_x86_64_pipeline(&code_buffer, &code_size, ir_operation_block_context, false, working_abi, flags);
+            assemble_x86_64_pipeline(&code_buffer, &code_size, ir_operation_block_context, working_abi, flags);
+        }; break;
+
+        case arm_64:
+        {
+            assemble_aarch64_pipeline(&code_buffer, &code_size, ir_operation_block_context, working_abi, flags);
         }; break;
 
         default: throw_error();

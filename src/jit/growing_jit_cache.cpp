@@ -11,9 +11,9 @@ void growing_jit_cache::create(growing_jit_cache* result, jit_memory* memory)
     result->memory = memory;
 }
 
-void* growing_jit_cache::allocate(growing_jit_cache* jit_cache, uint64_t size)
+uint64_t growing_jit_cache::allocate(growing_jit_cache* jit_cache, uint64_t size)
 {
-    void* result = (char*)jit_cache->memory->raw_memory_block + jit_cache->top;
+    void* result = (void*)jit_cache->top;
 
     jit_cache->top += size;
 
@@ -22,18 +22,18 @@ void* growing_jit_cache::allocate(growing_jit_cache* jit_cache, uint64_t size)
         throw_error();
     }
 
-    return result;
+    return (uint64_t)result;
 }
 
 void* growing_jit_cache::append_code(growing_jit_cache* jit_cache, void* code, uint64_t size)
 {
     jit_cache->lock.lock();
 
-    void* result = allocate(jit_cache, size);
+    uint64_t result = allocate(jit_cache, size);
 
-    memcpy(result, code, size);
+    jit_memory::coppy_over(jit_cache->memory, (uint64_t)result, code, size);
 
     jit_cache->lock.unlock();
 
-    return result;
+    return (void*)(result + (uint64_t)jit_cache->memory->raw_memory_block);
 }

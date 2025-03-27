@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.14)
 
 set(PROJECT_SHARED rem)
 
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_CXX_COMPILER g++)
+
 set(SOURCE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/)
 set(LIBRARY_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/libraries/)
 
@@ -9,10 +12,12 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS "-g -Ofast -Wno-c++11-narrowing")
+set(CMAKE_CXX_FLAGS "-g")
 
 project(${PROJECT_SHARED})
 
+add_definitions(-Ofast)
+add_definitions(-Wno-c++11-narrowing)
 add_definitions(-std=c++17)
 add_compile_definitions(XBYAK64)
 

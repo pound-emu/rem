@@ -34,13 +34,21 @@ extern "C"
         result->process.log_native = nullptr;
 
         jit_context::create(&result->memory, 5ULL * 1024 * 1024 * 1024, get_abi());
-        guest_process::create(&result->process, {memory, base_plus_va, base_plus_va_jit}, &result->memory, *context_offsets);
+
+        guest_memory guest_memory_context = {memory, base_plus_va, base_plus_va_jit};
+
+        guest_process::create_guest_process(&result->process, guest_memory_context, &result->memory, context_offsets, sizeof(aarch64_context_offsets), cpu_type::arm, cpu_size::_64_bit, memory_order::little_endian);
 
         result->process.undefined_instruction = undefined_instruction;
         result->process.svc_function = svc;
         result->process.counter_function = counter;
 
         return result;
+    }
+
+    EXPORT void set_log_native(external_context* context, void* log_native)
+    {
+        context->process.log_native = log_native;
     }
     
     EXPORT void destroy_rem_context(external_context* context)
@@ -69,6 +77,8 @@ extern "C"
 
     EXPORT void invalidate_jit_region(external_context* context, uint64_t address, uint64_t size)
     {
+        context->process.guest_functions.main_translate_lock.lock();
+
         for (uint64_t i = 0; i < size; i += 4)
         {
             uint64_t working_address = address + i;
@@ -76,5 +86,7 @@ extern "C"
             fast_function_table::insert_function(&context->process.guest_functions.native_function_table, working_address, -1);
             context->process.guest_functions.functions.erase(working_address);
         }
+
+        context->process.guest_functions.main_translate_lock.unlock();
     }
 }

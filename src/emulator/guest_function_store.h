@@ -5,12 +5,15 @@
 #include <inttypes.h>
 #include <mutex>
 #include <vector>
+#include <thread>
+#include <atomic>
 
 #include "translate_request_data.h"
 #include "fast_function_table.h"
 #include "guest_compiler_optimization_flags.h"
 #include "translate_request_data.h"
-#include <thread>
+
+#define THREAD_COUNT 10
 
 struct guest_function_store;
 struct translate_request_data;
@@ -33,11 +36,12 @@ struct guest_function_store
 
     std::vector<retranslate_request>                retranslate_requests;
     std::thread                                     retranslator_thread;
+
     bool                                            retranslator_is_running;
+    bool                                            retranslator_workers[THREAD_COUNT];
 
     static void                                     request_retranslate_function(guest_function_store* context, uint64_t address, guest_compiler_optimization_flags flags, translate_request_data process_context);
-    static void                                     retranslate_functions(guest_function_store* context);
-
+    
     static guest_function                           get_or_translate_function(guest_function_store* context, uint64_t address, translate_request_data* process_context, bool incrament_usgae_counter = false);
     static void                                     destroy(guest_function_store* to_destory);
 };
