@@ -3,11 +3,13 @@
 
 #include "jit_memory.h"
 
-#define USE_MEMPROTECT defined (__linux__) || defined(__APPLE__)
-#define USE_VIRTUAL_PROTECT (defined _WIN32)
+#ifdef WIN32
+#include <Windows.h>
+#else
+#include <sys/mman.h>
+#endif
 
-#if USE_MEMPROTECT
-#include "sys/mman.h"
+#if defined(__linux__) || defined(__APPLE__)
 
 static bool allocate_executable_memory(void** memory, uint64_t size)
 {
@@ -32,8 +34,7 @@ static void unmark_memory_executable(void* memory, uint64_t size)
     munmap(memory, size);
 }
 
-#elif USE_VIRTUAL_PROTECT
-#include "windows.h"
+#else
 
 static bool allocate_executable_memory(void** memory, uint64_t size)
 {
@@ -116,14 +117,22 @@ static void ready_page_for_write(jit_memory* jit_memory_context, uint64_t result
 {
     align_page_info(jit_memory_context, &result_offset, &size);
 
+#ifdef WIN32
+    VirtualAlloc((void*)result_offset, size, MEM_COMMIT, PAGE_READWRITE);
+#else
     mprotect((void*)result_offset, size, PROT_READ | PROT_WRITE);
+#endif
 }
 
 static void ready_page_for_execution(jit_memory* jit_memory_context, uint64_t result_offset, uint64_t size)
 {
     align_page_info(jit_memory_context, &result_offset, &size);
 
-    mprotect((void*)result_offset, size, PROT_READ | PROT_EXEC);
+#ifdef WIN32
+    VirtualAlloc((void*)result_offset, size, MEM_COMMIT, PAGE_READWRITE);
+#else
+    mprotect((void*)result_offset, size, PROT_READ | PROT_WRITE);
+#endif
 }
 
 void* jit_memory::coppy_over(jit_memory* jit_memory_context, uint64_t result_offset, void* source, uint64_t size)
