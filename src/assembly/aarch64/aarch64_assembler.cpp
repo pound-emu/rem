@@ -1,11 +1,12 @@
 #include "aarch64_assembler.h"
 #include "jit/jit_context.h"
 #include <string.h>
-
-#include <sys/mman.h>
 #include <stdio.h>
-#include <string.h>
+
+#ifdef __linux__
+#include <sys/mman.h>
 #include <unistd.h>
+#endif
 
 #define ONE_MB 1 * 1024 * 1024
 

@@ -1,3 +1,4 @@
+#include "emulator/aarch64/aarch64_context_offsets.h"
 #include "emulator/guest_process.h"
 #include "emulator/ssa_emit_context.h"
 

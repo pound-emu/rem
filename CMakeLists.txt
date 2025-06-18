@@ -1,32 +1,23 @@
 cmake_minimum_required(VERSION 3.14)
 
-set(PROJECT_SHARED rem)
-
-set(CMAKE_C_COMPILER gcc)
-set(CMAKE_CXX_COMPILER g++)
-
-set(SOURCE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/)
-set(LIBRARY_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/libraries/)
+project(rem)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS "-g")
-
-project(${PROJECT_SHARED})
-
-add_definitions(-Ofast)
-add_definitions(-Wno-c++11-narrowing)
-add_definitions(-std=c++17)
 add_compile_definitions(XBYAK64)
+add_definitions(-Wno-c++11-narrowing)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(SOURCE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src)
+set(LIBRARY_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/libraries)
 
-file(GLOB_RECURSE SOURCES "${SOURCE_DIRECTORY}*.cpp")
-file(GLOB_RECURSE HEADERS "${SOURCE_DIRECTORY}*.h")
+file(GLOB_RECURSE SOURCES "${SOURCE_DIRECTORY}/*.cpp")
+file(GLOB_RECURSE HEADERS "${SOURCE_DIRECTORY}/*.h")
 
-include_directories(${PROJECT_SHARED} ${LIBRARY_DIRECTORY})
-include_directories(${PROJECT_SHARED} ${SOURCE_DIRECTORY})
+include_directories(rem ${LIBRARY_DIRECTORY})
+include_directories(rem ${SOURCE_DIRECTORY})
 
-add_library(${PROJECT_SHARED} SHARED ${SOURCES} ${HEADERS})
+add_library(rem STATIC ${SOURCES} ${HEADERS})
+
+target_include_directories(rem PUBLIC ${SOURCE_DIRECTORY})
