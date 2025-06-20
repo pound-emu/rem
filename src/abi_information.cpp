@@ -1,31 +1,28 @@
 #include "abi_information.h"
 
-os_information get_running_os()
-{
-    #if defined __linux__
-        return os_information::_linux;
-    #elif defined _WIN32
-        return os_information::_windows;
-    #elif defined __APPLE__
-        return os_information::_macos;
-    #endif
+os_information get_running_os() {
+#if defined __linux__
+    return os_information::_linux;
+#elif defined _WIN32
+    return os_information::_windows;
+#elif defined __APPLE__
+    return os_information::_macos;
+#endif
 
     return os_information::_unknown;
 }
 
-cpu_information get_running_cpu()
-{
-    #if (defined __x86_64__) || (defined _M_X64)
-        return cpu_information::x86_64;
-    #elif (defined __aarch64__) || (defined _M_ARM64)
-        return cpu_information::arm_64;
-    #endif
+cpu_information get_running_cpu() {
+#if (defined __x86_64__) || (defined _M_X64)
+    return cpu_information::x86_64;
+#elif (defined __aarch64__) || (defined _M_ARM64)
+    return cpu_information::arm_64;
+#endif
 
-    return cpu_information::unknown; 
+    return cpu_information::unknown;
 }
 
-abi get_abi()
-{
+abi get_abi() {
     abi result;
 
     result.cpu = get_running_cpu();
@@ -34,7 +31,6 @@ abi get_abi()
     return result;
 }
 
-bool get_is_apple_silicon(abi abi_context)
-{
+bool get_is_apple_silicon(abi abi_context) {
     return abi_context.cpu == cpu_information::arm_64 && abi_context.os == os_information::_macos;
 }

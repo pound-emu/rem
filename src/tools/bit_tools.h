@@ -1,10 +1,11 @@
-#ifndef BIT_TOOLS_H
-#define BIT_TOOLS_H
+#pragma once
 
+#include <assert.h>
 #include <inttypes.h>
 
-static uint64_t get_mask_from_size(uint64_t size)
-{
+#include "ir/ir.h"
+
+static uint64_t get_mask_from_size(uint64_t size) {
     size &= UINT32_MAX;
 
     if (size == 3)
@@ -17,8 +18,7 @@ static uint64_t get_mask_from_size(uint64_t size)
     return mask;
 }
 
-static uint64_t create_int_min(uint64_t size)
-{
+static uint64_t create_int_min(uint64_t size) {
     int bit_count = (8 << size);
 
     uint64_t working_result = UINT64_MAX << (bit_count - 1);
@@ -28,16 +28,13 @@ static uint64_t create_int_min(uint64_t size)
     return result;
 }
 
-static uint64_t create_int_max(uint64_t size)
-{
+static uint64_t create_int_max(uint64_t size) {
     int bit_count = (8 << size);
 
     return (1ULL << (bit_count - 1)) - 1;
 }
 
-
-static int64_t sign_extend_from_size(uint64_t source, uint64_t size)
-{
+static int64_t sign_extend_from_size(uint64_t source, uint64_t size) {
     if (size == int64)
         return source;
 
@@ -48,9 +45,6 @@ static int64_t sign_extend_from_size(uint64_t source, uint64_t size)
     return ((int64_t)source << bit) >> bit;
 }
 
-static uint64_t zero_extend_from_size(uint64_t source, uint64_t size)
-{
+static uint64_t zero_extend_from_size(uint64_t source, uint64_t size) {
     return source & get_mask_from_size(size);
 }
-
-#endif

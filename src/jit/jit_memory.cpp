@@ -11,33 +11,30 @@
 
 #if defined(__linux__) || defined(__APPLE__)
 
-static bool allocate_executable_memory(void** memory, uint64_t size)
-{
+static bool allocate_executable_memory(void** memory, uint64_t size) {
     uint64_t map_info = MAP_PRIVATE | MAP_ANONYMOUS;
     uint64_t map_proc = PROT_READ | PROT_WRITE;
 
-    #if defined(__APPLE__)
-        map_info |= MAP_JIT;
-    #else
-        map_proc |= PROT_EXEC;
-    #endif
+#if defined(__APPLE__)
+    map_info |= MAP_JIT;
+#else
+    map_proc |= PROT_EXEC;
+#endif
 
-    void* result = mmap(NULL, size, map_proc, map_info , -1, 0);
+    void* result = mmap(NULL, size, map_proc, map_info, -1, 0);
 
     *memory = result;
 
     return result != nullptr;
 }
 
-static void unmark_memory_executable(void* memory, uint64_t size)
-{
+static void unmark_memory_executable(void* memory, uint64_t size) {
     munmap(memory, size);
 }
 
 #else
 
-static bool allocate_executable_memory(void** memory, uint64_t size)
-{
+static bool allocate_executable_memory(void** memory, uint64_t size) {
     void* result = VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_READWRITE);
 
     DWORD dummy;
@@ -48,35 +45,31 @@ static bool allocate_executable_memory(void** memory, uint64_t size)
     return success;
 }
 
-static void unmark_memory_executable(void* memory, uint64_t size)
-{
+static void unmark_memory_executable(void* memory, uint64_t size) {
     VirtualFree(memory, 0, MEM_RELEASE);
 }
 
-//TODO:
+// TODO:
 
 #endif
 
 #define DEFAULT_KB_SIZE 4
 
-static uint64_t align_page_size(uint64_t source, int kb_size = DEFAULT_KB_SIZE)
-{
+static uint64_t align_page_size(uint64_t source, int kb_size = DEFAULT_KB_SIZE) {
     uint64_t page_size = kb_size * 1024;
 
     uint64_t mask = page_size - 1;
 
     uint64_t working_result = (source & ~mask);
 
-    if (source > working_result)
-    {
+    if (source > working_result) {
         working_result += page_size;
     }
 
     return working_result;
 }
 
-static uint64_t align_page(uint64_t source, int kb_size = DEFAULT_KB_SIZE)
-{
+static uint64_t align_page(uint64_t source, int kb_size = DEFAULT_KB_SIZE) {
     uint64_t page_size = kb_size * 1024;
 
     uint64_t mask = page_size - 1;
@@ -84,8 +77,7 @@ static uint64_t align_page(uint64_t source, int kb_size = DEFAULT_KB_SIZE)
     return source & ~mask;
 }
 
-bool jit_memory::create(jit_memory** result, uint64_t allocation_size, abi host_abi)
-{
+bool jit_memory::create(jit_memory** result, uint64_t allocation_size, abi host_abi) {
     jit_memory* working_result = new jit_memory();
 
     allocation_size = align_page_size(allocation_size, 4);
@@ -98,23 +90,20 @@ bool jit_memory::create(jit_memory** result, uint64_t allocation_size, abi host_
     return allocate_executable_memory(&working_result->raw_memory_block, allocation_size);
 }
 
-void jit_memory::destroy(jit_memory* to_destroy)
-{
+void jit_memory::destroy(jit_memory* to_destroy) {
     unmark_memory_executable(to_destroy->raw_memory_block, to_destroy->memory_block_size);
 
     delete to_destroy;
 }
 
-static void align_page_info(jit_memory* jit_memory_context, uint64_t* offset, uint64_t* size)
-{
+static void align_page_info(jit_memory* jit_memory_context, uint64_t* offset, uint64_t* size) {
     *offset = align_page(*offset);
     *size = align_page_size(*size);
 
     *offset = (uint64_t)jit_memory_context->raw_memory_block + *offset;
 }
 
-static void ready_page_for_write(jit_memory* jit_memory_context, uint64_t result_offset, uint64_t size)
-{
+static void ready_page_for_write(jit_memory* jit_memory_context, uint64_t result_offset, uint64_t size) {
     align_page_info(jit_memory_context, &result_offset, &size);
 
 #ifdef WIN32
@@ -124,8 +113,7 @@ static void ready_page_for_write(jit_memory* jit_memory_context, uint64_t result
 #endif
 }
 
-static void ready_page_for_execution(jit_memory* jit_memory_context, uint64_t result_offset, uint64_t size)
-{
+static void ready_page_for_execution(jit_memory* jit_memory_context, uint64_t result_offset, uint64_t size) {
     align_page_info(jit_memory_context, &result_offset, &size);
 
 #ifdef WIN32
@@ -135,19 +123,16 @@ static void ready_page_for_execution(jit_memory* jit_memory_context, uint64_t re
 #endif
 }
 
-void* jit_memory::coppy_over(jit_memory* jit_memory_context, uint64_t result_offset, void* source, uint64_t size)
-{
+void* jit_memory::coppy_over(jit_memory* jit_memory_context, uint64_t result_offset, void* source, uint64_t size) {
     char* result_location = (char*)jit_memory_context->raw_memory_block + result_offset;
 
-    if (get_is_apple_silicon(jit_memory_context->host_abi))
-    {
+    if (get_is_apple_silicon(jit_memory_context->host_abi)) {
         ready_page_for_write(jit_memory_context, result_offset, size);
     }
-    
+
     memcpy(result_location, source, size);
 
-    if (get_is_apple_silicon(jit_memory_context->host_abi))
-    {
+    if (get_is_apple_silicon(jit_memory_context->host_abi)) {
         ready_page_for_execution(jit_memory_context, result_offset, size);
     }
 

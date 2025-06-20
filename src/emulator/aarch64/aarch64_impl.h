@@ -1,25 +1,23 @@
 #include <inttypes.h>
-#include "emulator/ssa_emit_context.h"
 #include "aarch64_context_offsets.h"
-#include "emulator/guest_process.h"
 #include "aarch64_soft_float.h"
 #include "emulator/atomic.h"
+#include "emulator/guest_process.h"
+#include "emulator/ssa_emit_context.h"
 #include "emulator/uint128_t.h"
 #include "fallbacks.h"
 
-struct interpreter_data
-{
-    guest_process*      process_context;
-    void*               register_data;
-    uint64_t            current_pc;
-    int                 branch_type;
-    uint32_t            current_instruction;
+struct interpreter_data {
+    guest_process* process_context;
+    void* register_data;
+    uint64_t current_pc;
+    int branch_type;
+    uint32_t current_instruction;
 };
 
 void init_aarch64_decoder(guest_process* process);
 
-enum sys_registers
-{
+enum sys_registers {
     nzcv_n,
     nzcv_z,
     nzcv_c,
@@ -33,31 +31,23 @@ enum sys_registers
 };
 
 template <typename D, typename S>
-uint64_t convert_to_float(uint64_t source, bool is_signed)
-{
+uint64_t convert_to_float(uint64_t source, bool is_signed) {
     int des_size = sizeof(D) * 8;
     int src_size = sizeof(S) * 8;
 
     double temp;
 
-    if (is_signed)
-    {
-        if (src_size == 32)
-        {
+    if (is_signed) {
+        if (src_size == 32) {
             temp = (int32_t)source;
-        }
-        else
-        {
+        } else {
             temp = (int64_t)source;
         }
-    }
-    else
-    {
+    } else {
         temp = (S)source;
     }
 
-    if (des_size == 32)
-    {
+    if (des_size == 32) {
         float temp_32 = temp;
 
         return *(uint32_t*)&temp_32;
@@ -67,32 +57,32 @@ uint64_t convert_to_float(uint64_t source, bool is_signed)
 }
 
 template <typename T>
-double get_float(uint64_t source)
-{
-	switch (sizeof(T))
-	{
-		case 4: return convert<float, uint32_t>(source);
-		case 8: return convert<double, uint64_t>(source);
-		default: throw_error();
-	}
-}
-
-template <typename T>
-uint64_t get_int(double source)
-{
-    switch (sizeof(T))
-    {
-        case 4: return convert<uint32_t, float>(source);
-        case 8: return convert<uint64_t, double>(source);
+double get_float(uint64_t source) {
+    switch (sizeof(T)) {
+    case 4:
+        return convert<float, uint32_t>(source);
+    case 8:
+        return convert<double, uint64_t>(source);
+    default:
+        throw_error();
     }
 }
 
-static uint64_t undefined_value()
-{
+template <typename T>
+uint64_t get_int(double source) {
+    switch (sizeof(T)) {
+    case 4:
+        return convert<uint32_t, float>(source);
+    case 8:
+        return convert<uint64_t, double>(source);
+    }
+}
+
+static uint64_t undefined_value() {
     throw_error();
 }
 
-//INTERPRETER
+// INTERPRETER
 void memory_single_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t p, uint64_t R, uint64_t Rm, uint64_t b, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t is_load, uint64_t opcode, uint64_t S);
 void memory_multiple_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t rpt, uint64_t selem, uint64_t wback, uint64_t is_load);
 uint64_t sign_extend_interpreter(interpreter_data* ctx, uint64_t source, uint64_t count);
@@ -337,56 +327,56 @@ void tbl_interpreter(interpreter_data* ctx, uint64_t Q, uint64_t Rm, uint64_t le
 void floating_point_conditional_select_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd);
 void fcmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc);
 void fccmp_interpreter(interpreter_data* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t nzcv);
-uint64_t _x_interpreter(interpreter_data* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
-void _x_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value);//THIS FUNCTION IS USER DEFINED
-uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
-void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value);//THIS FUNCTION IS USER DEFINED
-uint128_t V_interpreter(interpreter_data* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
-void V_interpreter(interpreter_data* ctx, uint64_t reg_id, uint128_t value);//THIS FUNCTION IS USER DEFINED
-void _branch_long_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
-void _branch_short_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
-void _branch_conditional_interpreter(interpreter_data* ctx, uint64_t yes, uint64_t no, uint64_t condition);//THIS FUNCTION IS USER DEFINED
-void _branch_call_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
-void _return_from_call_interpreter(interpreter_data* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
-uint64_t get_vector_context_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-void store_context_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-void load_context_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_fast_float_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_sse_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_sse2_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_sse41_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_lzcnt_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
+uint64_t _x_interpreter(interpreter_data* ctx, uint64_t reg_id);                                            // THIS FUNCTION IS USER DEFINED
+void _x_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value);                                // THIS FUNCTION IS USER DEFINED
+uint64_t _sys_interpreter(interpreter_data* ctx, uint64_t reg_id);                                          // THIS FUNCTION IS USER DEFINED
+void _sys_interpreter(interpreter_data* ctx, uint64_t reg_id, uint64_t value);                              // THIS FUNCTION IS USER DEFINED
+uint128_t V_interpreter(interpreter_data* ctx, uint64_t reg_id);                                            // THIS FUNCTION IS USER DEFINED
+void V_interpreter(interpreter_data* ctx, uint64_t reg_id, uint128_t value);                                // THIS FUNCTION IS USER DEFINED
+void _branch_long_interpreter(interpreter_data* ctx, uint64_t location);                                    // THIS FUNCTION IS USER DEFINED
+void _branch_short_interpreter(interpreter_data* ctx, uint64_t location);                                   // THIS FUNCTION IS USER DEFINED
+void _branch_conditional_interpreter(interpreter_data* ctx, uint64_t yes, uint64_t no, uint64_t condition); // THIS FUNCTION IS USER DEFINED
+void _branch_call_interpreter(interpreter_data* ctx, uint64_t location);                                    // THIS FUNCTION IS USER DEFINED
+void _return_from_call_interpreter(interpreter_data* ctx, uint64_t location);                               // THIS FUNCTION IS USER DEFINED
+uint64_t get_vector_context_interpreter(interpreter_data* ctx);                                             // THIS FUNCTION IS USER DEFINED
+void store_context_interpreter(interpreter_data* ctx);                                                      // THIS FUNCTION IS USER DEFINED
+void load_context_interpreter(interpreter_data* ctx);                                                       // THIS FUNCTION IS USER DEFINED
+uint64_t use_fast_float_interpreter(interpreter_data* ctx);                                                 // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_sse_interpreter(interpreter_data* ctx);                                                    // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_sse2_interpreter(interpreter_data* ctx);                                                   // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_sse41_interpreter(interpreter_data* ctx);                                                  // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_interpreter(interpreter_data* ctx);                                                        // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_lzcnt_interpreter(interpreter_data* ctx);                                                  // THIS FUNCTION IS USER DEFINED
 template <typename O>
-O x86_add_set_flags_interpreter(interpreter_data* ctx, O n, O m);//THIS FUNCTION IS USER DEFINED
+O x86_add_set_flags_interpreter(interpreter_data* ctx, O n, O m); // THIS FUNCTION IS USER DEFINED
 template <typename O>
-O x86_subtract_set_flags_interpreter(interpreter_data* ctx, O n, O m);//THIS FUNCTION IS USER DEFINED
-uint64_t _get_pc_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address);//THIS FUNCTION IS USER DEFINED
-void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED
-uint64_t call_counter_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-void undefined_with_interpreter(interpreter_data* ctx, uint64_t value);//THIS FUNCTION IS USER DEFINED
-void undefined_interpreter(interpreter_data* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t call_interpreter(interpreter_data* ctx, uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5, uint64_t function);//THIS FUNCTION IS USER DEFINED
+O x86_subtract_set_flags_interpreter(interpreter_data* ctx, O n, O m);                                                                             // THIS FUNCTION IS USER DEFINED
+uint64_t _get_pc_interpreter(interpreter_data* ctx);                                                                                               // THIS FUNCTION IS USER DEFINED
+uint64_t translate_address_interpreter(interpreter_data* ctx, uint64_t address);                                                                   // THIS FUNCTION IS USER DEFINED
+void call_supervisor_interpreter(interpreter_data* ctx, uint64_t svc);                                                                             // THIS FUNCTION IS USER DEFINED
+uint64_t call_counter_interpreter(interpreter_data* ctx);                                                                                          // THIS FUNCTION IS USER DEFINED
+void undefined_with_interpreter(interpreter_data* ctx, uint64_t value);                                                                            // THIS FUNCTION IS USER DEFINED
+void undefined_interpreter(interpreter_data* ctx);                                                                                                 // THIS FUNCTION IS USER DEFINED
+uint64_t call_interpreter(interpreter_data* ctx, uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5, uint64_t function); // THIS FUNCTION IS USER DEFINED
 template <typename R>
-R intrinsic_unary_interpreter(interpreter_data* ctx, uint64_t instruction, R source);//THIS FUNCTION IS USER DEFINED
+R intrinsic_unary_interpreter(interpreter_data* ctx, uint64_t instruction, R source); // THIS FUNCTION IS USER DEFINED
 template <typename R>
-R intrinsic_binary_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, R source_1);//THIS FUNCTION IS USER DEFINED
+R intrinsic_binary_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, R source_1); // THIS FUNCTION IS USER DEFINED
 template <typename R>
-R intrinsic_binary_imm_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, uint64_t source_1);//THIS FUNCTION IS USER DEFINED
+R intrinsic_binary_imm_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, uint64_t source_1); // THIS FUNCTION IS USER DEFINED
 template <typename R>
-R intrinsic_ternary_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, R source_1, R source_2);//THIS FUNCTION IS USER DEFINED
+R intrinsic_ternary_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, R source_1, R source_2); // THIS FUNCTION IS USER DEFINED
 template <typename R>
-R intrinsic_ternary_imm_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, R source_1, uint64_t source_2);//THIS FUNCTION IS USER DEFINED
+R intrinsic_ternary_imm_interpreter(interpreter_data* ctx, uint64_t instruction, R source_0, R source_1, uint64_t source_2); // THIS FUNCTION IS USER DEFINED
 
-//JIT
+// JIT
 void memory_single_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t p, uint64_t R, uint64_t Rm, uint64_t b, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t is_load, uint64_t opcode, uint64_t S);
 void memory_multiple_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t rpt, uint64_t selem, uint64_t wback, uint64_t is_load);
 uint64_t sign_extend_jit(ssa_emit_context* ctx, uint64_t source, uint64_t count);
-ir_operand a_shift_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t shift_type, uint64_t ammount);
-ir_operand a_extend_reg_jit(ssa_emit_context* ctx,uint64_t O, uint64_t m, uint64_t extend_type, uint64_t shift);
+ir_operand a_shift_reg_jit(ssa_emit_context* ctx, uint64_t O, uint64_t m, uint64_t shift_type, uint64_t ammount);
+ir_operand a_extend_reg_jit(ssa_emit_context* ctx, uint64_t O, uint64_t m, uint64_t extend_type, uint64_t shift);
 ir_operand a_extend_reg_64_jit(ssa_emit_context* ctx, uint64_t m, uint64_t extend_type, uint64_t shift);
-ir_operand reverse_bytes_jit(ssa_emit_context* ctx,uint64_t O, ir_operand source, uint64_t byte_count);
+ir_operand reverse_bytes_jit(ssa_emit_context* ctx, uint64_t O, ir_operand source, uint64_t byte_count);
 uint64_t highest_bit_set_c_jit(ssa_emit_context* ctx, uint64_t src, uint64_t size);
 uint64_t ones_jit(ssa_emit_context* ctx, uint64_t size);
 uint64_t replicate_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t source_size, uint64_t count);
@@ -395,8 +385,8 @@ uint64_t bit_c_jit(ssa_emit_context* ctx, uint64_t source, uint64_t bit);
 uint64_t rotate_right_bits_jit(ssa_emit_context* ctx, uint64_t source, uint64_t ammount, uint64_t bit_count);
 uint64_t decode_bitmask_tmask_jit(ssa_emit_context* ctx, uint64_t immN, uint64_t imms, uint64_t immr, uint64_t immediate, uint64_t M, uint64_t return_tmask);
 uint64_t decode_add_subtract_imm_12_jit(ssa_emit_context* ctx, uint64_t source, uint64_t shift);
-ir_operand add_subtract_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add);
-ir_operand add_subtract_carry_impl_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add, ir_operand carry);
+ir_operand add_subtract_impl_jit(ssa_emit_context* ctx, uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add);
+ir_operand add_subtract_carry_impl_jit(ssa_emit_context* ctx, uint64_t O, ir_operand n, ir_operand m, uint64_t set_flags, uint64_t is_add, ir_operand carry);
 ir_operand condition_holds_jit(ssa_emit_context* ctx, uint64_t cond);
 void branch_long_universal_jit(ssa_emit_context* ctx, uint64_t Rn, uint64_t link);
 uint64_t select_jit(ssa_emit_context* ctx, uint64_t condition, uint64_t yes, uint64_t no);
@@ -422,7 +412,7 @@ ir_operand bits_r_jit(ssa_emit_context* ctx, ir_operand operand, uint64_t top, u
 ir_operand infinity_jit(ssa_emit_context* ctx, uint64_t sign, uint64_t N);
 ir_operand float_is_nan_jit(ssa_emit_context* ctx, ir_operand operand, uint64_t N);
 ir_operand float_imm_jit(ssa_emit_context* ctx, ir_operand source, uint64_t N);
-ir_operand create_fixed_from_fbits_jit(ssa_emit_context* ctx,uint64_t F, uint64_t fbits, uint64_t N);
+ir_operand create_fixed_from_fbits_jit(ssa_emit_context* ctx, uint64_t F, uint64_t fbits, uint64_t N);
 ir_operand FPAdd_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);
 ir_operand FPSub_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);
 ir_operand FPMul_jit(ssa_emit_context* ctx, ir_operand operand1, ir_operand operand2, ir_operand FPCR, uint64_t N);
@@ -473,8 +463,8 @@ void load_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t s
 void store_exclusive_jit(ssa_emit_context* ctx, uint64_t is_exclusive, uint64_t size, uint64_t Rn, uint64_t Rt, uint64_t Rs);
 ir_operand _compare_and_swap_jit(ssa_emit_context* ctx, ir_operand physical_address, ir_operand expecting, ir_operand to_swap, uint64_t size);
 ir_operand compare_and_swap_jit(ssa_emit_context* ctx, ir_operand address, ir_operand expecting, ir_operand to_swap, uint64_t size);
-void mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address, ir_operand value);
-ir_operand mem_jit(ssa_emit_context* ctx,uint64_t O, ir_operand address);
+void mem_jit(ssa_emit_context* ctx, uint64_t O, ir_operand address, ir_operand value);
+ir_operand mem_jit(ssa_emit_context* ctx, uint64_t O, ir_operand address);
 ir_operand XSP_jit(ssa_emit_context* ctx, uint64_t reg_id);
 void XSP_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);
 ir_operand X_jit(ssa_emit_context* ctx, uint64_t reg_id);
@@ -616,37 +606,37 @@ void tbl_jit(ssa_emit_context* ctx, uint64_t Q, uint64_t Rm, uint64_t len, uint6
 void floating_point_conditional_select_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t Rd);
 void fcmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t Rn, uint64_t opc);
 void fccmp_jit(ssa_emit_context* ctx, uint64_t ftype, uint64_t Rm, uint64_t cond, uint64_t Rn, uint64_t nzcv);
-ir_operand _x_jit(ssa_emit_context* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
-void _x_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);//THIS FUNCTION IS USER DEFINED
-ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
-void _sys_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);//THIS FUNCTION IS USER DEFINED
-ir_operand V_jit(ssa_emit_context* ctx, uint64_t reg_id);//THIS FUNCTION IS USER DEFINED
-void V_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);//THIS FUNCTION IS USER DEFINED
-void _branch_long_jit(ssa_emit_context* ctx, ir_operand location);//THIS FUNCTION IS USER DEFINED
-void _branch_short_jit(ssa_emit_context* ctx, uint64_t location);//THIS FUNCTION IS USER DEFINED
-void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t yes, uint64_t no, ir_operand condition);//THIS FUNCTION IS USER DEFINED
-void _branch_call_jit(ssa_emit_context* ctx, ir_operand location);//THIS FUNCTION IS USER DEFINED
-void _return_from_call_jit(ssa_emit_context* ctx, ir_operand location);//THIS FUNCTION IS USER DEFINED
-ir_operand get_vector_context_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-void store_context_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-void load_context_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_fast_float_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_sse_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_sse2_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_sse41_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-uint64_t use_x86_lzcnt_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-ir_operand x86_add_set_flags_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m);//THIS FUNCTION IS USER DEFINED
-ir_operand x86_subtract_set_flags_jit(ssa_emit_context* ctx,uint64_t O, ir_operand n, ir_operand m);//THIS FUNCTION IS USER DEFINED
-uint64_t _get_pc_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address);//THIS FUNCTION IS USER DEFINED
-void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc);//THIS FUNCTION IS USER DEFINED
-ir_operand call_counter_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-void undefined_with_jit(ssa_emit_context* ctx, uint64_t value);//THIS FUNCTION IS USER DEFINED
-void undefined_jit(ssa_emit_context* ctx);//THIS FUNCTION IS USER DEFINED
-ir_operand call_jit(ssa_emit_context* ctx, ir_operand a0, ir_operand a1, ir_operand a2, ir_operand a3, ir_operand a4, ir_operand a5, uint64_t function);//THIS FUNCTION IS USER DEFINED
-ir_operand intrinsic_unary_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source);//THIS FUNCTION IS USER DEFINED
-ir_operand intrinsic_binary_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1);//THIS FUNCTION IS USER DEFINED
-ir_operand intrinsic_binary_imm_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source_0, uint64_t source_1);//THIS FUNCTION IS USER DEFINED
-ir_operand intrinsic_ternary_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1, ir_operand source_2);//THIS FUNCTION IS USER DEFINED
-ir_operand intrinsic_ternary_imm_jit(ssa_emit_context* ctx,uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1, uint64_t source_2);//THIS FUNCTION IS USER DEFINED
+ir_operand _x_jit(ssa_emit_context* ctx, uint64_t reg_id);                                                                                                  // THIS FUNCTION IS USER DEFINED
+void _x_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);                                                                                      // THIS FUNCTION IS USER DEFINED
+ir_operand _sys_jit(ssa_emit_context* ctx, uint64_t reg_id);                                                                                                // THIS FUNCTION IS USER DEFINED
+void _sys_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);                                                                                    // THIS FUNCTION IS USER DEFINED
+ir_operand V_jit(ssa_emit_context* ctx, uint64_t reg_id);                                                                                                   // THIS FUNCTION IS USER DEFINED
+void V_jit(ssa_emit_context* ctx, uint64_t reg_id, ir_operand value);                                                                                       // THIS FUNCTION IS USER DEFINED
+void _branch_long_jit(ssa_emit_context* ctx, ir_operand location);                                                                                          // THIS FUNCTION IS USER DEFINED
+void _branch_short_jit(ssa_emit_context* ctx, uint64_t location);                                                                                           // THIS FUNCTION IS USER DEFINED
+void _branch_conditional_jit(ssa_emit_context* ctx, uint64_t yes, uint64_t no, ir_operand condition);                                                       // THIS FUNCTION IS USER DEFINED
+void _branch_call_jit(ssa_emit_context* ctx, ir_operand location);                                                                                          // THIS FUNCTION IS USER DEFINED
+void _return_from_call_jit(ssa_emit_context* ctx, ir_operand location);                                                                                     // THIS FUNCTION IS USER DEFINED
+ir_operand get_vector_context_jit(ssa_emit_context* ctx);                                                                                                   // THIS FUNCTION IS USER DEFINED
+void store_context_jit(ssa_emit_context* ctx);                                                                                                              // THIS FUNCTION IS USER DEFINED
+void load_context_jit(ssa_emit_context* ctx);                                                                                                               // THIS FUNCTION IS USER DEFINED
+uint64_t use_fast_float_jit(ssa_emit_context* ctx);                                                                                                         // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_sse_jit(ssa_emit_context* ctx);                                                                                                            // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_sse2_jit(ssa_emit_context* ctx);                                                                                                           // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_sse41_jit(ssa_emit_context* ctx);                                                                                                          // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_jit(ssa_emit_context* ctx);                                                                                                                // THIS FUNCTION IS USER DEFINED
+uint64_t use_x86_lzcnt_jit(ssa_emit_context* ctx);                                                                                                          // THIS FUNCTION IS USER DEFINED
+ir_operand x86_add_set_flags_jit(ssa_emit_context* ctx, uint64_t O, ir_operand n, ir_operand m);                                                            // THIS FUNCTION IS USER DEFINED
+ir_operand x86_subtract_set_flags_jit(ssa_emit_context* ctx, uint64_t O, ir_operand n, ir_operand m);                                                       // THIS FUNCTION IS USER DEFINED
+uint64_t _get_pc_jit(ssa_emit_context* ctx);                                                                                                                // THIS FUNCTION IS USER DEFINED
+ir_operand translate_address_jit(ssa_emit_context* ctx, ir_operand address);                                                                                // THIS FUNCTION IS USER DEFINED
+void call_supervisor_jit(ssa_emit_context* ctx, uint64_t svc);                                                                                              // THIS FUNCTION IS USER DEFINED
+ir_operand call_counter_jit(ssa_emit_context* ctx);                                                                                                         // THIS FUNCTION IS USER DEFINED
+void undefined_with_jit(ssa_emit_context* ctx, uint64_t value);                                                                                             // THIS FUNCTION IS USER DEFINED
+void undefined_jit(ssa_emit_context* ctx);                                                                                                                  // THIS FUNCTION IS USER DEFINED
+ir_operand call_jit(ssa_emit_context* ctx, ir_operand a0, ir_operand a1, ir_operand a2, ir_operand a3, ir_operand a4, ir_operand a5, uint64_t function);    // THIS FUNCTION IS USER DEFINED
+ir_operand intrinsic_unary_jit(ssa_emit_context* ctx, uint64_t R, uint64_t instruction, ir_operand source);                                                 // THIS FUNCTION IS USER DEFINED
+ir_operand intrinsic_binary_jit(ssa_emit_context* ctx, uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1);                         // THIS FUNCTION IS USER DEFINED
+ir_operand intrinsic_binary_imm_jit(ssa_emit_context* ctx, uint64_t R, uint64_t instruction, ir_operand source_0, uint64_t source_1);                       // THIS FUNCTION IS USER DEFINED
+ir_operand intrinsic_ternary_jit(ssa_emit_context* ctx, uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1, ir_operand source_2);   // THIS FUNCTION IS USER DEFINED
+ir_operand intrinsic_ternary_imm_jit(ssa_emit_context* ctx, uint64_t R, uint64_t instruction, ir_operand source_0, ir_operand source_1, uint64_t source_2); // THIS FUNCTION IS USER DEFINED

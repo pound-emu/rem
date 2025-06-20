@@ -1,26 +1,22 @@
-#include "guest_register_store.h"
 #include "assert.h"
-#include "ssa_emit_context.h"
 #include "debugging.h"
+#include "guest_register_store.h"
+#include "ssa_emit_context.h"
 
-void guest_register_store::create(guest_register_store* result, ssa_emit_context* ir, int guest_context_size)
-{
+void guest_register_store::create(guest_register_store* result, ssa_emit_context* ir, int guest_context_size) {
     result->ssa_emit_context_context = ir;
     result->guest_context_size = guest_context_size;
 
     result->guest_registers = (guest_register*)arena_allocator::allocate_recursive(ir->ir->allocator, guest_context_size * sizeof(guest_register));
 
-    for (int i = 0; i < guest_context_size; ++i)
-    {
+    for (int i = 0; i < guest_context_size; ++i) {
         result->guest_registers[i].free_guest = true;
         result->guest_registers[i].mode = guest_usage_none;
     }
 }
 
-void guest_register_store::create_register(guest_register_store* guest_register_store_context, int offset, uint64_t type)
-{
-    if (offset == -1)
-    {
+void guest_register_store::create_register(guest_register_store* guest_register_store_context, int offset, uint64_t type) {
+    if (offset == -1) {
         throw_error();
     }
 
@@ -31,12 +27,10 @@ void guest_register_store::create_register(guest_register_store* guest_register_
     int size = type & UINT32_MAX;
     int byte_count = 1 << size;
 
-    for (int i = 0; i < size; ++i)
-    {
+    for (int i = 0; i < size; ++i) {
         assert(result[i].free_guest);
 
-        if (!result[i].free_guest)
-        {
+        if (!result[i].free_guest) {
             std::cout << "REGISTER " << i << " ALREADY DEFINED !!!" << std::endl;
 
             throw_error();
@@ -47,14 +41,12 @@ void guest_register_store::create_register(guest_register_store* guest_register_
     result->raw_register = ssa_emit_context::create_global(guest_register_store_context->ssa_emit_context_context, type);
 }
 
-ir_operand guest_register_store::request_guest_register(guest_register_store* guest_register_store_context, int index)
-{
+ir_operand guest_register_store::request_guest_register(guest_register_store* guest_register_store_context, int index) {
     assert(index <= guest_register_store_context->guest_context_size);
-    
+
     guest_register* guest_register = &guest_register_store_context->guest_registers[index];
 
-    if (guest_register->free_guest)
-    {
+    if (guest_register->free_guest) {
         std::cout << "REGISTER " << index << " NOT DEFINED !!!" << std::endl;
 
         throw_error();
@@ -65,16 +57,14 @@ ir_operand guest_register_store::request_guest_register(guest_register_store* gu
     return guest_register->raw_register;
 }
 
-void guest_register_store::write_to_guest_register(guest_register_store* guest_register_store_context, int index, ir_operand new_value)
-{
+void guest_register_store::write_to_guest_register(guest_register_store* guest_register_store_context, int index, ir_operand new_value) {
     assert(index <= guest_register_store_context->guest_context_size);
-    
+
     guest_register* guest_register = &guest_register_store_context->guest_registers[index];
     ir_operation_block* ir = guest_register_store_context->ssa_emit_context_context->ir;
 
-    if (guest_register->free_guest)
-    {
-        std::cout << "REGISTER " << index << " NOT DEFINED !!!" << std::endl;        
+    if (guest_register->free_guest) {
+        std::cout << "REGISTER " << index << " NOT DEFINED !!!" << std::endl;
 
         throw_error();
     }
@@ -88,15 +78,13 @@ void guest_register_store::write_to_guest_register(guest_register_store* guest_r
     guest_register->mode |= guest_usage::guest_usage_write;
 }
 
-void guest_register_store::emit_load_context(guest_register_store* guest_register_store_context)
-{
+void guest_register_store::emit_load_context(guest_register_store* guest_register_store_context) {
     ir_operation_block* ir = guest_register_store_context->ssa_emit_context_context->ir;
 
     ir_operation_block::emits(ir, ir_guest_load_context);
 }
 
-void guest_register_store::emit_store_context(guest_register_store* guest_register_store_context)
-{
+void guest_register_store::emit_store_context(guest_register_store* guest_register_store_context) {
     ir_operation_block* ir = guest_register_store_context->ssa_emit_context_context->ir;
 
     ir_operation_block::emits(ir, ir_guest_store_context);

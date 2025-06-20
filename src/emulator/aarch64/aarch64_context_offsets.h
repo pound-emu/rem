@@ -1,8 +1,6 @@
-#ifndef AARCH64_CONTEXT_OFFSETS_H
-#define AARCH64_CONTEXT_OFFSETS_H
+#pragma once
 
-struct aarch64_context_offsets
-{
+struct aarch64_context_offsets {
     int x_offset;
     int q_offset;
 
@@ -10,7 +8,7 @@ struct aarch64_context_offsets
     int z_offset;
     int c_offset;
     int v_offset;
-    
+
     int exclusive_address_offset;
     int exclusive_value_offset;
 
@@ -22,5 +20,3 @@ struct aarch64_context_offsets
 
     int context_size;
 };
-
-#endif

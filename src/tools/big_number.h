@@ -1,49 +1,40 @@
-#ifndef BIG_NUMBER_H
-#define BIG_NUMBER_H
+#pragma once
 
-#include <inttypes.h>
 #include <assert.h>
+#include <inttypes.h>
 #include <string.h>
 
 #include "numbers.h"
 
 template <typename T>
-int get_bit_count()
-{
+int get_bit_count() {
     return sizeof(T) * 8;
 }
 
 template <typename T, int C>
-struct big_number
-{
+struct big_number {
     T buffer[C];
 
-    big_number()
-    {
-        for (int i = 0; i < C; ++i)
-        {
+    big_number() {
+        for (int i = 0; i < C; ++i) {
             buffer[i] = 0;
         }
     }
 
-    big_number(T source)
-    {
+    big_number(T source) {
         buffer[0] = source;
 
-        for (int i = 1; i < C; ++i)
-        {
+        for (int i = 1; i < C; ++i) {
             buffer[i] = 0;
         }
     }
 
-    big_number<T,C> operator + (big_number<T,C> other)
-    {
-        big_number<T,C> result = 0;
+    big_number<T, C> operator+(big_number<T, C> other) {
+        big_number<T, C> result = 0;
 
         bool carry = false;
 
-        for (int i = 0; i < C; ++i)
-        {
+        for (int i = 0; i < C; ++i) {
             T x = buffer[i];
             T y = other.buffer[i] + carry;
 
@@ -57,9 +48,8 @@ struct big_number
         return result;
     }
 
-    big_number<T,C> operator << (int other)
-    {
-        big_number<T,C> result = 0;
+    big_number<T, C> operator<<(int other) {
+        big_number<T, C> result = 0;
 
         T carry = 0;
 
@@ -67,14 +57,12 @@ struct big_number
 
         int r_offset = 0;
 
-        while (other >= bit_count)
-        {
+        while (other >= bit_count) {
             other -= bit_count;
             r_offset++;
         }
 
-        for (int i = 0; i < C; ++i)
-        {
+        for (int i = 0; i < C; ++i) {
             int to_place = r_offset + i;
 
             if (to_place >= C)
@@ -92,27 +80,23 @@ struct big_number
         return result;
     }
 
-    big_number<T,C> operator * (big_number<T,C> other)
-    {
-        if (sizeof(T) == 1 && C == 1)
-        {
+    big_number<T, C> operator*(big_number<T, C> other) {
+        if (sizeof(T) == 1 && C == 1) {
             return buffer[0] * other.buffer[0];
         }
 
-        big_number<uint8_t,C * sizeof(T)> working_result = 0;
+        big_number<uint8_t, C * sizeof(T)> working_result = 0;
 
         uint8_t* dx = (uint8_t*)buffer;
         uint8_t* dy = (uint8_t*)other.buffer;
 
         int size = C * sizeof(T);
 
-        for (int x = 0; x < size; ++x)
-        {
-            for (int y = 0; y < size; ++y)
-            {
+        for (int x = 0; x < size; ++x) {
+            for (int y = 0; y < size; ++y) {
                 uint16_t raw_short_result = (uint16_t)dx[x] * (uint16_t)dy[y];
 
-                big_number<uint8_t,C * sizeof(T)> to_be_shifted;
+                big_number<uint8_t, C * sizeof(T)> to_be_shifted;
 
                 to_be_shifted.buffer[0] = raw_short_result;
                 to_be_shifted.buffer[1] = raw_short_result >> 8;
@@ -125,7 +109,7 @@ struct big_number
             }
         }
 
-        big_number<T,C> real_result;
+        big_number<T, C> real_result;
 
         memcpy(real_result.buffer, working_result.buffer, sizeof(real_result));
 
@@ -133,45 +117,39 @@ struct big_number
     }
 };
 
-static void test_multiplication()
-{
-    while (true)
-    {
+static void test_multiplication() {
+    while (true) {
         uint64_t rx = create_random_number();
         uint64_t ry = create_random_number();
 
         uint64_t real_result = rx * ry;
 
-        big_number<uint64_t,1> x = rx;
-        big_number<uint64_t,1> y = ry;
+        big_number<uint64_t, 1> x = rx;
+        big_number<uint64_t, 1> y = ry;
 
-        big_number<uint64_t,1> r = x * y;
-        
+        big_number<uint64_t, 1> r = x * y;
+
         assert(r.buffer[0] == real_result);
     }
 };
 
 template <typename T>
-static void sign_extend_bottom(big_number<T, 2>* working)
-{
+static void sign_extend_bottom(big_number<T, 2>* working) {
     int top_bit = (sizeof(T) * 8) - 1;
 
     bool bit = working->buffer[0] >> top_bit;
 
-    if (bit)
-    {
+    if (bit) {
         working->buffer[1] = -1;
     }
 }
 
 template <typename T>
-static void multiply_hi(T* top, T* bottom, T x, T y, bool is_signed)
-{
+static void multiply_hi(T* top, T* bottom, T x, T y, bool is_signed) {
     big_number<T, 2> wx = x;
     big_number<T, 2> wy = y;
 
-    if (is_signed)
-    {
+    if (is_signed) {
         sign_extend_bottom(&wx);
         sign_extend_bottom(&wy);
     }
@@ -183,13 +161,11 @@ static void multiply_hi(T* top, T* bottom, T x, T y, bool is_signed)
 }
 
 template <typename T>
-static T multiply_hi(T x, T y, bool is_signed)
-{
+static T multiply_hi(T x, T y, bool is_signed) {
     big_number<T, 2> wx = x;
     big_number<T, 2> wy = y;
 
-    if (is_signed)
-    {
+    if (is_signed) {
         sign_extend_bottom(&wx);
         sign_extend_bottom(&wy);
     }
@@ -198,5 +174,3 @@ static T multiply_hi(T x, T y, bool is_signed)
 
     return r.buffer[1];
 }
-
-#endif

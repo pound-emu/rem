@@ -1,79 +1,64 @@
+#include "debugging.h"
+#include "x86_assembler.h"
 #include "x86_pipeline.h"
 #include "x86_pre_allocator.h"
-#include "x86_assembler.h"
-#include "debugging.h"
 
-#include "ir/ssa.h"
 #include "ir/basic_register_allocator.h"
+#include "ir/ssa.h"
 #include "ir/undefined_behavior_check.h"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 int id = 0;
 
-void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir_operation_block* source_ir, abi working_abi, compiler_flags flags)
-{
-	arena_allocator* allocator = source_ir->allocator;
-	
-	ir_operation_block* pre_allocated_code; 
-	ir_operation_block* register_allocated_code;
-		
-	ir_operation_block::create(&pre_allocated_code, allocator);
-	ir_operation_block::create(&register_allocated_code, allocator);
+void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir_operation_block* source_ir, abi working_abi, compiler_flags flags) {
+    arena_allocator* allocator = source_ir->allocator;
 
-	x86_pre_allocator_context pre_allocation_data;
-	basic_register_allocator_context register_allocation_data;
+    ir_operation_block* pre_allocated_code;
+    ir_operation_block* register_allocated_code;
 
-	if (flags & check_undefined_behavior)
-	{
-		ir_operation_block* undefined_behavior_checked_code;		
-		ir_operation_block::create(&undefined_behavior_checked_code, allocator);
+    ir_operation_block::create(&pre_allocated_code, allocator);
+    ir_operation_block::create(&register_allocated_code, allocator);
 
-		run_undefined_behavior_check_pass(undefined_behavior_checked_code, source_ir);
+    x86_pre_allocator_context pre_allocation_data;
+    basic_register_allocator_context register_allocation_data;
 
-		source_ir = undefined_behavior_checked_code;
-	}
+    if (flags & check_undefined_behavior) {
+        ir_operation_block* undefined_behavior_checked_code;
+        ir_operation_block::create(&undefined_behavior_checked_code, allocator);
 
-	bool use_lrsa_hints = false;
+        run_undefined_behavior_check_pass(undefined_behavior_checked_code, source_ir);
 
-	if ((flags & optimize_basic_ssa) || (flags & optimize_group_pool_ssa))
-	{
-		convert_to_ssa(source_ir, flags);
-		
-		use_lrsa_hints = true;
-	}
-	
-	x86_pre_allocator_context::run_pass(&pre_allocation_data, pre_allocated_code, source_ir, working_abi.cpu,working_abi.os);
+        source_ir = undefined_behavior_checked_code;
+    }
 
-	//ir_operation_block::log(pre_allocated_code);
+    bool use_lrsa_hints = false;
 
-    //std::string code;
-    //std::cin >> code;
+    if ((flags & optimize_basic_ssa) || (flags & optimize_group_pool_ssa)) {
+        convert_to_ssa(source_ir, flags);
 
-	basic_register_allocator_context::run_pass(
-		&register_allocation_data,
-		register_allocated_code,
-		pre_allocated_code,
+        use_lrsa_hints = true;
+    }
 
-		16,
-		{ 
-			ir_operand_meta::int64, 
-			(uint32_t)pre_allocation_data.opernad_counts[0] 
-		},
+    x86_pre_allocator_context::run_pass(&pre_allocation_data, pre_allocated_code, source_ir, working_abi.cpu, working_abi.os);
 
-		16,
-		{ 
-			ir_operand_meta::int128, 
-			(uint32_t)pre_allocation_data.opernad_counts[0] 
-		},
-		
-		RSP(ir_operand_meta::int64),
+    // ir_operation_block::log(pre_allocated_code);
 
-		use_lrsa_hints
-	);
+    // std::string code;
+    // std::cin >> code;
 
-	/*
+    basic_register_allocator_context::run_pass(&register_allocation_data, register_allocated_code, pre_allocated_code,
+
+                                               16, {ir_operand_meta::int64, (uint32_t)pre_allocation_data.opernad_counts[0]},
+
+                                               16, {ir_operand_meta::int128, (uint32_t)pre_allocation_data.opernad_counts[0]},
+
+                                               RSP(ir_operand_meta::int64),
+
+                                               use_lrsa_hints);
+
+    /*
     if (flags & compiler_flags::optimize_group_pool_ssa)
     {
         std::ofstream str;
@@ -86,7 +71,7 @@ void assemble_x86_64_pipeline(void** result_code, uint64_t* result_code_size, ir
 
         str.close();
     }
-		*/
+        */
 
-	assemble_x86_64_code(result_code, result_code_size, register_allocated_code);
+    assemble_x86_64_code(result_code, result_code_size, register_allocated_code);
 }

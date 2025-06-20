@@ -1,13 +1,12 @@
+#pragma once
+
 #include "emulator/aarch64/aarch64_context_offsets.h"
 #include "emulator/guest_process.h"
 #include "emulator/ssa_emit_context.h"
 
-#pragma once
-
-struct external_context
-{
-    guest_process   process;
-    jit_context     memory;
+struct external_context {
+    guest_process process;
+    jit_context memory;
 };
 
 extern void* base_plus_va(void* context, uint64_t virtual_address);

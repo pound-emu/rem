@@ -1,17 +1,12 @@
-#ifndef ABI_INFORMATION
-#define ABI_INFORMATION
+#pragma once
 
-enum cpu_information
-{
-	x86_64,
-	arm_64,
+enum cpu_information {
+    x86_64,
+    arm_64
 };
 
-enum os_information
-{
-	windows,
-	linux,
-	macos
+enum os_information {
+    windows,
+    linux,
+    macos
 };
-
-#endif

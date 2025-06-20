@@ -1,20 +1,16 @@
 #include "rem.h"
 
-void* base_plus_va(void* context, uint64_t virtual_address)
-{
+void* base_plus_va(void* context, uint64_t virtual_address) {
     return (char*)context + virtual_address;
 }
 
-void base_plus_va_jit(void* memory, ssa_emit_context* ir, ir_operand destination, ir_operand source)
-{
+void base_plus_va_jit(void* memory, ssa_emit_context* ir, ir_operand destination, ir_operand source) {
     ir_operation_block* ctx = ir->ir;
 
     ir_operation_block::emitds(ctx, ir_add, destination, source, ir->memory_base);
 }
 
-
-void* create_rem_context(void* memory, aarch64_context_offsets* context_offsets, void* svc, void* counter, void* undefined_instruction)
-{
+void* create_rem_context(void* memory, aarch64_context_offsets* context_offsets, void* svc, void* counter, void* undefined_instruction) {
     external_context* result = new external_context;
 
     result->process.log_native = nullptr;
@@ -32,41 +28,34 @@ void* create_rem_context(void* memory, aarch64_context_offsets* context_offsets,
     return result;
 }
 
-void set_log_native(external_context* context, void* log_native)
-{
+void set_log_native(external_context* context, void* log_native) {
     context->process.log_native = log_native;
 }
-    
-void destroy_rem_context(external_context* context)
-{
+
+void destroy_rem_context(external_context* context) {
     jit_context::destroy(&context->memory);
 
     delete context;
 }
 
-uint64_t interperate_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context, bool* is_running)
-{
+uint64_t interperate_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context, bool* is_running) {
     return guest_process::interperate_function(&context->process, virtual_address, guest_context, is_running);
 }
 
-uint64_t jit_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context, bool* is_running, void* log_native)
-{
+uint64_t jit_until_long_jump(external_context* context, uint64_t virtual_address, void* guest_context, bool* is_running, void* log_native) {
     context->process.log_native = log_native;
 
-    while (*is_running)
-    {
+    while (*is_running) {
         virtual_address = guest_process::jit_function(&context->process, virtual_address, guest_context);
     }
 
     return virtual_address;
 }
 
-void invalidate_jit_region(external_context* context, uint64_t address, uint64_t size)
-{
+void invalidate_jit_region(external_context* context, uint64_t address, uint64_t size) {
     context->process.guest_functions.main_translate_lock.lock();
 
-    for (uint64_t i = 0; i < size; i += 4)
-    {
+    for (uint64_t i = 0; i < size; i += 4) {
         uint64_t working_address = address + i;
 
         fast_function_table::insert_function(&context->process.guest_functions.native_function_table, working_address, -1);
