@@ -13,5 +13,5 @@ enum cpu_size {
 
 enum memory_order {
     little_endian,
-    bit_endian
+    big_endian
 };
